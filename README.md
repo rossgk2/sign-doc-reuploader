@@ -2,7 +2,7 @@
 
 ## Dependencies
 
-You need to installed [node.js](https://nodejs.org/en/) installed.
+You need to have [node.js](https://nodejs.org/en/) installed.
 
 ## Install and run
 
