@@ -19,8 +19,8 @@ async function getBaseUri()
 }
 
 /* 
-
-	If cb is null, then cb takes on its default value, which is function() { console.log("Download completed."); }.
+	Downloads the content located at url and stores it at the relative path (with the root directory
+	being the one that contains this file) that is dest.
 */
 function download(url: string, dest: string, cb: () => (void)) // from https://stackoverflow.com/a/17676794
 {
@@ -45,7 +45,7 @@ async function main(libraryDocumentId: string, debug: boolean)
 		{ 'headers' : headersConfig, 'responseType' : 'blob' });
 	combinedDocumentUrl = JSON.parse(combinedDocumentUrl.data).url;
 
-	// TO-DO: save the PDF
+	// Save the PDF to the folder this script resides in.
 	let cb = function() { console.log("Download completed."); };
 	download(combinedDocumentUrl, 'combined_document.pdf', cb);
 
