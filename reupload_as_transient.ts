@@ -68,18 +68,24 @@ async function main(libraryDocumentId: string, debug: boolean)
 	}
 
 	/* POST the same document, but without any custom form fields. */
-	
+	// https://stackoverflow.com/questions/53038900/nodejs-axios-post-file-from-local-server-to-another-server
 	let form = new FormData();
 	form.append('combined_document', fs.createReadStream(savedFileName));
-	form.submit
-	(
+	let config =
 		{
-			host: baseUri,
-			path: '/transientDocuments',
-			headers: headersConfig
-		},
-		function(err: any, res: any) { console.log(res); res.resume(); }
-	);
+			'headers' : 
+			{
+				'Authorization' : `Bearer ${gmailBearerToken}`,
+				...form.getHeaders()
+			},
+			'data': form
+		};
+
+	let response = await axios.post(`${baseUri}/transientDocuments`, form, config);
+	console.log(response);
+	console.log("========================");
+	console.log(typeof(response));
+	console.log(Object.keys(response));
 	
 	/* Use a PUT request to add the custom form fields and the values entered earlier to the document. */
 	
