@@ -1,4 +1,6 @@
 const
+	https = require('https'),
+	fs = require('fs'),
 	axios = require('axios'),
 	open = require('open'), // for viewing URLs
 	FormData = require('form-data'), // https://maximorlov.com/send-a-file-with-axios-in-nodejs/
@@ -8,14 +10,30 @@ const gmailBearerToken = '(This sensitive info has been removed by BFG repo clea
 const headersConfig = {'Authorization' : `Bearer ${gmailBearerToken}`}
 const requestConfig = { 'headers' : headersConfig };
 
-async function getBaseUri() {
+async function getBaseUri()
+{
 	let response = await axios.get('https://api.na1.adobesign.com:443/api/rest/v6/baseUris', requestConfig);
 	let baseUri = response.data['apiAccessPoint'];
 	baseUri = baseUri.substring(0, baseUri.length - 1) + "/api/rest/v6";
 	return baseUri;
 }
 
-async function main(libraryDocumentId: string, debug: boolean) {
+/* 
+
+	If cb is null, then cb takes on its default value, which is function() { console.log("Download completed."); }.
+*/
+function download(url: string, dest: string, cb: () => (void)) // from https://stackoverflow.com/a/17676794
+{
+	let file = fs.createWriteStream(dest);
+	https.get(url, function(response: any)
+	{
+    	response.pipe(file);
+    	file.on('finish', function() { file.close(cb); });
+    });
+}
+
+async function main(libraryDocumentId: string, debug: boolean)
+{
 	let baseUri = await getBaseUri();
 
 	/* GET the values the user has entered into the document's fields. */
@@ -23,16 +41,19 @@ async function main(libraryDocumentId: string, debug: boolean) {
 	formFields = formFields.data;
 
 	/* GET the PDF on which the custom form fields that the user field out were placed.*/
-	let combinedDocumentUri = await axios.get(`${baseUri}/libraryDocuments/${libraryDocumentId}/combinedDocument/url`,
+	let combinedDocumentUrl = await axios.get(`${baseUri}/libraryDocuments/${libraryDocumentId}/combinedDocument/url`,
 		{ 'headers' : headersConfig, 'responseType' : 'blob' });
-	combinedDocumentUri = JSON.parse(combinedDocumentUri.data).url;
+	combinedDocumentUrl = JSON.parse(combinedDocumentUrl.data).url;
 
-	// TO-DO: use FileSaver to save the PDF
+	// TO-DO: save the PDF
+	let cb = function() { console.log("Download completed."); };
+	download(combinedDocumentUrl, 'combined_document.pdf', cb);
 
 	/* If debugging, print the form fields and inspect the combined document PDF. */
-	if (debug) {
+	if (debug)
+	{
 		console.log(formFields);
-		open(combinedDocumentUri);	
+		open(combinedDocumentUrl);	
 	}
 
 	/* POST the same document, but without any custom form fields. */
@@ -44,11 +65,12 @@ async function main(libraryDocumentId: string, debug: boolean) {
 	// TO-DO: PUT /libraryDocuments/{libraryDocumentId}/formFields
 }
 
-main("CBJCHBCAABAA7V0riaWVDHwrLaSkRddihs_aqME4QQuz", true);
+main("CBJCHBCAABAA7V0riaWVDHwrLaSkRddihs_aqME4QQuz", false);
 
 /* Experimentation of how to implement a return statement below something like "let result = await getBaseUri(...)". */
 
-function getBaseUri2() {
+function getBaseUri2()
+{
 	let baseUriInfo = axios.get('https://api.na1.adobesign.com:443/api/rest/v6/baseUris', 
 	{ headers: {'Authorization' : `Bearer ${gmailBearerToken}`} })
 	.then((response: any) => {
@@ -59,7 +81,8 @@ function getBaseUri2() {
 	return baseUriInfo;
 }
 	
-function main2() {
+function main2()
+{
 	getBaseUri2().then(console.log);
 }
 
