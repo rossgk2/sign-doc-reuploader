@@ -56,8 +56,9 @@ async function main(libraryDocumentId: string, debug: boolean)
 	combinedDocumentUrl = JSON.parse(combinedDocumentUrl.data).url;
 
 	// Save the PDF to the folder this script resides in.
+	const savedFileName = 'combined_document.pdf';
 	let cb = function() { console.log("Download completed."); };
-	download(combinedDocumentUrl, 'combined_document.pdf', cb);
+	download(combinedDocumentUrl, savedFileName, cb);
 
 	/* If debugging, print the form fields and inspect the combined document PDF. */
 	if (debug)
@@ -68,8 +69,18 @@ async function main(libraryDocumentId: string, debug: boolean)
 
 	/* POST the same document, but without any custom form fields. */
 	
-	// TO-DO: POST /transientDocuments by using FormData
-
+	let form = new FormData();
+	form.append('combined_document', fs.createReadStream(savedFileName));
+	form.submit
+	(
+		{
+			host: baseUri,
+			path: '/transientDocuments',
+			headers: headersConfig
+		},
+		function(err: any, res: any) { console.log(res); res.resume(); }
+	);
+	
 	/* Use a PUT request to add the custom form fields and the values entered earlier to the document. */
 	
 	// TO-DO: PUT /libraryDocuments/{libraryDocumentId}/formFields
