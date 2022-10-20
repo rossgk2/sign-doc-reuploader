@@ -27,7 +27,17 @@ function download(url: string, dest: string, cb: () => (void)) // from https://s
 	let file = fs.createWriteStream(dest);
 	https.get(url, function(response: any)
 	{
-    	response.pipe(file);
+    	response.pipe(file); // If you wanted to use axios instead of https and change https.get 
+    						 // to axios.get, the initial line of this request would become 
+    						 // "axios.get(url).then(function(response: any) { ... })",
+    						 // where the anonymous function passed is this function.
+    						 //
+    						 // After some investigation, you would also think that this line should change 
+    						 // to "response.request.res.pipe(file);", since the "response" of https seems 
+    						 // to be the same as the "response.request.res" of axios.
+    						 //
+    						 // For some reason this doesn't work- a file will get downloaded, 
+    						 // but it won't be able to be opened.
     	file.on('finish', function() { file.close(cb); });
     });
 }
