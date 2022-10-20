@@ -27,6 +27,8 @@ async function main(libraryDocumentId: string, debug: boolean) {
 		{ 'headers' : headersConfig, 'responseType' : 'blob' });
 	combinedDocumentUri = JSON.parse(combinedDocumentUri.data).url;
 
+	// TO-DO: use FileSaver to save the PDF
+
 	/* If debugging, print the form fields and inspect the combined document PDF. */
 	if (debug) {
 		console.log(formFields);
@@ -39,7 +41,7 @@ async function main(libraryDocumentId: string, debug: boolean) {
 
 	/* Use a PUT request to add the custom form fields and the values entered earlier to the document. */
 	
-	// TO-DO: PUT /libraryDocuments/{libraryDocumentId}/formFields by using FileSaver
+	// TO-DO: PUT /libraryDocuments/{libraryDocumentId}/formFields
 }
 
 main("CBJCHBCAABAA7V0riaWVDHwrLaSkRddihs_aqME4QQuz", true);
