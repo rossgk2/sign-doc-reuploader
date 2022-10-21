@@ -84,7 +84,7 @@ async function main(libraryDocumentId: string, debug: boolean)
 	}
 
 	/* Create a library document from the just-created transient document. */
-	let libraryDocumentInfo = 
+	let libraryDocumentInfo =
 	{
 		'fileInfos' : [{'transientDocumentId' : transientDocumentId}],
 		'name': savedFileName,
@@ -93,15 +93,15 @@ async function main(libraryDocumentId: string, debug: boolean)
 		'templateTypes': ['DOCUMENT'] // each array elt can be 'DOCUMENT' or 'FORM_FIELD_LAYER'
 	};
 
-	
 	printWithEqualsSep('2');
-	let headersConfig = { 'headers' : {'Content-Type' : 'application/json', ...defaultHeadersConfig} };
+	let headersConfig = { 'headers' : { ...defaultHeadersConfig, 'Content-Type' : 'application/json' } };
+	printWithEqualsSep('3');
 	response = await axios.post(`${baseUri}/libraryDocuments`, JSON.stringify(libraryDocumentInfo), headersConfig);
 
-	if (debug)
-	{
-		printWithEqualsSep(response.data);
-	}
+	// if (debug)
+	// {
+	// 	printWithEqualsSep(response.data);
+	// }
 
 	/* Use a PUT request to add the custom form fields and the values entered earlier to the document. */
 	
