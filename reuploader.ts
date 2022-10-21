@@ -1,5 +1,4 @@
 const
-	https = require('https'),
 	fs = require('fs'),
 	axios = require('axios'),
 	open = require('open'), // for viewing URLs
@@ -22,14 +21,14 @@ async function getBaseUri()
 	Downloads the content located at url and stores it at the relative path (with the root directory
 	being the one that contains this file) that is dest.
 
-	Inspired by https://github.com/axios/axios/issues/3971#issuecomment-1159556428.
+	Informed by https://github.com/axios/axios/issues/3971#issuecomment-1159556428.
 */
 async function download(url: string, dest: string, cb: () => (void))
 {
 	let file = fs.createWriteStream(dest);
 	file.on('finish', function() { file.close(cb); });	
 	let {data} = await axios.get(url, {'responseType': 'stream'});
-	data.pipe(file);
+	data.pipe(file); // this wouldn't work if we didn't use 'responseType' : 'stream'
 }
 
 async function main(libraryDocumentId: string, debug: boolean)
@@ -46,10 +45,9 @@ async function main(libraryDocumentId: string, debug: boolean)
 	combinedDocumentUrl = JSON.parse(combinedDocumentUrl.data).url;
 	console.log(combinedDocumentUrl);
 
-	// Save the PDF to the folder this script resides in.
+	/* Save the PDF to the folder this script resides in. */
 	const savedFileName = 'combined_document.pdf';
-	let cb = function() { console.log("Download completed."); };
-	await download(combinedDocumentUrl, savedFileName, cb);
+	await download(combinedDocumentUrl, savedFileName, function() { console.log("Download completed."); });
 
 	/* If debugging, print the form fields and inspect the combined document PDF. */
 	if (debug)
@@ -60,22 +58,22 @@ async function main(libraryDocumentId: string, debug: boolean)
 
 	/* POST the same document, but without any custom form fields. */
 	// https://stackoverflow.com/questions/53038900/nodejs-axios-post-file-from-local-server-to-another-server
-	// let form = new FormData();
-	// form.append('combined_document', fs.createReadStream(savedFileName));
-	// let config =
-	// 	{
-	// 		method: "post",
-	// 		url: `${baseUri}/transientDocuments`,
-	// 		'headers' : 
-	// 		{
-	// 			'Authorization' : `Bearer ${gmailBearerToken}`,
-	// 			'Content-Type' : 'multipart/form-data',
-	// 			'boundary' : form.getHeaders().boundary
-	// 		},
-	// 		data: form
-	// 	};
+	let form = new FormData();
+	form.append('combined_document', fs.createReadStream(savedFileName));
+	let config =
+		{
+			method: "post",
+			url: `${baseUri}/transientDocuments`,
+			'headers' : 
+			{
+				'Authorization' : `Bearer ${gmailBearerToken}`,
+				'Content-Type' : 'multipart/form-data',
+				'boundary' : form.getHeaders().boundary
+			},
+			data: form
+		};
 
-	// let response = await axios(config);
+	let response = await axios(config);
 
 	// "data: { code: 'NO_FILE_CONTENT', message: 'Must provide file body' }" is debug output produced by the above
 	
