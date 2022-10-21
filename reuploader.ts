@@ -4,6 +4,8 @@ const
 	FormData = require('form-data'), // https://maximorlov.com/send-a-file-with-axios-in-nodejs/
 	FileSaver = require('file-saver'); // https://github.com/eligrey/FileSaver.js/
 
+import {Blob} from 'node:buffer';
+
 const gmailBearerToken = '(This sensitive info has been removed by BFG repo cleaner)';
 const headersConfig = {'Authorization' : `Bearer ${gmailBearerToken}`}
 const defaultRequestConfig = { 'headers' : headersConfig };
@@ -37,6 +39,12 @@ function printWithEqualsSep(message: string)
 	console.log("================================================");
 }
 
+/* Returns the JSON that specifies custom headers for an HTTP request. */
+function getRequestConfig(form: typeof FormData)
+{
+	return { 'headers' : {...headersConfig, ...form.getHeaders()} }
+}
+
 async function main(libraryDocumentId: string, debug: boolean)
 {
 	let baseUri = await getBaseUri();
@@ -60,25 +68,52 @@ async function main(libraryDocumentId: string, debug: boolean)
 	const savedFileName = 'combined_document.pdf';
 	await download(combinedDocumentUrl, savedFileName, function() { console.log("Download completed."); });	
 
-	/* POST the same document, but without any custom form fields. */
-	/* Informed by https://stackoverflow.com/questions/53038900/nodejs-axios-post-file-from-local-server-to-another-server. */
+	/* POST the same document (but without any custom form fields) as a transient document and get its ID.
+	
+	Informed by https://stackoverflow.com/questions/53038900/nodejs-axios-post-file-from-local-server-to-another-server. */
 	let form = new FormData();
 	form.append('File-Name', docName);
 	form.append('File', fs.createReadStream(savedFileName));
-	let requestConfig = // have to manually pass headers from form to the HTTP request
-	{
-		'headers' : {...headersConfig, ...form.getHeaders()}, // performs union of headersConfig and form.getHeaders()
-	};
+	let response = await axios.post(`${baseUri}/transientDocuments`, form, getRequestConfig(form));
+	let transientDocumentId = response.data.transientDocumentId;
 
 	if (debug)
 	{
-		let response = await axios.post(`${baseUri}/transientDocuments`, form, requestConfig);
+		printWithEqualsSep(response.data);
 		console.log(`Status code of response to POST to /transientDocuments: ${response.status}`);
+	}
+
+	/* Create a library document from the just-created transient document. */
+	console.log('1');
+	form = new FormData();
+	console.log('2');
+	let libraryDocumentInfo = 
+	{
+		'fileInfos' : [{'transientDocumentId' : transientDocumentId}],
+		'name': savedFileName,
+		'sharingMode': 'GLOBAL', // can be 'USER' or 'GROUP' or 'ACCOUNT' or 'GLOBAL'
+		'state': 'AUTHORING', // can be 'AUTHORING' or 'ACTIVE'
+		'templateTypes': ['DOCUMENT'] // each array elt can be 'DOCUMENT' or 'FORM_FIELD_LAYER'
+	};
+
+	/* According to this: https://stackoverflow.com/questions/24535189/
+	composing-multipart-form-data-with-a-different-content-type-on-each-parts-with-j,
+	the only way to append content to a FormData object while also specifying that content's type
+	(e.g. 'text/html', application/json', 'multipart/form-data') is to append a Blob that stores both
+	the content and the choice of content-type to the FormData object. */
+	let blob = new Blob([JSON.stringify(libraryDocumentInfo)], {'type': 'application/json'});
+	form.append('LibraryDocumentInfo', blob);
+	console.log('3');
+	response = await axios.post(`${baseUri}/libraryDocuments`, form, getRequestConfig(form));
+
+	if (debug)
+	{
+		printWithEqualsSep(response.data);
 	}
 
 	/* Use a PUT request to add the custom form fields and the values entered earlier to the document. */
 	
-	// TO-DO: PUT /libraryDocuments/{libraryDocumentId}/formFields
+	// await axios.put(`/libraryDocuments/${libraryDocumentId}/formFields`);
 }
 
 let libraryDocumentId = "CBJCHBCAABAA7V0riaWVDHwrLaSkRddihs_aqME4QQuz";
