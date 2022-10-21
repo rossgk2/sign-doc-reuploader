@@ -7,8 +7,8 @@ const
 import {Blob} from 'node:buffer';
 
 const gmailBearerToken = '(This sensitive info has been removed by BFG repo cleaner)';
-const headersConfig = {'Authorization' : `Bearer ${gmailBearerToken}`}
-const defaultRequestConfig = { 'headers' : headersConfig };
+const defaultHeadersConfig = {'Authorization' : `Bearer ${gmailBearerToken}`}
+const defaultRequestConfig = { 'headers' : defaultHeadersConfig };
 
 /* Retrieves the base URI that is the first part of all Adobe Sign API endpoints. */
 async function getBaseUri()
@@ -42,7 +42,7 @@ function printWithEqualsSep(message: string)
 /* Returns the JSON that specifies custom headers for an HTTP request. */
 function getRequestConfig(form: typeof FormData)
 {
-	return { 'headers' : {...headersConfig, ...form.getHeaders()} }
+	return { 'headers' : {...defaultHeadersConfig, ...form.getHeaders()} }
 }
 
 async function main(libraryDocumentId: string, debug: boolean)
@@ -84,27 +84,19 @@ async function main(libraryDocumentId: string, debug: boolean)
 	}
 
 	/* Create a library document from the just-created transient document. */
-	console.log('1');
-	form = new FormData();
-	console.log('2');
 	let libraryDocumentInfo = 
 	{
 		'fileInfos' : [{'transientDocumentId' : transientDocumentId}],
 		'name': savedFileName,
-		'sharingMode': 'GLOBAL', // can be 'USER' or 'GROUP' or 'ACCOUNT' or 'GLOBAL'
+		'sharingMode': 'ACCOUNT', // can be 'USER' or 'GROUP' or 'ACCOUNT' or 'GLOBAL'
 		'state': 'AUTHORING', // can be 'AUTHORING' or 'ACTIVE'
 		'templateTypes': ['DOCUMENT'] // each array elt can be 'DOCUMENT' or 'FORM_FIELD_LAYER'
 	};
 
-	/* According to this: https://stackoverflow.com/questions/24535189/
-	composing-multipart-form-data-with-a-different-content-type-on-each-parts-with-j,
-	the only way to append content to a FormData object while also specifying that content's type
-	(e.g. 'text/html', application/json', 'multipart/form-data') is to append a Blob that stores both
-	the content and the choice of content-type to the FormData object. */
-	let blob = new Blob([JSON.stringify(libraryDocumentInfo)], {'type': 'application/json'});
-	form.append('LibraryDocumentInfo', blob);
-	console.log('3');
-	response = await axios.post(`${baseUri}/libraryDocuments`, form, getRequestConfig(form));
+	
+	printWithEqualsSep('2');
+	let headersConfig = { 'headers' : {'Content-Type' : 'application/json', ...defaultHeadersConfig} };
+	response = await axios.post(`${baseUri}/libraryDocuments`, JSON.stringify(libraryDocumentInfo), headersConfig);
 
 	if (debug)
 	{
