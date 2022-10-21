@@ -9,6 +9,7 @@ const gmailBearerToken = '(This sensitive info has been removed by BFG repo clea
 const headersConfig = {'Authorization' : `Bearer ${gmailBearerToken}`}
 const requestConfig = { 'headers' : headersConfig };
 
+/* Retrieves the base URI that is the first part of all Adobe Sign API endpoints. */
 async function getBaseUri()
 {
 	let response = await axios.get('https://api.na1.adobesign.com:443/api/rest/v6/baseUris', requestConfig);
@@ -43,7 +44,6 @@ async function main(libraryDocumentId: string, debug: boolean)
 	let combinedDocumentUrl = await axios.get(`${baseUri}/libraryDocuments/${libraryDocumentId}/combinedDocument/url`,
 		{ 'headers' : headersConfig, 'responseType' : 'blob' });
 	combinedDocumentUrl = JSON.parse(combinedDocumentUrl.data).url;
-	console.log(combinedDocumentUrl);
 
 	/* Save the PDF to the folder this script resides in. */
 	const savedFileName = 'combined_document.pdf';
@@ -59,21 +59,18 @@ async function main(libraryDocumentId: string, debug: boolean)
 	/* POST the same document, but without any custom form fields. */
 	// https://stackoverflow.com/questions/53038900/nodejs-axios-post-file-from-local-server-to-another-server
 	let form = new FormData();
-	form.append('combined_document', fs.createReadStream(savedFileName));
+	form.append('File-Name', 'temp'); //make this something better
+	form.append('File', fs.createReadStream(savedFileName));
 	let config =
+	{
+		'headers' : 
 		{
-			method: "post",
-			url: `${baseUri}/transientDocuments`,
-			'headers' : 
-			{
-				'Authorization' : `Bearer ${gmailBearerToken}`,
-				'Content-Type' : 'multipart/form-data',
-				'boundary' : form.getHeaders().boundary
-			},
-			data: form
-		};
+			'Authorization' : `Bearer ${gmailBearerToken}`,
+			...form.getHeaders()
+		},
+	};
 
-	let response = await axios(config);
+	let response = await axios.post(`${baseUri}/transientDocuments`, form, config);
 
 	// "data: { code: 'NO_FILE_CONTENT', message: 'Must provide file body' }" is debug output produced by the above
 	
