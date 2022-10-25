@@ -111,7 +111,7 @@ async function main(libraryDocumentId: string, debug: boolean)
 			printWithEqualsSep(response.data);
 	}
 
-	/* Approach 2: create a FormData object that holds libraryDocumentInfo*/
+	/* Approach 2: create a FormData object that holds libraryDocumentInfo. */
 
 	else if (approachSelector === 2)
 	{
