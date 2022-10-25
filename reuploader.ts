@@ -93,7 +93,7 @@ async function main(libraryDocumentId: string, debug: boolean)
 		'templateTypes': ['DOCUMENT'] // each array elt can be 'DOCUMENT' or 'FORM_FIELD_LAYER'
 	};
 
-	/* IN-PROGRESS */
+	/* IN PROGRESS */
 
 	let approachSelector = 1;
 
