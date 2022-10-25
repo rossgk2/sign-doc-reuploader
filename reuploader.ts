@@ -4,7 +4,7 @@ const
 	FormData = require('form-data'), // https://maximorlov.com/send-a-file-with-axios-in-nodejs/
 	FileSaver = require('file-saver'); // https://github.com/eligrey/FileSaver.js/
 
-import {Blob} from 'node:buffer';
+import {Blob} from 'buffer';
 
 const gmailBearerToken = '(This sensitive info has been removed by BFG repo cleaner)';
 const defaultHeadersConfig = {'Authorization' : `Bearer ${gmailBearerToken}`}
@@ -84,7 +84,7 @@ async function main(libraryDocumentId: string, debug: boolean)
 	}
 
 	/* Create a library document from the just-created transient document. */
-	let libraryDocumentInfo =
+	let libraryDocumentInfo =	
 	{
 		'fileInfos' : [{'transientDocumentId' : transientDocumentId}],
 		'name': savedFileName,
@@ -93,15 +93,59 @@ async function main(libraryDocumentId: string, debug: boolean)
 		'templateTypes': ['DOCUMENT'] // each array elt can be 'DOCUMENT' or 'FORM_FIELD_LAYER'
 	};
 
-	printWithEqualsSep('2');
-	let headersConfig = { 'headers' : { ...defaultHeadersConfig, 'Content-Type' : 'application/json' } };
-	printWithEqualsSep('3');
-	response = await axios.post(`${baseUri}/libraryDocuments`, JSON.stringify(libraryDocumentInfo), headersConfig);
+	/* IN-PROGRESS */
 
-	// if (debug)
-	// {
-	// 	printWithEqualsSep(response.data);
-	// }
+	let approachSelector = 1;
+
+	/* Approach 1: send JSON.stringify(libraryDocumentInfo) as the request body and specify
+	a header of 'Content-Type' : 'application/json'. */
+
+	if (approachSelector === 1)
+	{
+		let headersConfig = { 'headers' : { ...defaultHeadersConfig, 'Content-Type' : 'application/json' } };
+		response = await axios.post(`${baseUri}/libraryDocuments`, JSON.stringify(libraryDocumentInfo), headersConfig);
+	
+		/* The response body to this is "{code: 'MISC_SERVER_ERROR', message: 'Some miscellaneous error has occurred'}". */
+
+		if (debug)
+			printWithEqualsSep(response.data);
+	}
+
+	/* Approach 2: create a FormData object that holds libraryDocumentInfo*/
+
+	else if (approachSelector === 2)
+	{
+		let form1 = new FormData();
+		form1.append('LibraryDocumentInfo', JSON.stringify(libraryDocumentInfo));
+		let requestConfig1 = { 'headers' : {...defaultHeadersConfig, ...form1.getHeaders(), 'Content-Type' : 'application/json'} };
+		let response1 = await axios.post(`${baseUri}/libraryDocuments`, form1, requestConfig1); 
+
+		/* The response body to this is "{ code: 'INVALID_JSON', message: 'An invalid JSON was specified' }".
+		I've double checked and it seems to me that libraryDocumentInfo is in the correct format. */
+
+		if (debug)
+			printWithEqualsSep(response1.data);
+	}
+
+	/* Approach 3: same as approach 2, but uses a Blob to specify the type of form1's content. 
+	In order to make this approach testable we first need to figure out how to convert a Blob
+	to a Buffer in NodeJS. This module may be helpful: https://github.com/feross/blob-to-buffer.*/
+
+	else if (approachSelector === 3)
+	{
+		let form1 = new FormData();
+		let blob = new Blob([JSON.stringify(libraryDocumentInfo)], {'type' : 'application/json'});
+		let blobToBuffer = function(blob: Blob) { }; // figure out some implementation for this
+		form1.append('LibraryDocumentInfo', blobToBuffer(blob));
+		
+		/* form1.append() expectedly throws an error right now since blobToBuffer() doesn't do anything. */
+
+		let requestConfig1 = { 'headers' : {...defaultHeadersConfig, ...form1.getHeaders()} };
+		let response1 = await axios.post(`${baseUri}/libraryDocuments`, form1, requestConfig1); 
+
+		if (debug)
+			printWithEqualsSep(response1.data);
+	}
 
 	/* Use a PUT request to add the custom form fields and the values entered earlier to the document. */
 	
