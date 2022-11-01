@@ -96,8 +96,6 @@ async function main(libraryDocumentId: string, debug: boolean)
   let headersConfig = { 'headers' : { ...defaultHeadersConfig, 'Content-Type' : 'application/json' } };
   response = await axios.post(`${baseUri}/libraryDocuments`, JSON.stringify(libraryDocumentInfo), headersConfig);
 
-  /* The response body to this is "{code: 'MISC_SERVER_ERROR', message: 'Some miscellaneous error has occurred'}". */
-
   if (debug)
   {
     console.log('Result of POSTing a library document...');
