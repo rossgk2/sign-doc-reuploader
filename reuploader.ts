@@ -57,8 +57,8 @@ async function main(libraryDocumentId: string, debug: boolean)
   let formFields = await axios.get(`${baseUri}/libraryDocuments/${libraryDocumentId}/formFields`, defaultRequestConfig);
   formFields = formFields.data.fields;
 
-  // if (debug)
-  //   printWithEqualsSep(formFields);
+  if (debug)
+    printWithEqualsSep(formFields);
 
   /* GET the PDF on which the custom form fields that the user field out were placed.*/
   let combinedDocumentUrl = await axios.get(`${baseUri}/libraryDocuments/${libraryDocumentId}/combinedDocument/url`, defaultRequestConfig);
@@ -104,32 +104,10 @@ async function main(libraryDocumentId: string, debug: boolean)
 
   /* Use a PUT request to add the custom form fields and the values entered earlier to the document. */
   
-  // first, put all form fields at (0, 0) and give them zero width and height
-  // after we get this to work, figure out how to copy over old locations and dimensions
+  response = await axios.put(`/libraryDocuments/${libraryDocumentId}/formFields`, JSON.stringify(formFields), headersConfig);
 
-  let formFieldLocations =
-  {
-    "locations":
-      [
-        {
-          "height": 0,
-          "left": 0,
-          "pageNumber": 1,
-          "top": 0,
-          "width": 0
-        }
-      ]
-  };
-  let formFieldAndLocationMetadata = [];
-  for (let ff in formFields)
-    formFieldAndLocationMetadata.push({...formFieldLocations, ...formFields[ff]});
-
-  console.log(formFieldAndLocationMetadata);
-  
-  // response = await axios.put(`/libraryDocuments/${libraryDocumentId}/formFields`, JSON.stringify(formFieldsWithLocations), headersConfig);
-
-  // if (debug)
-  //   printWithEqualsSep(response.data);
+  if (debug)
+    printWithEqualsSep(response.data);
 }
 
 let libraryDocumentId = "CBJCHBCAABAA7V0riaWVDHwrLaSkRddihs_aqME4QQuz";
