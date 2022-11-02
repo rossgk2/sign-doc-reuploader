@@ -55,10 +55,10 @@ async function main(libraryDocumentId: string, debug: boolean)
 
   /* GET the values the user has entered into the document's fields. */
   let formFields = await axios.get(`${baseUri}/libraryDocuments/${libraryDocumentId}/formFields`, defaultRequestConfig);
-  formFields = formFields.data;
+  formFields = formFields.data.fields;
 
-  if (debug)
-    printWithEqualsSep(formFields);
+  // if (debug)
+  //   printWithEqualsSep(formFields);
 
   /* GET the PDF on which the custom form fields that the user field out were placed.*/
   let combinedDocumentUrl = await axios.get(`${baseUri}/libraryDocuments/${libraryDocumentId}/combinedDocument/url`, defaultRequestConfig);
@@ -77,11 +77,11 @@ async function main(libraryDocumentId: string, debug: boolean)
   let response = await axios.post(`${baseUri}/transientDocuments`, form, getRequestConfig(form));
   let transientDocumentId = response.data.transientDocumentId;
 
-  if (debug)
-  {
-    printWithEqualsSep(response.data);
-    console.log(`Status code of response to POST to /transientDocuments: ${response.status}`);
-  }
+  // if (debug)
+  // {
+  //   printWithEqualsSep(response.data);
+  //   console.log(`Status code of response to POST to /transientDocuments: ${response.status}`);
+  // }
 
   /* Create a library document from the just-created transient document. */
   let libraryDocumentInfo = 
@@ -96,15 +96,40 @@ async function main(libraryDocumentId: string, debug: boolean)
   let headersConfig = { 'headers' : { ...defaultHeadersConfig, 'Content-Type' : 'application/json' } };
   response = await axios.post(`${baseUri}/libraryDocuments`, JSON.stringify(libraryDocumentInfo), headersConfig);
 
-  if (debug)
-  {
-    console.log('Result of POSTing a library document...');
-    printWithEqualsSep(response.data);
-  }
+  // if (debug)
+  // {
+  //   console.log('Result of POSTing a library document...');
+  //   printWithEqualsSep(response.data);
+  // }
 
   /* Use a PUT request to add the custom form fields and the values entered earlier to the document. */
   
-  // await axios.put(`/libraryDocuments/${libraryDocumentId}/formFields`);
+  // first, put all form fields at (0, 0) and give them zero width and height
+  // after we get this to work, figure out how to copy over old locations and dimensions
+
+  let formFieldLocations =
+  {
+    "locations":
+      [
+        {
+          "height": 0,
+          "left": 0,
+          "pageNumber": 1,
+          "top": 0,
+          "width": 0
+        }
+      ]
+  };
+  let formFieldAndLocationMetadata = [];
+  for (let ff in formFields)
+    formFieldAndLocationMetadata.push({...formFieldLocations, ...formFields[ff]});
+
+  console.log(formFieldAndLocationMetadata);
+  
+  // response = await axios.put(`/libraryDocuments/${libraryDocumentId}/formFields`, JSON.stringify(formFieldsWithLocations), headersConfig);
+
+  // if (debug)
+  //   printWithEqualsSep(response.data);
 }
 
 let libraryDocumentId = "CBJCHBCAABAA7V0riaWVDHwrLaSkRddihs_aqME4QQuz";
