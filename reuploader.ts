@@ -33,9 +33,8 @@ async function download(url: string, dest: string, cb: () => (void))
   data.pipe(file); // this wouldn't work if we didn't use 'responseType' : 'stream'
 }
 
-function printWithEqualsSep(message: string)
+function printSep()
 {
-  console.log(message);
   console.log("================================================");
 }
 
@@ -58,7 +57,11 @@ async function main(libraryDocumentId: string, debug: boolean)
   formFields = formFields.data;
 
   if (debug)
-    printWithEqualsSep(formFields);
+  {
+    console.log('Form fields obtained from document:\n');
+    console.log(formFields);
+    printSep();
+  }
 
   /* GET the PDF on which the custom form fields that the user field out were placed.*/
   let combinedDocumentUrl = await axios.get(`${baseUri}/libraryDocuments/${libraryDocumentId}/combinedDocument/url`, defaultRequestConfig);
@@ -66,7 +69,7 @@ async function main(libraryDocumentId: string, debug: boolean)
 
   /* Save the PDF to the folder this script resides in. */
   const savedFileName = 'combined_document.pdf';
-  await download(combinedDocumentUrl, savedFileName, function() { console.log("Download completed."); }); 
+  await download(combinedDocumentUrl, savedFileName, function() { console.log("Download completed."); printSep(); }); 
 
   /* POST the same document (but without any custom form fields) as a transient document and get its ID.
   
@@ -79,8 +82,10 @@ async function main(libraryDocumentId: string, debug: boolean)
 
   if (debug)
   {
-    printWithEqualsSep(response.data);
+    console.log('Response to POSTing a transient document:\n');
+    console.log(response.data);
     console.log(`Status code of response to POST to /transientDocuments: ${response.status}`);
+    printSep();
   }
 
   /* Create a library document from the just-created transient document. */
@@ -98,8 +103,9 @@ async function main(libraryDocumentId: string, debug: boolean)
 
   if (debug)
   {
-    console.log('Result of POSTing a library document...');
-    printWithEqualsSep(response.data);
+    console.log('Response to POSTing a library document:\n');
+    console.log(response.data);
+    printSep();
   }
 
   /* Use a PUT request to add the custom form fields and the values entered earlier to the document. */
@@ -108,8 +114,9 @@ async function main(libraryDocumentId: string, debug: boolean)
 
   if (debug)
   {
-    console.log("Result of editing the library document with a PUT request...");
-    printWithEqualsSep(response.data);
+    console.log("Response to editing the library document with a PUT request:\n");
+    console.log(response.data);
+    printSep();
   }
 }
 
