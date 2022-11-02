@@ -55,7 +55,7 @@ async function main(libraryDocumentId: string, debug: boolean)
 
   /* GET the values the user has entered into the document's fields. */
   let formFields = await axios.get(`${baseUri}/libraryDocuments/${libraryDocumentId}/formFields`, defaultRequestConfig);
-  formFields = formFields.data.fields;
+  formFields = formFields.data;
 
   if (debug)
     printWithEqualsSep(formFields);
@@ -77,11 +77,11 @@ async function main(libraryDocumentId: string, debug: boolean)
   let response = await axios.post(`${baseUri}/transientDocuments`, form, getRequestConfig(form));
   let transientDocumentId = response.data.transientDocumentId;
 
-  // if (debug)
-  // {
-  //   printWithEqualsSep(response.data);
-  //   console.log(`Status code of response to POST to /transientDocuments: ${response.status}`);
-  // }
+  if (debug)
+  {
+    printWithEqualsSep(response.data);
+    console.log(`Status code of response to POST to /transientDocuments: ${response.status}`);
+  }
 
   /* Create a library document from the just-created transient document. */
   let libraryDocumentInfo = 
@@ -96,18 +96,21 @@ async function main(libraryDocumentId: string, debug: boolean)
   let headersConfig = { 'headers' : { ...defaultHeadersConfig, 'Content-Type' : 'application/json' } };
   response = await axios.post(`${baseUri}/libraryDocuments`, JSON.stringify(libraryDocumentInfo), headersConfig);
 
-  // if (debug)
-  // {
-  //   console.log('Result of POSTing a library document...');
-  //   printWithEqualsSep(response.data);
-  // }
+  if (debug)
+  {
+    console.log('Result of POSTing a library document...');
+    printWithEqualsSep(response.data);
+  }
 
   /* Use a PUT request to add the custom form fields and the values entered earlier to the document. */
   
-  response = await axios.put(`/libraryDocuments/${libraryDocumentId}/formFields`, JSON.stringify(formFields), headersConfig);
+  response = await axios.put(`${baseUri}/libraryDocuments/${libraryDocumentId}/formFields`, JSON.stringify(formFields), headersConfig);
 
   if (debug)
+  {
+    console.log("Result of editing the library document with a PUT request...");
     printWithEqualsSep(response.data);
+  }
 }
 
 let libraryDocumentId = "CBJCHBCAABAA7V0riaWVDHwrLaSkRddihs_aqME4QQuz";
