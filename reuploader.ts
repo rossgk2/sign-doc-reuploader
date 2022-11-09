@@ -81,7 +81,7 @@ async function reupload(libraryDocumentId: string, oldToken: string, newToken: s
   combinedDocumentUrl = combinedDocumentUrl.data.url;
 
   /* Save the PDF to the folder this script resides in. */
-  const savedFileName = 'combined_document.pdf';
+  const savedFileName = `${docName}.pdf`;
   await download(combinedDocumentUrl, savedFileName, function() { console.log("Download completed."); printSep(); }); 
 
   /* ===============================*/
