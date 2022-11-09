@@ -6,6 +6,10 @@ const
 
 import {Blob} from 'buffer';
 
+/* ============================================ */
+/* Helper functions.                            */
+/* ============================================ */
+
 function getDefaultHeadersConfig(bearerToken: string)
 {
   return {'Authorization' : `Bearer ${bearerToken}`};
@@ -44,7 +48,11 @@ function printSep()
   console.log("================================================");
 }
 
-async function main(libraryDocumentId: string, oldToken: string, newToken: string, debug: boolean)
+/* ============================================ */
+/* Core functionality implemented here.                            */
+/* ============================================ */
+
+async function reupload(libraryDocumentId: string, oldToken: string, newToken: string, debug: boolean)
 {
   /* ==================================*/
   /* Download from the "old" account.  */
@@ -136,4 +144,4 @@ async function main(libraryDocumentId: string, oldToken: string, newToken: strin
 let libraryDocumentId = "CBJCHBCAABAA7V0riaWVDHwrLaSkRddihs_aqME4QQuz";
 let oldToken = '(This sensitive info has been removed by BFG repo cleaner)';
 let newToken = oldToken; // temp
-main(libraryDocumentId, oldToken, newToken, true);
+reupload(libraryDocumentId, oldToken, newToken, true);
