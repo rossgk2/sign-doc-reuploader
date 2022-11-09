@@ -6,14 +6,20 @@ const
 
 import {Blob} from 'buffer';
 
-const gmailBearerToken = '(This sensitive info has been removed by BFG repo cleaner)';
-const defaultHeadersConfig = {'Authorization' : `Bearer ${gmailBearerToken}`}
-const defaultRequestConfig = { 'headers' : defaultHeadersConfig };
+function getDefaultHeadersConfig(bearerToken: string)
+{
+  return {'Authorization' : `Bearer ${bearerToken}`};
+}
+
+function getDefaultRequestConfig(bearerToken: string)
+{
+  return {'headers' : getDefaultHeadersConfig(bearerToken)};
+}
 
 /* Retrieves the base URI that is the first part of all Adobe Sign API endpoints. */
-async function getBaseUri()
+async function getBaseUri(bearerToken: string)
 {
-  let response = await axios.get('https://api.na1.adobesign.com:443/api/rest/v6/baseUris', defaultRequestConfig);
+  let response = await axios.get('https://api.na1.adobesign.com:443/api/rest/v6/baseUris', getDefaultRequestConfig(bearerToken));
   let baseUri = response.data['apiAccessPoint'];
   baseUri = baseUri.substring(0, baseUri.length - 1) + "/api/rest/v6";
   return baseUri;
@@ -39,14 +45,19 @@ function printSep()
 }
 
 /* Returns the JSON that specifies custom headers for an HTTP request. */
-function getRequestConfig(form: typeof FormData)
+function getRequestConfig(bearerToken: string, form: typeof FormData)
 {
-  return { 'headers' : {...defaultHeadersConfig, ...form.getHeaders()} }
+  return { 'headers' : {...getDefaultHeadersConfig(bearerToken), ...form.getHeaders()} }
 }
 
-async function main(libraryDocumentId: string, debug: boolean)
+async function main(libraryDocumentId: string, oldToken: string, newToken: string, debug: boolean)
 {
-  let baseUri = await getBaseUri();
+  /* ==================================*/
+  /* Download from the "old" account.  */
+  /* ==================================*/
+
+  let baseUri = await getBaseUri(oldToken);
+  let defaultRequestConfig = getDefaultRequestConfig(oldToken);
 
   /* GET the name of the document. */
   let docInfo = await axios.get(`${baseUri}/libraryDocuments/${libraryDocumentId}`, defaultRequestConfig);
@@ -71,13 +82,20 @@ async function main(libraryDocumentId: string, debug: boolean)
   const savedFileName = 'combined_document.pdf';
   await download(combinedDocumentUrl, savedFileName, function() { console.log("Download completed."); printSep(); }); 
 
+  /* ===============================*/
+  /* Upload to the "new" account.   */
+  /* ===============================*/
+
+  baseUri = await getBaseUri(newToken);
+  defaultRequestConfig = await getDefaultRequestConfig(newToken);
+
   /* POST the same document (but without any custom form fields) as a transient document and get its ID.
   
   Informed by https://stackoverflow.com/questions/53038900/nodejs-axios-post-file-from-local-server-to-another-server. */
   let form = new FormData();
   form.append('File-Name', `"${docName}"`); // have to enclose values for File-Name and File in double quotes 
   form.append('File', `"${fs.createReadStream(savedFileName)}"`);
-  let response = await axios.post(`${baseUri}/transientDocuments`, form, getRequestConfig(form));
+  let response = await axios.post(`${baseUri}/transientDocuments`, form, getRequestConfig(newToken, form));
   let transientDocumentId = response.data.transientDocumentId;
 
   if (debug)
@@ -98,7 +116,7 @@ async function main(libraryDocumentId: string, debug: boolean)
     'templateTypes': ['DOCUMENT'] // each array elt can be 'DOCUMENT' or 'FORM_FIELD_LAYER'
   };
   
-  let headersConfig = { 'headers' : { ...defaultHeadersConfig, 'Content-Type' : 'application/json' } };
+  let headersConfig = { 'headers' : { ...getDefaultHeadersConfig(newToken), 'Content-Type' : 'application/json' } };
   response = await axios.post(`${baseUri}/libraryDocuments`, JSON.stringify(libraryDocumentInfo), headersConfig);
 
   if (debug)
@@ -121,4 +139,6 @@ async function main(libraryDocumentId: string, debug: boolean)
 }
 
 let libraryDocumentId = "CBJCHBCAABAA7V0riaWVDHwrLaSkRddihs_aqME4QQuz";
-main(libraryDocumentId, true);
+let oldToken = '(This sensitive info has been removed by BFG repo cleaner)';
+let newToken = oldToken; // temp
+main(libraryDocumentId, oldToken, newToken, true);
