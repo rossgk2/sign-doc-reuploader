@@ -52,7 +52,7 @@ function printSep()
 /* Core functionality implemented here.                            */
 /* ============================================ */
 
-async function reupload(libraryDocumentId: string, oldToken: string, newToken: string, debug: boolean)
+async function reupload(oldLibraryDocumentId: string, oldToken: string, newToken: string, debug: boolean)
 {
   /* ==================================*/
   /* Download from the "old" account.  */
@@ -62,11 +62,11 @@ async function reupload(libraryDocumentId: string, oldToken: string, newToken: s
   let defaultRequestConfig = getDefaultRequestConfig(oldToken);
 
   /* GET the name of the document. */
-  let docInfo = await axios.get(`${baseUri}/libraryDocuments/${libraryDocumentId}`, defaultRequestConfig);
+  let docInfo = await axios.get(`${baseUri}/libraryDocuments/${oldLibraryDocumentId}`, defaultRequestConfig);
   let docName = docInfo.data.name;
 
   /* GET the values the user has entered into the document's fields. */
-  let formFields = await axios.get(`${baseUri}/libraryDocuments/${libraryDocumentId}/formFields`, defaultRequestConfig);
+  let formFields = await axios.get(`${baseUri}/libraryDocuments/${oldLibraryDocumentId}/formFields`, defaultRequestConfig);
   formFields = formFields.data;
 
   if (debug)
@@ -77,11 +77,11 @@ async function reupload(libraryDocumentId: string, oldToken: string, newToken: s
   }
 
   /* GET the PDF on which the custom form fields that the user field out were placed.*/
-  let combinedDocumentUrl = await axios.get(`${baseUri}/libraryDocuments/${libraryDocumentId}/combinedDocument/url`, defaultRequestConfig);
+  let combinedDocumentUrl = await axios.get(`${baseUri}/libraryDocuments/${oldLibraryDocumentId}/combinedDocument/url`, defaultRequestConfig);
   combinedDocumentUrl = combinedDocumentUrl.data.url;
 
   /* Save the PDF to the folder this script resides in. */
-  const savedFileName = `${docName}.pdf`;
+  const savedFileName = 'DOCUMENT FROM REUPLOADER';
   await download(combinedDocumentUrl, savedFileName, function() { console.log("Download completed."); printSep(); }); 
 
   /* ===============================*/
@@ -121,6 +121,7 @@ async function reupload(libraryDocumentId: string, oldToken: string, newToken: s
   
   let headersConfig = { 'headers' : { ...getDefaultHeadersConfig(newToken), 'Content-Type' : 'application/json' } };
   response = await axios.post(`${baseUri}/libraryDocuments`, JSON.stringify(libraryDocumentInfo), headersConfig);
+  let newLibraryDocumentId = response.data.id;
 
   if (debug)
   {
@@ -131,7 +132,7 @@ async function reupload(libraryDocumentId: string, oldToken: string, newToken: s
 
   /* Use a PUT request to add the custom form fields and the values entered earlier to the document. */
   
-  response = await axios.put(`${baseUri}/libraryDocuments/${libraryDocumentId}/formFields`, JSON.stringify(formFields), headersConfig);
+  response = await axios.put(`${baseUri}/libraryDocuments/${newLibraryDocumentId}/formFields`, JSON.stringify(formFields), headersConfig);
 
   if (debug)
   {
@@ -141,7 +142,12 @@ async function reupload(libraryDocumentId: string, oldToken: string, newToken: s
   }
 }
 
-let libraryDocumentId = "CBJCHBCAABAA7V0riaWVDHwrLaSkRddihs_aqME4QQuz";
-let oldToken = '(This sensitive info has been removed by BFG repo cleaner)';
-let newToken = oldToken; // temp
-reupload(libraryDocumentId, oldToken, newToken, true);
+async function main()
+{
+  let oldLibraryDocumentId = "CBJCHBCAABAA7V0riaWVDHwrLaSkRddihs_aqME4QQuz";
+  let oldToken = '(This sensitive info has been removed by BFG repo cleaner)';
+  let newToken = oldToken; // temp
+  reupload(oldLibraryDocumentId, oldToken, newToken, true);
+}
+
+main();
