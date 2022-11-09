@@ -44,12 +44,6 @@ function printSep()
   console.log("================================================");
 }
 
-/* Returns the JSON that specifies custom headers for an HTTP request. */
-function getRequestConfig(bearerToken: string, form: typeof FormData)
-{
-  return { 'headers' : {...getDefaultHeadersConfig(bearerToken), ...form.getHeaders()} }
-}
-
 async function main(libraryDocumentId: string, oldToken: string, newToken: string, debug: boolean)
 {
   /* ==================================*/
@@ -95,7 +89,8 @@ async function main(libraryDocumentId: string, oldToken: string, newToken: strin
   let form = new FormData();
   form.append('File-Name', `"${docName}"`); // have to enclose values for File-Name and File in double quotes 
   form.append('File', `"${fs.createReadStream(savedFileName)}"`);
-  let response = await axios.post(`${baseUri}/transientDocuments`, form, getRequestConfig(newToken, form));
+  let requestConfig = { 'headers' : {...getDefaultHeadersConfig(newToken), ...form.getHeaders()} };
+  let response = await axios.post(`${baseUri}/transientDocuments`, form, requestConfig);
   let transientDocumentId = response.data.transientDocumentId;
 
   if (debug)
