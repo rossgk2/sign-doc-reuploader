@@ -17,5 +17,5 @@ You need to have v16 of [node.js](https://nodejs.org/en/) installed.
 
 ### tsconfig.json
 
-The tsconfig.json used in this project is informed by these two links: [1](https://stackoverflow.com/a/55701637) [2](
+The tsconfig.json used in this project is informed by these two links: [(1)](https://stackoverflow.com/a/55701637) [(2)](
 https://blog.appsignal.com/2022/01/19/how-to-set-up-a-nodejs-project-with-typescript.html).
