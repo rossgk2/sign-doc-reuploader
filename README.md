@@ -13,7 +13,7 @@ You need to have v16 of [node.js](https://nodejs.org/en/) installed.
 5. `npm install @tsconfig/node16`
 6. To run the script, execute `npx ts-node reuploader.ts` (not `node reuploader.ts`, since we're using TypeScript).
 
-## Misc. documentation
+## Miscellaneous documentation
 
 ### tsconfig.json
 
