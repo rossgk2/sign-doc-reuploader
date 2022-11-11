@@ -81,7 +81,7 @@ async function reupload(oldLibraryDocumentId: string, oldToken: string, newToken
   combinedDocumentUrl = combinedDocumentUrl.data.url;
 
   /* Save the PDF to the folder this script resides in. */
-  const savedFileName = 'DOCUMENT FROM REUPLOADER';
+  const savedFileName = 'DOCUMENT FROM REUPLOADER 2';
   await download(combinedDocumentUrl, savedFileName, function() { console.log("Download completed."); printSep(); }); 
 
   /* ===============================*/
@@ -95,14 +95,18 @@ async function reupload(oldLibraryDocumentId: string, oldToken: string, newToken
   
   Informed by https://stackoverflow.com/questions/53038900/nodejs-axios-post-file-from-local-server-to-another-server. */
   let form = new FormData();
-  form.append('File-Name', `"${docName}"`); // have to enclose values for File-Name and File in double quotes 
-  form.append('File', `"${fs.createReadStream(savedFileName)}"`);
+  form.append('File-Name', `${docName}`);
+  form.append('File', `${fs.createReadStream(savedFileName)}`);
   let requestConfig = { 'headers' : {...getDefaultHeadersConfig(newToken), ...form.getHeaders()} };
   let response = await axios.post(`${baseUri}/transientDocuments`, form, requestConfig);
   let transientDocumentId = response.data.transientDocumentId;
 
   if (debug)
   {
+    console.log('Request config:');
+    console.log(requestConfig);
+    printSep();
+
     console.log('Response to POSTing a transient document:\n');
     console.log(response.data);
     console.log(`Status code of response to POST to /transientDocuments: ${response.status}`);
@@ -145,8 +149,8 @@ async function reupload(oldLibraryDocumentId: string, oldToken: string, newToken
 async function main()
 {
   let oldLibraryDocumentId = "CBJCHBCAABAA7V0riaWVDHwrLaSkRddihs_aqME4QQuz";
-  let oldToken = '(This sensitive info has been removed by BFG repo cleaner)';
-  let newToken = oldToken; // temp
+  let oldToken = '(This sensitive info has been removed by BFG repo cleaner)'; // Ross's account
+  let newToken = oldToken; // '3AAABLblqZhDI08CVbG5A7glf8jxmrdoIyo0RZlchGBQhex8Jw1WNuoZiuIXlrLe89BlaxYtEdUka-I8zQ_xugtxcHO5WxP7k'; // Todd's account
   reupload(oldLibraryDocumentId, oldToken, newToken, true);
 }
 
