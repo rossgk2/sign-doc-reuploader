@@ -86,7 +86,6 @@ async function reupload(oldLibraryDocumentId: string, oldToken: string, newToken
   fs.writeFileSync(`${savedFileName}.pdf`, arrayBuffer);
 
   // let mimeType = blob.headers['content-type']; // might need this for something ... ?
-  // let buffer = Buffer.from(arrayBuffer);
 
   let blob = new Blob([arrayBuffer], {'type': 'application/pdf'}); // try adding/removing {'type': 'application/pdf'}
   let file = new File([blob], savedFileName);
@@ -103,7 +102,7 @@ async function reupload(oldLibraryDocumentId: string, oldToken: string, newToken
   Informed by https://stackoverflow.com/questions/53038900/nodejs-axios-post-file-from-local-server-to-another-server. */
   let form = new FormData();
   form.append('File-Name', docName);
-  form.append('File', file);
+  form.append('File', arrayBuffer, `${savedFileName}.pdf`); // Buffer.from(arrayBuffer)
   let requestConfig = { 'headers' : {...getDefaultHeadersConfig(newToken), ...form.getHeaders()} };
 
   if (debug)
