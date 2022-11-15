@@ -9,6 +9,20 @@ const
 
 /* Deprecated functions. */
 
+/* 
+  Downloads the content located at url and stores it at the relative path (with the root directory
+  being the one that contains this file) that is dest.
+
+  Informed by https://github.com/axios/axios/issues/3971#issuecomment-1159556428.
+*/
+async function download(url: string, dest: string, cb: () => (void))
+{
+  let file = fs.createWriteStream(dest);
+  file.on('finish', function() { file.close(cb); });  
+  let {data} = await axios.get(url, {'responseType': 'stream'});
+  data.pipe(file); // this wouldn't work if we didn't use 'responseType' : 'stream'
+}
+
 async function downloadWithHttps(url: string, dest: string, cb: () => (void)) // from https://stackoverflow.com/a/17676794
 {
 	let file = fs.createWriteStream(dest);

@@ -1,9 +1,9 @@
 const
   fs = require('fs'),
   axios = require('axios'),
-  FormData = require('form-data'), // https://maximorlov.com/send-a-file-with-axios-in-nodejs/
-  FileSaver = require('file-saver'); // https://github.com/eligrey/FileSaver.js/
-import {File, Blob} from "@web-std/file";
+  FormData = require('form-data'); // https://maximorlov.com/send-a-file-with-axios-in-nodejs/
+
+import Blob from "@web-std/file";
 
 /* ============================================ */
 /* Helper functions.                            */
@@ -26,20 +26,6 @@ async function getBaseUri(bearerToken: string)
   let baseUri = response.data['apiAccessPoint'];
   baseUri = baseUri.substring(0, baseUri.length - 1) + "/api/rest/v6";
   return baseUri;
-}
-
-/* 
-  Downloads the content located at url and stores it at the relative path (with the root directory
-  being the one that contains this file) that is dest.
-
-  Informed by https://github.com/axios/axios/issues/3971#issuecomment-1159556428.
-*/
-async function download(url: string, dest: string, cb: () => (void))
-{
-  let file = fs.createWriteStream(dest);
-  file.on('finish', function() { file.close(cb); });  
-  let {data} = await axios.get(url, {'responseType': 'stream'});
-  data.pipe(file); // this wouldn't work if we didn't use 'responseType' : 'stream'
 }
 
 function printSep()
@@ -85,11 +71,6 @@ async function reupload(oldLibraryDocumentId: string, oldToken: string, newToken
   arrayBuffer = arrayBuffer.data;
   fs.writeFileSync(`${savedFileName}.pdf`, arrayBuffer);
 
-  // let mimeType = blob.headers['content-type']; // might need this for something ... ?
-
-  let blob = new Blob([arrayBuffer], {'type': 'application/pdf'}); // try adding/removing {'type': 'application/pdf'}
-  let file = new File([blob], savedFileName);
-
   /* ===============================*/
   /* Upload to the "new" account.   */
   /* ===============================*/
@@ -102,7 +83,7 @@ async function reupload(oldLibraryDocumentId: string, oldToken: string, newToken
   Informed by https://stackoverflow.com/questions/53038900/nodejs-axios-post-file-from-local-server-to-another-server. */
   let form = new FormData();
   form.append('File-Name', docName);
-  form.append('File', arrayBuffer, `${savedFileName}.pdf`); // Buffer.from(arrayBuffer)
+  form.append('File', arrayBuffer, `${savedFileName}.pdf`);
   let requestConfig = { 'headers' : {...getDefaultHeadersConfig(newToken), ...form.getHeaders()} };
 
   if (debug)
