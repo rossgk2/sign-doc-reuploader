@@ -3,8 +3,7 @@ const
   axios = require('axios'),
   FormData = require('form-data'), // https://maximorlov.com/send-a-file-with-axios-in-nodejs/
   FileSaver = require('file-saver'); // https://github.com/eligrey/FileSaver.js/
-
-import {Blob} from 'buffer';
+import {File, Blob} from "@web-std/file";
 
 /* ============================================ */
 /* Helper functions.                            */
@@ -81,8 +80,16 @@ async function reupload(oldLibraryDocumentId: string, oldToken: string, newToken
   combinedDocumentUrl = combinedDocumentUrl.data.url;
 
   /* Save the PDF to the folder this script resides in. */
-  const savedFileName = 'DOCUMENT FROM REUPLOADER 2';
-  await download(combinedDocumentUrl, savedFileName, function() { console.log("Download completed."); printSep(); }); 
+  const savedFileName = 'DOCUMENT FROM REUPLOADER 3';
+  let arrayBuffer = await axios.get(combinedDocumentUrl, {'responseType': 'arraybuffer'}); // 'responseType': 'blob' is browser-only: see https://stackoverflow.com/questions/60454048/how-does-axios-handle-blob-vs-arraybuffer-as-responsetype
+  arrayBuffer = arrayBuffer.data;
+  fs.writeFileSync(`${savedFileName}.pdf`, arrayBuffer);
+
+  // let mimeType = blob.headers['content-type']; // might need this for something ... ?
+  // let buffer = Buffer.from(arrayBuffer);
+
+  let blob = new Blob([arrayBuffer], {'type': 'application/pdf'}); // try adding/removing {'type': 'application/pdf'}
+  let file = new File([blob], savedFileName);
 
   /* ===============================*/
   /* Upload to the "new" account.   */
@@ -95,18 +102,22 @@ async function reupload(oldLibraryDocumentId: string, oldToken: string, newToken
   
   Informed by https://stackoverflow.com/questions/53038900/nodejs-axios-post-file-from-local-server-to-another-server. */
   let form = new FormData();
-  form.append('File-Name', `${docName}`);
-  form.append('File', `${fs.createReadStream(savedFileName)}`);
+  form.append('File-Name', docName);
+  form.append('File', file);
   let requestConfig = { 'headers' : {...getDefaultHeadersConfig(newToken), ...form.getHeaders()} };
-  let response = await axios.post(`${baseUri}/transientDocuments`, form, requestConfig);
-  let transientDocumentId = response.data.transientDocumentId;
 
   if (debug)
   {
     console.log('Request config:');
     console.log(requestConfig);
     printSep();
+  }
 
+  let response = await axios.post(`${baseUri}/transientDocuments`, form, requestConfig);
+  let transientDocumentId = response.data.transientDocumentId;
+
+  if (debug)
+  {
     console.log('Response to POSTing a transient document:\n');
     console.log(response.data);
     console.log(`Status code of response to POST to /transientDocuments: ${response.status}`);
@@ -155,3 +166,7 @@ async function main()
 }
 
 main();
+
+/* Could be useful in future: https://stackoverflow.com/questions/43231241/how-to-create-a-file-object-with-a-path-in-nodejs*/
+/* Apparently solves the lack of interoperability between Node's fs file system (which the browser doesn't have access to),
+ and the browser's File object type, which Node cannot create. */
