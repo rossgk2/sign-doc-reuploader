@@ -14,6 +14,20 @@ You need to have v16 of [node.js](https://nodejs.org/en/) installed.
 
 ## Miscellaneous documentation
 
+### Forwarding to localhost with ngrok
+
+This app uses OAuth, so, to run it, it is necessary to send the URL that points to the Angular webserver to the OAuth API. Obviously it won't work to send "localhost:<port>" to the OAuth API. (The OAuth API is decoupled from whatever machine the webserver runs on, so there is no shared notion of locality. Even if they weren't decoupled, this would be invalid syntax). To solve this problem, we use ngrok, which provides a globally available URL that forwards to localhost.
+
+To install ngrok on Windows:
+1. Follow step 2 of this installation guide and install the Chocolatey package manager. Use the "Individual" installation. This will involve typing commands in an instance of Windows PowerShell that has admin privileges.
+2. Open the regular Windows command prompt and execute `choco install ngrok`.
+3. Create an ngrok account.
+4. In the Windows command prompt, execute `ngrok config add-authtoken <token>`, as is suggested on the home page of your ngrok account.
+
+After installing ngrok, here is how you obtain the global URL that forwards to localhost:
+1. Start the Angular webserver with `ng serve`.
+2. Assuming that `<port>` is the port on which the Angular webserver runs, execute `ngrok http <port> --host-header="localhost:<port>". This command may take a while to execute. After it does, the global URL is the one to the left of the -> in the row of text labeled by "Forwarding".
+
 ### tsconfig.json
 
 The tsconfig.json used in this project is informed by these two links: [(1)](https://stackoverflow.com/a/55701637) [(2)](
