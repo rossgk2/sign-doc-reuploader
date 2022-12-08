@@ -16,7 +16,9 @@ You need to have v16 of [node.js](https://nodejs.org/en/) installed.
 
 ### Forwarding to localhost with ngrok
 
-This app uses OAuth, so, to run it, it is necessary to send the URL that points to the Angular webserver to the OAuth API. Obviously it won't work to send "localhost:<port>" to the OAuth API. (The OAuth API is decoupled from whatever machine the webserver runs on, so there is no shared notion of locality. Even if they weren't decoupled, this would be invalid syntax). To solve this problem, we use ngrok, which provides a globally available URL that forwards to localhost.
+This app uses OAuth, so, to run it, it is necessary to send the URL that points to the Angular webserver to the OAuth API. Obviously it won't work to send "localhost:\<port\>" to the OAuth API. (The OAuth API is decoupled from whatever machine the webserver runs on, so there is no shared notion of locality. Even if they weren't decoupled, this would be invalid syntax). 
+
+Is it even possible to obtain a global URL that points to a locally hosted webserver? It turns out that if we use ngrok, it is. ngrok is a command line tool that provides a globally available URL that forwards to a locally running webserver.
 
 To install ngrok on Windows:
 1. Follow step 2 of this installation guide and install the Chocolatey package manager. Use the "Individual" installation. This will involve typing commands in an instance of Windows PowerShell that has admin privileges.
@@ -26,7 +28,7 @@ To install ngrok on Windows:
 
 After installing ngrok, here is how you obtain the global URL that forwards to localhost:
 1. Start the Angular webserver with `ng serve`.
-2. Assuming that `<port>` is the port on which the Angular webserver runs, execute `ngrok http <port> --host-header="localhost:<port>". This command may take a while to execute. After it does, the global URL is the one to the left of the -> in the row of text labeled by "Forwarding".
+2. Assuming that `<port>` is the port on which the Angular webserver runs, execute `ngrok http <port> --host-header="localhost:<port>"`. This command may take a while to execute. After it does, the global URL is the one to the left of the -> in the row of text labeled by "Forwarding".
 
 ### tsconfig.json
 
