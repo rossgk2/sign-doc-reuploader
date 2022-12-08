@@ -16,7 +16,7 @@ You need to have v16 of [node.js](https://nodejs.org/en/) installed.
 
 ### Forwarding to localhost with ngrok
 
-This app uses OAuth, so, to run it, it is necessary to send the URL that points to the Angular webserver to the OAuth API. Obviously it won't work to send "localhost:\<port\>" to the OAuth API. (The OAuth API is decoupled from whatever machine the webserver runs on, so there is no shared notion of locality. Even if they weren't decoupled, this would be invalid syntax). 
+Since this app uses OAuth, it is necessary to provide the URL that will point to the Angular webserver to the OAuth API. Obviously it won't work to send "localhost:\<port\>" to the OAuth API. (The OAuth API is decoupled from whatever machine the webserver runs on, so there is no shared notion of locality. Even if they weren't decoupled, this would be invalid syntax). 
 
 Is it even possible to obtain a global URL that points to a locally hosted webserver? It turns out that if we use ngrok, it is. ngrok is a command line tool that provides a globally available URL that forwards to a locally running webserver.
 
