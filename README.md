@@ -23,7 +23,7 @@ Is it even possible to obtain a global URL that points to a locally hosted webse
 To install ngrok on Windows:
 1. Follow step 2 of this installation guide and install the Chocolatey package manager. Use the "Individual" installation. This will involve typing commands in an instance of Windows PowerShell that has admin privileges.
 2. Open the regular Windows command prompt and execute `choco install ngrok`.
-3. Create an ngrok account.
+3. In your browser, go to the ngrok website and create an ngrok account.
 4. In the Windows command prompt, execute `ngrok config add-authtoken <token>`, as is suggested on the home page of your ngrok account.
 
 After installing ngrok, here is how you obtain the global URL that forwards to localhost:
