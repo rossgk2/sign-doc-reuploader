@@ -12,8 +12,14 @@ export class SourceDocumentsListComponent implements OnInit {
     documents: this.formBuilder.array([])
   });
 
+  /* Fields internal to this component. */
   documentIds: string[] = [];
   readyForDownload: boolean = false;
+
+  /* Fields input by user. */
+  selectedDocs: boolean[] = [];
+  oauthClientId: string = '';
+  loginEmail: string = '';
 
   constructor(private formBuilder: FormBuilder,
               private downloadService: DownloadService) {
@@ -61,23 +67,36 @@ export class SourceDocumentsListComponent implements OnInit {
 
   upload() {
     /* Get a list of all the indices cooresponding to documents that the user wants to upload. */
-    let selectedDocs: boolean[] = [];
+    let oldThis = this;
     this.documents.controls.forEach(function(group: FormGroup) {
-      selectedDocs.push(group.value.include !== false); // in this context, '' functions as true and false as false
+      oldThis.selectedDocs.push(group.value.include !== false); // in this context, '' functions as true and false as false
     });
 
     /* For each document: if that document was selected, upload it. */
-    for (let i = 0; i < selectedDocs.length; i ++) {
-      if (selectedDocs[i])
+    let temp = 1; // once done getting uploadHelper() working, delete "&& i < temp" in the below
+    for (let i = 0; i < this.selectedDocs.length && i < temp; i ++) {
+      if (this.selectedDocs[i])
         this.uploadHelper(this.documentIds[i]);
     }
   }
 
   uploadHelper(documentId: string) {
     console.log(`Uploading document with the following ID: ${documentId}`);
+    console.log(`OAuth client_id: ${this.oauthClientId}`);
+    console.log(`email: ${this.loginEmail}`);
+  }
+
+  login() {
+    console.log("login() clicked.")
   }
 
   ngOnInit() {
+  }
+
+  /* Helper functions for use in .html file. */
+
+  getValue(event: Event): string {
+    return (event.target as HTMLInputElement).value;
   }
 
 }

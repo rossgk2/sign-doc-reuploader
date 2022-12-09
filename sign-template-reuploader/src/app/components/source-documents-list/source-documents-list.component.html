@@ -1,19 +1,24 @@
 <p>THE LIST OF LISTS</p>
 
-<button (click)="getDocumentList()">Get Document List</button>
+<button (click)="getDocumentList()">Display documents from your Sign account</button>
 <p>
 </p>
 <br/>
 <br/>
 
-<form [formGroup]="documentListForm" (ngSubmit)="upload()">
+<form [formGroup]="documentListForm">
   <ng-container formArrayName="documents">
-    <ng-container *ngFor="let documentForm of documents.controls; let i = index">
-      <div class="lesson-form-row" [formGroup]="documentForm">
+    <ng-container *ngFor="let group of documents.controls; let i = index">
+      <div class="lesson-form-row" [formGroup]="group">
         <input type="checkbox" [checked]="true" formControlName="include" placeholder="true">
         <input formControlName="name" placeholder="document name" readonly>
       </div>
     </ng-container>
   </ng-container>
-  <button type="submit" *ngIf="readyForDownload">Begin upload</button>
+  <div style = "float:right">
+    <input placeholder="OAuth client_id" (input) = "oauthClientId=getValue($event)">
+    <input placeholder="Email of your Sign account" (input) = "loginEmail=getValue($event)">
+    <button type="button" (click) = "login()">Log in</button>
+  </div>
+  <button type="submit" *ngIf="readyForDownload" (click) = "upload()">Begin upload</button>
 </form>
