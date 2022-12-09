@@ -4,7 +4,11 @@
 
 You need to have v16 of [node.js](https://nodejs.org/en/) installed.
 
-## Install and run - command line script
+## Install and run
+
+There are two versions of this tool: a proof of concept command line tool and an Angular app. The Angluar app is still in development.
+
+### Command line tool
 
 1. [Download](https://github.com/rossgk2/sign-doc-reuploader/archive/refs/heads/main.zip) the zip of this repo and extract it.
 2. Rename the extracted folder to something (e.g. `fldr`).
@@ -12,7 +16,7 @@ You need to have v16 of [node.js](https://nodejs.org/en/) installed.
 4. Execute `npm install`.
 5. To run the script, execute `npx ts-node reuploader.ts` (not `node reuploader.ts`, since we're using TypeScript).
 
-## Run - Angular app
+### Angular app
 
 1. [Download](https://github.com/rossgk2/sign-doc-reuploader/archive/refs/heads/main.zip) the zip of this repo and extract it.
 2. Rename the extracted folder to something (e.g. `fldr`).
