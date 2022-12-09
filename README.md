@@ -19,7 +19,7 @@ You need to have v16 of [node.js](https://nodejs.org/en/) installed.
 3. In a command prompt `cd` to `fldr/sign-template-reuploader`.
 4. (Possibly not necessary). If running for the first time, execute `npm install`.
 5. Execute `ng serve`.
-6. Navigate to https://localhost:4200 in your web browser.
+6. Navigate to http://localhost:4200 in your web browser.
 
 ## Miscellaneous documentation
 
