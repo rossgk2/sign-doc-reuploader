@@ -41,5 +41,5 @@ After installing ngrok, here is how you obtain the global URL that forwards to l
 
 ### tsconfig.json
 
-The tsconfig.json used in this project is informed by these two links: [(1)](https://stackoverflow.com/a/55701637) [(2)](
+The tsconfig.json used in the top level-directory of this project is informed by these two links: [(1)](https://stackoverflow.com/a/55701637) [(2)](
 https://blog.appsignal.com/2022/01/19/how-to-set-up-a-nodejs-project-with-typescript.html). Specifically, we learn from (1) that since TypeScript's `File` type is defined in the `dom` library,  we have to add `dom` to `complierOptions` in order for TypeScript to know about the `File` type.
