@@ -37,12 +37,11 @@ export class SourceDocumentsListComponent implements OnInit {
   getDocumentList(): void {
 
     let documentsCall = this.downloadService.getAllDocuments();
-    console.log('starting call, mang! hold on a you asses!');
+    console.log('starting call!');
 
     documentsCall.subscribe(data => {
-      console.log('we gots a thing, mang', data);
       if (data.status === 200) {
-        console.log('shit was successful, mang! time a getta beer!');
+        console.log('call was a success! time to get a beer!');
         let libraryDocumentList: any = (data.body as any).libraryDocumentList; // TS doesn't know that data.body has a libraryDocumentList without the cast
 
         /* Initalize documentIds. */
@@ -50,12 +49,12 @@ export class SourceDocumentsListComponent implements OnInit {
         libraryDocumentList.forEach(function(doc: any) {
           oldThis.documentIds.push(doc.id);
         });
-        
+
         /* Set up the FormArray that will be used to display the list of documents to the user. */
-        this.populateDocForm(libraryDocumentList); 
+        this.populateDocForm(libraryDocumentList);
       }
     }, error => {
-      console.log('oh no we hit a iceberg! ahhhhhhhhh!', error);
+      console.log('ERROR oh no we hit a iceberg! ahhhhhhhhh!', error);
     });
   }
 
