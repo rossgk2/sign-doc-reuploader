@@ -22,8 +22,9 @@ There are two versions of this tool: a proof of concept command line tool and an
 2. Rename the extracted folder to something (e.g. `fldr`).
 3. In a command prompt `cd` to `fldr/sign-template-reuploader`.
 4. (Possibly not necessary). If running for the first time, execute `npm install`.
-5. Execute `ng serve`.
-6. Navigate to http://localhost:4200 in your web browser.
+5. Execute `ng serve --disableHostCheck true `. (We use `disableHostCheck` to allow traffic outside the local machine, i.e., traffic from the `ngrok`-generated URL).
+6. In another command prompt, `ngrok http 4200 --host-header="localhost:4200"`.
+7. Navigate to the ngrok forwarding URL in your web browser.
 
 ## Miscellaneous documentation
 
