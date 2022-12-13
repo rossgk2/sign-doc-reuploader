@@ -48,6 +48,8 @@ After installing ngrok, here is how you obtain the global URL that forwards to l
 
 Use [this](https://webbrowsertools.com/test-cors/) Chrome plugin to enable [CORS](https://www.stackhawk.com/blog/what-is-cors/) (cross-origin resource sharing). This prevents errors being thrown due a "same origin" policy. See [this](https://www.stackhawk.com/blog/angular-cors-guide-examples-and-how-to-enable-it/) for more info.
 
+A more permanent solution will be necessary when finishing development... working on it!
+
 ### tsconfig.json
 
 The tsconfig.json used in the top level-directory of this project is informed by these two links: [(1)](https://stackoverflow.com/a/55701637) [(2)](
