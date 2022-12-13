@@ -44,6 +44,10 @@ After installing ngrok, here is how you obtain the global URL that forwards to l
 1. Start the Angular webserver with `ng serve --disableHostCheck true`.
 2. Assuming that `<port>` is the port on which the Angular webserver runs, execute `ngrok http <port> --host-header="localhost:<port>"`. This command may take a while to execute. After it does, the global URL is the one to the left of the -> in the row of text labeled by "Forwarding".
 
+### Enable CORS for development
+
+Use [this](https://webbrowsertools.com/test-cors/) Chrome plugin to enable CORS. This takes care of CORS errors that normally pop up when using localhost for development hosting.
+
 ### tsconfig.json
 
 The tsconfig.json used in the top level-directory of this project is informed by these two links: [(1)](https://stackoverflow.com/a/55701637) [(2)](
