@@ -46,7 +46,7 @@ After installing ngrok, here is how you obtain the global URL that forwards to l
 
 ### Enable CORS for development
 
-Use [this](https://webbrowsertools.com/test-cors/) Chrome plugin to enable CORS (cross-origin resource sharing). This prevents errors being thrown due a "same origin" policy.
+Use [this](https://webbrowsertools.com/test-cors/) Chrome plugin to enable [CORS](https://www.stackhawk.com/blog/what-is-cors/) (cross-origin resource sharing). This prevents errors being thrown due a "same origin" policy.
 
 ### tsconfig.json
 
