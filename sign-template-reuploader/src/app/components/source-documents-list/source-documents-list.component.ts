@@ -1,29 +1,35 @@
 import {Component, OnInit} from '@angular/core';
 import {FormArray, FormBuilder, FormGroup, FormControl, Validators} from '@angular/forms';
 import {DownloadService} from '../../services/download.service';
+import {OAuthService} from '../../services/oauth.service';
+import {UrlTree, Router, UrlSerializer} from '@angular/router';
 
 @Component({
   selector: 'app-source-documents-list',
   templateUrl: './source-documents-list.component.html',
   styleUrls: ['./source-documents-list.component.scss']
 })
+
 export class SourceDocumentsListComponent implements OnInit {
   documentListForm = this.formBuilder.group({
     documents: this.formBuilder.array([])
   });
 
   /* Fields internal to this component. */
-  documentIds: string[] = [];
-  readyForDownload: boolean = false;
+  private static previousUrl: string = window.location.href; // the URL that hosts this webapp before user is redirected
+  private documentIds: string[] = [];
+  private readyForDownload: boolean = false;
 
   /* Fields input by user. */
-  selectedDocs: boolean[] = [];
-  oauthClientId: string = '';
-  loginEmail: string = '';
+  private selectedDocs: boolean[] = [];
+  private oauthClientId: string = '';
+  private loginEmail: string = '';
 
   constructor(private formBuilder: FormBuilder,
-              private downloadService: DownloadService) {
-  }
+              private downloadService: DownloadService,
+              private oauthService: OAuthService,
+              private router: Router,
+              private serializer: UrlSerializer) { }
 
   get documents() {
     return this.documentListForm.controls['documents'] as FormArray;
@@ -88,6 +94,32 @@ export class SourceDocumentsListComponent implements OnInit {
 
   login() {
     console.log("login() clicked.")
+    console.log(`previousUrl: ${SourceDocumentsListComponent.previousUrl}`);
+
+    /* Temporary: for ease of development */
+    let oauthClientId = '(This sensitive info has been removed by BFG repo cleaner)';
+    let loginEmail = '(This sensitive info has been removed by BFG repo cleaner)';
+    
+    /* Real program will do this: */
+    // console.log(this.oauthService.getOAuthRequestAuthGrantURL(this.oauthClientId, this.loginEmail)); 
+    
+    let authGrantRequest = this.oauthService.getOAuthGrantRequest(oauthClientId, loginEmail); // temp hardcoded params
+    console.log(`Authorization grant request URL: ${authGrantRequest.url}`);
+  
+    let tree: UrlTree = this.serializer.parse(this.router.url);
+    let redirected: boolean = tree.queryParams.hasOwnProperty('code') || tree.queryParams.hasOwnProperty('error'); // there's probably a better way to check this
+    if (redirected) {
+      console.log(`initialState: ${authGrantRequest.initialState}`);
+      this.oauthService.getAuthGrantToken(this.router.url, authGrantRequest.initialState);
+    }
+  }
+
+  login2() {
+    // Generate authorization grant URL, which contains state
+    // Store state
+    // Visit URL
+    // Get redirected to new URL
+    // Check that state is what it was before
   }
 
   ngOnInit() {
