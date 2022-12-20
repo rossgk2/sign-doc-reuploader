@@ -2,6 +2,7 @@ import {Component, OnInit} from '@angular/core';
 import {FormArray, FormBuilder, FormGroup, FormControl, Validators} from '@angular/forms';
 import {DownloadService} from '../../services/download.service';
 import {OAuthService} from '../../services/oauth.service';
+import {StoreService} from '../../services/store.service';
 import {UrlTree, Router, UrlSerializer} from '@angular/router';
 
 @Component({
@@ -28,6 +29,7 @@ export class SourceDocumentsListComponent implements OnInit {
   constructor(private formBuilder: FormBuilder,
               private downloadService: DownloadService,
               private oauthService: OAuthService,
+              private storeService: StoreService,
               private router: Router,
               private serializer: UrlSerializer) { }
 
@@ -92,37 +94,37 @@ export class SourceDocumentsListComponent implements OnInit {
     console.log(`email: ${this.loginEmail}`);
   }
 
+  /* There's probably a better implementation of this function. */
+  redirected(): boolean {
+    let tree: UrlTree = this.serializer.parse(this.router.url);
+    return tree.queryParams.hasOwnProperty('code') || tree.queryParams.hasOwnProperty('error');
+  }
+ 
   login() {
     console.log("login() clicked.")
-    console.log(`previousUrl: ${SourceDocumentsListComponent.previousUrl}`);
 
-    /* Temporary: for ease of development */
-    let oauthClientId = '(This sensitive info has been removed by BFG repo cleaner)';
-    let loginEmail = '(This sensitive info has been removed by BFG repo cleaner)';
-    
-    /* Real program will do this: */
-    // console.log(this.oauthService.getOAuthRequestAuthGrantURL(this.oauthClientId, this.loginEmail)); 
-    
-    let authGrantRequest = this.oauthService.getOAuthGrantRequest(oauthClientId, loginEmail); // temp hardcoded params
-    console.log(`Authorization grant request URL: ${authGrantRequest.url}`);
-  
-    let tree: UrlTree = this.serializer.parse(this.router.url);
-    let redirected: boolean = tree.queryParams.hasOwnProperty('code') || tree.queryParams.hasOwnProperty('error'); // there's probably a better way to check this
-    if (redirected) {
-      console.log(`initialState: ${authGrantRequest.initialState}`);
-      this.oauthService.getAuthGrantToken(this.router.url, authGrantRequest.initialState);
+    if (!this.redirected()) {
+      /* Temporary: for ease of development */
+      let oauthClientId = '(This sensitive info has been removed by BFG repo cleaner)';
+      let loginEmail = '(This sensitive info has been removed by BFG repo cleaner)';
+      
+      /* Real program will do this: */
+      // console.log(this.oauthService.getOAuthRequestAuthGrantURL(this.oauthClientId, this.loginEmail)); 
+      
+      /* For now, use hardcoded params. */
+      let authGrantRequest = this.oauthService.getOAuthGrantRequest(oauthClientId, loginEmail);
+      this.storeService.store.state = authGrantRequest.initialState;
+      console.log(`Authorization grant request URL: ${authGrantRequest.url}`);
+      console.log(`Initial state (before): ${this.storeService.store.state}`); 
     }
   }
 
-  login2() {
-    // Generate authorization grant URL, which contains state
-    // Store state
-    // Visit URL
-    // Get redirected to new URL
-    // Check that state is what it was before
-  }
-
   ngOnInit() {
+    if (this.redirected()) {
+      console.log(`Initial state (after): ${this.storeService.store.state}`); 
+      let initialState: string = this.storeService.store.state;
+      this.oauthService.getAuthGrantToken(this.router.url, initialState);
+    }
   }
 
   /* Helper functions for use in .html file. */

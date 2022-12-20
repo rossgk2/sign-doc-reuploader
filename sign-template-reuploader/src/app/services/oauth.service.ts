@@ -14,20 +14,17 @@ export class OAuthService {
         this.oauthBaseURL = 'https://secure.na1.adobesignstage.us/api/gateway/adobesignauthservice'
       else
         this.oauthBaseURL = 'https://secure.na1.adobesign.us/api/gateway/adobesignauthservice';
-
    }
 
   getOAuthGrantRequest(clientId: string, loginEmail: string) {
     let state = this.getRandomId();
-    console.log(state);
-
     let tree: UrlTree = this.router.createUrlTree([''],
       {
         'queryParams':
         {
               'client_id' : clientId,
               'response_type' : 'code',
-              'redirect_uri' : 'https://29f2-2600-1702-6d0-33e0-cc4e-bf6e-3ced-cb9a.ngrok.io',
+              'redirect_uri' : 'https://e267-192-147-118-254.eu.ngrok.io',
               'scope' : 'library_read library_write agreement_write', //notice no 'library_read:account'
               'state' : state,
               'login_hint' : loginEmail
