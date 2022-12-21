@@ -12,11 +12,21 @@ Is it even possible to obtain a global URL that points to a locally hosted webse
 
 To install ngrok on Windows:
 
-Follow step 2 of this installation guide and install the Chocolatey package manager. Use the "Individual" installation. This will involve typing commands in an instance of Windows PowerShell that has admin privileges.
-Open the regular Windows command prompt and execute choco install ngrok.
-In your browser, go to the ngrok website and create an ngrok account.
-In the Windows command prompt, execute ngrok config add-authtoken <token>, as is suggested on the home page of your ngrok account.
-After installing ngrok, here is how you obtain the global URL that forwards to localhost:
+1. Follow step 2 of this installation guide and install the Chocolatey package manager. Use the "Individual" installation. This will involve typing commands in an instance of Windows PowerShell that has admin privileges.
+2. Open the regular Windows command prompt and execute `choco install ngrok`.
+3. In your browser, go to the ngrok website and create an ngrok account.
+4. In the Windows command prompt, execute `ngrok config add-authtoken <token>`, as is suggested on the home page of your ngrok account.
 
-Start the Angular webserver with ng serve --disableHostCheck true.
-Assuming that <port> is the port on which the Angular webserver runs, execute ngrok http <port> --host-header="localhost:<port>". This command may take a while to execute. After it does, the global URL is the one to the left of the -> in the row of text labeled by "Forwarding".
+After installing ngrok, here is how you obtain the global URL that forwards to localhost:
+1. Start the Angular webserver with `ng serve --disableHostCheck true`. (We use `disableHostCheck` to allow traffic outside the local machine, i.e., traffic from the ngrok-generated URL).
+2. Assuming that `<port>` is the port on which the Angular webserver runs, execute `ngrok http <port> --host-header="localhost:<port>"`. This command may take a while to execute. After it does, the global URL is the one to the left of the -> in the row of text labeled by "Forwarding".
+
+# Summarized download and install instructions for running Angular app with ngrok 
+
+1. [Download](https://github.com/rossgk2/sign-doc-reuploader/archive/refs/heads/main.zip) the zip of this repo and extract it.
+2. Rename the extracted folder to something (e.g. `fldr`).
+3. In a command prompt `cd` to `fldr/sign-template-reuploader`.
+4. (Possibly not necessary). If running for the first time, execute `npm install`.
+5. Execute `ng serve --disableHostCheck true`. 
+6. In another command prompt, `ngrok http 4200 --host-header="localhost:4200"`.
+7. Navigate to the ngrok forwarding URL in your web browser.
