@@ -18,7 +18,7 @@ To install ngrok on Windows:
 4. In the Windows command prompt, execute `ngrok config add-authtoken <token>`, as is suggested on the home page of your ngrok account.
 
 After installing ngrok, here is how you obtain the global URL that forwards to localhost:
-1. Start the Angular webserver with `ng serve --disableHostCheck true`. (We use `disableHostCheck` to allow traffic outside the local machine, i.e., traffic from the ngrok-generated URL).
+1. Start the Angular webserver with `ng serve --disableHostCheck true`. (We use `disableHostCheck` to allow traffic outside the local machine, i.e., traffic from the OAuth authentication server).
 2. Assuming that `<port>` is the port on which the Angular webserver runs, execute `ngrok http <port> --host-header="localhost:<port>"`. This command may take a while to execute. After it does, the global URL is the one to the left of the -> in the row of text labeled by "Forwarding".
 
 # Summarized download and install instructions for running Angular app with ngrok 
