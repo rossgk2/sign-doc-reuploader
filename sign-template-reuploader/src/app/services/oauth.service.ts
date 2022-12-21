@@ -16,7 +16,7 @@ export class OAuthService {
         this.oauthBaseURL = 'https://secure.na1.adobesign.us/api/gateway/adobesignauthservice';
    }
 
-  getOAuthGrantRequest(clientId: string, loginEmail: string) {
+  getOAuthGrantRequest(clientId: string, redirectUri: string, loginEmail: string) {
     let state = this.getRandomId();
     let tree: UrlTree = this.router.createUrlTree([''],
       {
@@ -24,7 +24,7 @@ export class OAuthService {
         {
               'client_id' : clientId,
               'response_type' : 'code',
-              'redirect_uri' : 'https://e267-192-147-118-254.eu.ngrok.io',
+              'redirect_uri' : redirectUri,
               'scope' : 'library_read library_write agreement_write', //notice no 'library_read:account'
               'state' : state,
               'login_hint' : loginEmail
@@ -36,6 +36,8 @@ export class OAuthService {
       'initialState': state
     };  
   }
+
+
 
   /*
     authGrantResponse is a URL whose query params encode the response to the request for an authorization grant.

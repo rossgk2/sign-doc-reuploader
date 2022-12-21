@@ -107,12 +107,14 @@ export class SourceDocumentsListComponent implements OnInit {
       /* Temporary: for ease of development */
       let oauthClientId = '(This sensitive info has been removed by BFG repo cleaner)';
       let loginEmail = '(This sensitive info has been removed by BFG repo cleaner)';
-      
+      let redirectUri = 'https://migrationtooldev.com:433';
+
       /* Real program will do this: */
       // console.log(this.oauthService.getOAuthRequestAuthGrantURL(this.oauthClientId, this.loginEmail)); 
       
       /* For now, use hardcoded params. */
-      let authGrantRequest = this.oauthService.getOAuthGrantRequest(oauthClientId, loginEmail);
+
+      let authGrantRequest = this.oauthService.getOAuthGrantRequest(oauthClientId, redirectUri, loginEmail);
       this.storeService.store.state = authGrantRequest.initialState;
       console.log(`Authorization grant request URL: ${authGrantRequest.url}`);
       console.log(`Initial state (before): ${this.storeService.store.state}`); 
