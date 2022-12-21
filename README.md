@@ -28,22 +28,6 @@ There are two versions of this tool: a proof of concept command line tool and an
 
 ## Miscellaneous documentation
 
-### Forwarding to localhost with ngrok
-
-Since the Angular app uses OAuth, it is necessary to provide the URL that will point to the Angular webserver to the OAuth API. Obviously it won't work to send "localhost:\<port\>" to the OAuth API. (The OAuth API is decoupled from whatever machine the webserver runs on, so there is no shared notion of locality. Even if they weren't decoupled, this would be invalid syntax). 
-
-Is it even possible to obtain a global URL that points to a locally hosted webserver? It turns out that if we use ngrok, it is. ngrok is a command line tool that provides a globally available URL that forwards to a locally running webserver.
-
-To install ngrok on Windows:
-1. Follow step 2 of this installation guide and install the Chocolatey package manager. Use the "Individual" installation. This will involve typing commands in an instance of Windows PowerShell that has admin privileges.
-2. Open the regular Windows command prompt and execute `choco install ngrok`.
-3. In your browser, go to the ngrok website and create an ngrok account.
-4. In the Windows command prompt, execute `ngrok config add-authtoken <token>`, as is suggested on the home page of your ngrok account.
-
-After installing ngrok, here is how you obtain the global URL that forwards to localhost:
-1. Start the Angular webserver with `ng serve --disableHostCheck true`.
-2. Assuming that `<port>` is the port on which the Angular webserver runs, execute `ngrok http <port> --host-header="localhost:<port>"`. This command may take a while to execute. After it does, the global URL is the one to the left of the -> in the row of text labeled by "Forwarding".
-
 ### Redirecting via the `hosts` file
 
 1. Add the line `127.0.0.1 some.url` to the Windows `hosts` file, which is in the directory `C:\Windows\System32\drivers\etc`. `localhost` is really just an alias for 127.0.0.1, so this line specifies that http://some.url should be forwarded to http://localhost. (To edit the `hosts` file, open a text editor with admin priveleges and then use the File > Open menu to open `hosts`).
