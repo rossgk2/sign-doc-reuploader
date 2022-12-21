@@ -18,14 +18,13 @@ There are two versions of this tool: a proof of concept command line tool and an
 
 ### Angular app
 
-1. Ensure the Angular app is hosted on port 443 by adding `"port" = 443` to `projects.<project>.architect.serve.options`, where `<project>` is the name of the associated Angular project.
+1. You don't need to do anything for this step; it's included for pedagogy. (Ensure the Angular app is hosted on port 443 by adding `"port" = 443` to `projects.<project>.architect.serve.options`, where `<project>` is the name of the associated Angular project.)
 2. Follow the instructions of the below "Redirecting via the `hosts` file" section. Perform step (3) as described in the "special case" subsection.
 3. [Download](https://github.com/rossgk2/sign-doc-reuploader/archive/refs/heads/main.zip) the zip of this repo and extract it.
 4. Rename the extracted folder to something (e.g. `fldr`).
 5. In a command prompt `cd` to `fldr/sign-template-reuploader`.
 6. (Possibly not necessary). If running for the first time, execute `npm install`.
 7. Execute `ng serve --disableHostCheck true`.
-  - Might not need `--disableHostCheck true` since not forwarding from an external webserver anymore.
 8. Navigate to https://localhost.
 
 ## Redirecting via the `hosts` file
