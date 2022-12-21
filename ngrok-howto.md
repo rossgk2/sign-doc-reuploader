@@ -4,7 +4,7 @@ The approach of modifying the Windows `hosts` file to achieve the redirect allow
 
 Anyhow, here is how the ngrok approach works.
 
-#Forwarding to localhost with ngrok
+# Forwarding to localhost with ngrok
 
 Since the Angular app uses OAuth, it is necessary to provide the URL that will point to the Angular webserver to the OAuth API. Obviously it won't work to send "localhost:<port>" to the OAuth API. (The OAuth API is decoupled from whatever machine the webserver runs on, so there is no shared notion of locality. Even if they weren't decoupled, this would be invalid syntax).
 
