@@ -18,14 +18,15 @@ There are two versions of this tool: a proof of concept command line tool and an
 
 ### Angular app
 
-1. Follow the instructions of the below "Redirecting via the `hosts` file" section, using `<port>` = 433. (This Angular app is hosted on port 433 because use of that port was requested by an admin). 
-2. [Download](https://github.com/rossgk2/sign-doc-reuploader/archive/refs/heads/main.zip) the zip of this repo and extract it.
-3. Rename the extracted folder to something (e.g. `fldr`).
-4. In a command prompt `cd` to `fldr/sign-template-reuploader`.
-5. (Possibly not necessary). If running for the first time, execute `npm install`.
-6. Execute `ng serve --disableHostCheck true`.
+1. Ensure the Angular app is hosted on port 443 by adding `"port" = 443` to `projects.<project>.architect.serve.options`, where `<project>` is the name of the associated Angular project.
+2. Follow the instructions of the below "Redirecting via the `hosts` file" section. Perform step (3) as described in the "special case" subsection.
+3. [Download](https://github.com/rossgk2/sign-doc-reuploader/archive/refs/heads/main.zip) the zip of this repo and extract it.
+4. Rename the extracted folder to something (e.g. `fldr`).
+5. In a command prompt `cd` to `fldr/sign-template-reuploader`.
+6. (Possibly not necessary). If running for the first time, execute `npm install`.
+7. Execute `ng serve --disableHostCheck true`.
   - Might not need `--disableHostCheck true` since not forwarding from an external webserver anymore.
-7. Navigate to https://localhost:433.
+8. Navigate to https://localhost:433.
 
 ## Redirecting via the `hosts` file
 
@@ -33,11 +34,17 @@ There are two versions of this tool: a proof of concept command line tool and an
 
 After saving this change to the `hosts` file, then, assuming you have a webserver listening to `localhost:<port>`, you should be able to navigate to `http://some.url:<port>`; and be redirected to `http://localhost:<port>`.
 
-2. Now change the Angular webserver so that it uses HTTPS instead of HTTP by adding the option `"ssl": true` to `projects.<project>.architect`, where `<project>` is the name of the associated Angular project.
+2. Now change the Angular webserver so that it uses HTTPS instead of HTTP by adding the option `"ssl": true` to `projects.<project>.architect.serve.options`, where `<project>` is the name of the associated Angular project.
 
 Now, assuming the webserver is running, you can navigate to `https://localhost:<port>` and be redirected to `http://some.url:<port>`.
 
 3. Ask an administrator to add `http://some.url:<port>` to the list of forwarding URLs that your Adobe Sign account recognizes as legitimate.
+
+### Special case: using the default port for HTTPS
+
+Since 443 is the default port for HTTPS, if our server is hosted on port 443, then you should be able to navigate to https://some.url:443 and be redirected to https://localhost:443, which is the same as https://localhost. The above step (3) simplifies to:
+
+3. Ask an administrator to add `http://some.url` to the list of forwarding URLs that your Adobe Sign account recognizes as legitimate.
 
 ## Miscellaneous documentation
 
