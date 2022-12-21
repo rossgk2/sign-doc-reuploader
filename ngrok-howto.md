@@ -1,6 +1,6 @@
-This approach that uses ngrok is no longer used. It is inconvenient because, because every time my local machine restarts, I have to run a new ngrok server, provide the cooresponding new ngrok forwarding URL to an admin; that admin has to add the forwarding URL to a list of legitimate URLs. ngrok does provide a way to ensure an unchanging URL, but this costs money.
+This approach that uses ngrok is no longer used. It is inconvenient because every time my local machine restarts, I have to run a new ngrok server, provide the cooresponding new ngrok forwarding URL to an admin, and that admin has to add the forwarding URL to a list of legitimate URLs.
 
-The approach of modifying the Windows `hosts` file to achieve the redirect allows for an unchanging URL, so that is what we use instead. The Windows `hosts` file approach is described in `README.md`.
+The approach of modifying the Windows `hosts` file to achieve the redirect allows for an unchanging URL, so that is what we use instead. (ngrok does provide a way to ensure an unchanging URL, but it costs money). The Windows `hosts` file approach is described in `README.md`.
 
 Anyhow, here is how the ngrok approach works.
 
