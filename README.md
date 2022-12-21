@@ -45,7 +45,7 @@ Since 443 is the default port for HTTPS, then if the Angular app is hosted on po
 
 3. Ask an administrator to add `http://some.url` to the list of forwarding URLs that your Adobe Sign account recognizes as legitimate.
 
-Taking advantage of this special case is probably necessary, because Adobe Sign might not store a URL-with-port in its list of legitimate forwarding URLs.
+Taking advantage of this special case is probably necessary because Adobe Sign might not be able to store a URL-with-port in its list of legitimate forwarding URLs.
 
 ## Miscellaneous documentation
 
