@@ -26,7 +26,7 @@ There are two versions of this tool: a proof of concept command line tool and an
 6. (Possibly not necessary). If running for the first time, execute `npm install`.
 7. Execute `ng serve --disableHostCheck true`.
   - Might not need `--disableHostCheck true` since not forwarding from an external webserver anymore.
-8. Navigate to https://localhost:433.
+8. Navigate to https://localhost.
 
 ## Redirecting via the `hosts` file
 
