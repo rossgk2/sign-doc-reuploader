@@ -18,17 +18,16 @@ There are two versions of this tool: a proof of concept command line tool and an
 
 ### Angular app
 
-1. [Download](https://github.com/rossgk2/sign-doc-reuploader/archive/refs/heads/main.zip) the zip of this repo and extract it.
-2. Rename the extracted folder to something (e.g. `fldr`).
-3. In a command prompt `cd` to `fldr/sign-template-reuploader`.
-4. (Possibly not necessary). If running for the first time, execute `npm install`.
-5. Execute `ng serve --disableHostCheck true`. (We use `disableHostCheck` to allow traffic outside the local machine, i.e., traffic from the ngrok-generated URL).
-6. In another command prompt, `ngrok http 4200 --host-header="localhost:4200"`.
-7. Navigate to the ngrok forwarding URL in your web browser.
+1. Follow the instructions of the below "Redirecting via the `hosts` file" section, using `<port>` = 433. (This Angular app is hosted on port 433 because use of that port was requested by an admin). 
+2. [Download](https://github.com/rossgk2/sign-doc-reuploader/archive/refs/heads/main.zip) the zip of this repo and extract it.
+3. Rename the extracted folder to something (e.g. `fldr`).
+4. In a command prompt `cd` to `fldr/sign-template-reuploader`.
+5. (Possibly not necessary). If running for the first time, execute `npm install`.
+6. Execute `ng serve --disableHostCheck true`.
+  - Might not need `--disableHostCheck true` since not forwarding from an external webserver anymore.
+7. Navigate to https://localhost:433.
 
-## Miscellaneous documentation
-
-### Redirecting via the `hosts` file
+## Redirecting via the `hosts` file
 
 1. Add the line `127.0.0.1 some.url` to the Windows `hosts` file, which is in the directory `C:\Windows\System32\drivers\etc`. `localhost` is really just an alias for 127.0.0.1, so this line specifies that http://some.url should be forwarded to http://localhost. (To edit the `hosts` file, open a text editor with admin priveleges and then use the File > Open menu to open `hosts`).
 
@@ -39,6 +38,8 @@ After saving this change to the `hosts` file, then, assuming you have a webserve
 Now, assuming the webserver is running, you can navigate to `https://localhost:<port>` and be redirected to `http://some.url:<port>`.
 
 3. Ask an administrator to add `http://some.url:<port>` to the list of forwarding URLs that your Adobe Sign account recognizes as legitimate.
+
+## Miscellaneous documentation
 
 ### Enable CORS for development
 
