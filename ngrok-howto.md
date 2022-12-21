@@ -28,5 +28,5 @@ After installing ngrok, here is how you obtain the global URL that forwards to l
 3. In a command prompt `cd` to `fldr/sign-template-reuploader`.
 4. (Possibly not necessary). If running for the first time, execute `npm install`.
 5. Execute `ng serve --disableHostCheck true`. 
-6. In another command prompt, `ngrok http 4200 --host-header="localhost:4200"`.
+6. In another command prompt, `ngrok http <port> --host-header="localhost:<port>"`.
 7. Navigate to the ngrok forwarding URL in your web browser.
