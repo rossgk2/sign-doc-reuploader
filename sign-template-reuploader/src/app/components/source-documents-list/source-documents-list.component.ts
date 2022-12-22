@@ -96,18 +96,20 @@ export class SourceDocumentsListComponent implements OnInit {
 
   /* There's probably a better implementation of this function. */
   redirected(): boolean {
-    let tree: UrlTree = this.serializer.parse(this.router.url);
+    let currentUrl = window.location.href;
+    let currentUrlProcessed = currentUrl.substring('https:/'.length, currentUrl.length);
+    let tree: UrlTree = this.serializer.parse(currentUrlProcessed); // urls passed to serializer.parse() must begin with '/'
     return tree.queryParams.hasOwnProperty('code') || tree.queryParams.hasOwnProperty('error');
   }
  
   login() {
-    console.log("login() clicked.")
+    console.log("login clicked.")
 
     if (!this.redirected()) {
       /* Temporary: for ease of development */
       let oauthClientId = '(This sensitive info has been removed by BFG repo cleaner)';
       let loginEmail = '(This sensitive info has been removed by BFG repo cleaner)';
-      let redirectUri = 'https://migrationtooldev.com:433';
+      let redirectUri = 'https://migrationtooldev.com';
 
       /* Real program will do this: */
       // console.log(this.oauthService.getOAuthRequestAuthGrantURL(this.oauthClientId, this.loginEmail)); 
@@ -122,6 +124,7 @@ export class SourceDocumentsListComponent implements OnInit {
   }
 
   ngOnInit() {
+    console.log("ngOnInit()");
     if (this.redirected()) {
       console.log(`Initial state (after): ${this.storeService.store.state}`); 
       let initialState: string = this.storeService.store.state;
