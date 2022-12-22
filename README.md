@@ -41,9 +41,9 @@ Now, assuming the webserver is running, you should be able navigate to `https://
 
 ### Special case: using the default port for HTTPS
 
-After performing the above steps (1) and (2), you can navigate to https://some.url and be redirected to https://localhost. Since the default port for HTTPS is 443, then `https://localhost` = `https://localhost:<port>` only when `<port>` = 443. Concretely speaking, you will get an error if you are redirected to https://localhost when the Angular app is hosted on a port other than 443.
+After performing the above steps (1) and (2), you can navigate to https://some.url and be redirected to https://localhost. 
 
-So, if you want to navigate to https://some.url, consequently be redirected to https://localhost, and then consequently *have the Angular app load*, then the Angular app must be hosted on port 443.
+This is not useful if the Angular app is not hosted on the default port for HTTPS, however; if the Angular app is not hosted on the default port for HTTPS (443), then you will get an error if you are redirected to https://localhost that complains there is no server hosted on port 443. If you want to navigate to https://some.url, consequently be redirected to https://localhost, and then consequently *have the Angular app load*, then the Angular app must be hosted on port 443.
 
 Assuming that the Angular app *is* hosted on port 443, the above steps are all the same, except for step (3):
 
