@@ -31,17 +31,17 @@ There are two versions of this tool: a proof of concept command line tool and an
 
 1. Add the line `127.0.0.1 some.url` to the Windows `hosts` file, which is in the directory `C:\Windows\System32\drivers\etc`. `localhost` is really just an alias for 127.0.0.1, so this line specifies that http://some.url should be forwarded to http://localhost. (To edit the `hosts` file, open a text editor with admin priveleges and then use the File > Open menu to open `hosts`).
 
-After saving this change to the `hosts` file, then, assuming you have a webserver listening to `localhost:<port>`, you should be able to navigate to `http://some.url:<port>`; and be redirected to `http://localhost:<port>`.
+After saving this change to the `hosts` file, then, assuming you have a webserver listening to `localhost:<port>`, you should be able to navigate to `http://some.url:<port>` and consequently be redirected to `http://localhost:<port>`.
 
 2. Now change the Angular webserver so that it uses HTTPS instead of HTTP by adding the option `"ssl": true` to `projects.<project>.architect.serve.options`, where `<project>` is the name of the associated Angular project.
 
-Now, assuming the webserver is running, you can navigate to `https://localhost:<port>` and be redirected to `http://some.url:<port>`.
+Now, assuming the webserver is running, you should be able navigate to `https://localhost:<port>` and consequently be redirected to `https://some.url:<port>`.
 
 3. Ask an administrator to add `http://some.url:<port>` to the list of forwarding URLs that your Adobe Sign account recognizes as legitimate.
 
 ### Special case: using the default port for HTTPS
 
-Since 443 is the default port for HTTPS, then if the Angular app is hosted on port 443, you should be able to navigate to https://some.url and be redirected to https://localhost. Thus, when the Angular app is hosted on port 443, the above step (3) simplifies to:
+Since 443 is the default port for HTTPS (80 is the default port for HTTP), then if the Angular app is hosted on port 443, you should be able to navigate to https://some.url and be redirected to https://localhost. Thus, when the Angular app is hosted on port 443, the above step (3) simplifies to:
 
 3. Ask an administrator to add `http://some.url` to the list of forwarding URLs that your Adobe Sign account recognizes as legitimate.
 
