@@ -41,7 +41,11 @@ Now, assuming the webserver is running, you should be able navigate to `https://
 
 ### Special case: using the default port for HTTPS
 
-Since 443 is the default port for HTTPS (80 is the default port for HTTP), then if the Angular app is hosted on port 443, you should be able to navigate to https://some.url and be redirected to https://localhost, which is the same as https://localhost:443. Thus, when the Angular app is hosted on port 443, the above step (3) simplifies to:
+After performing the above steps (1) and (2), you can navigate to https://some.url and be redirected to https://localhost. Since the default port for HTTPS is 443, so `https://localhost` = `https://localhost:<port>` only when `<port>` = 443. Concretely speaking, you will get an error if you are redirected to https://localhost when the Angular app is hosted on a port other than 443.
+
+So, if you want to navigate to https://some.url, be redirected to https://localhost, *and have the Angular app load*, then the Angular app must be hosted on port 443.
+
+Assuming that the Angular app *is* hosted on port 443, the above steps are all the same, except for step (3):
 
 3. Ask an administrator to add `http://some.url` to the list of forwarding URLs that your Adobe Sign account recognizes as legitimate.
 
