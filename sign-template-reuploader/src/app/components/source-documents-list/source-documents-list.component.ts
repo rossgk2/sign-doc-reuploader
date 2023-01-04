@@ -4,6 +4,15 @@ import {DownloadService} from '../../services/download.service';
 import {OAuthService} from '../../services/oauth.service';
 import {UrlTree, Router, UrlSerializer} from '@angular/router';
 
+/* ngrx stores */
+import {select, Store} from '@ngrx/store';
+import {setVariable} from '../../store/actions';
+import {reducer} from '../../store/reducer'
+
+/* RxJS Observables and support for vanilla JS Promises. */
+import {Observable} from 'rxjs';
+import {first} from 'rxjs/operators';
+
 @Component({
   selector: 'app-source-documents-list',
   templateUrl: './source-documents-list.component.html',
@@ -20,6 +29,18 @@ export class SourceDocumentsListComponent implements OnInit {
   private documentIds: string[] = [];
   private readyForDownload: boolean = false;
 
+  /* An "internal" field that persists across multiple instances of this component. */
+  private store: Store<{'variable': string}>;
+  
+  async getState() {
+    let state = this.store.pipe(select('variable'));
+    return state.pipe(first()).toPromise();
+  }
+
+  setState(variable: string) {
+    this.store.dispatch(setVariable({ variable }));
+  }
+
   /* Fields input by user. */
   private selectedDocs: boolean[] = [];
   private oauthClientId: string = '';
@@ -29,7 +50,15 @@ export class SourceDocumentsListComponent implements OnInit {
               private downloadService: DownloadService,
               private oauthService: OAuthService,
               private router: Router,
-              private serializer: UrlSerializer) { }
+              private serializer: UrlSerializer,
+              
+              /* If we use the private keyword on "store" here in addition to using it in the above "private store",
+              then the above "private store" will NOT be initalized to whatever is injected via the constructor. */
+              store: Store<{'variable': string}>
+              )
+  {
+
+  }
 
   get documents() {
     return this.documentListForm.controls['documents'] as FormArray;

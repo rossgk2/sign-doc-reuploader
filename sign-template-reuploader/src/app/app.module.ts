@@ -7,6 +7,8 @@ import {SourceDocumentsListComponent} from './components/source-documents-list/s
 import {ReactiveFormsModule} from '@angular/forms';
 import {HttpClientModule} from '@angular/common/http';
 
+import {StoreModule} from '@ngrx/store';
+
 @NgModule({
   declarations: [
     AppComponent,
@@ -14,6 +16,7 @@ import {HttpClientModule} from '@angular/common/http';
   ],
   imports: [
     BrowserModule,
+    StoreModule.forRoot({}),
     AppRoutingModule,
     ReactiveFormsModule,
     HttpClientModule
