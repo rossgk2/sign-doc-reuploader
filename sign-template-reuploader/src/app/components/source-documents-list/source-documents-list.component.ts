@@ -2,7 +2,6 @@ import {Component, OnInit} from '@angular/core';
 import {FormArray, FormBuilder, FormGroup, FormControl, Validators} from '@angular/forms';
 import {DownloadService} from '../../services/download.service';
 import {OAuthService} from '../../services/oauth.service';
-import {StoreService} from '../../services/store.service';
 import {UrlTree, Router, UrlSerializer} from '@angular/router';
 
 @Component({
@@ -29,7 +28,6 @@ export class SourceDocumentsListComponent implements OnInit {
   constructor(private formBuilder: FormBuilder,
               private downloadService: DownloadService,
               private oauthService: OAuthService,
-              private storeService: StoreService,
               private router: Router,
               private serializer: UrlSerializer) { }
 
@@ -117,17 +115,17 @@ export class SourceDocumentsListComponent implements OnInit {
       /* For now, use hardcoded params. */
 
       let authGrantRequest = this.oauthService.getOAuthGrantRequest(oauthClientId, redirectUri, loginEmail);
-      this.storeService.store.state = authGrantRequest.initialState;
+      // Store state
       console.log(`Authorization grant request URL: ${authGrantRequest.url}`);
-      console.log(`Initial state (before): ${this.storeService.store.state}`); 
+      console.log(`Initial state (before): ${authGrantRequest.initialState}`); 
     }
   }
 
   ngOnInit() {
     console.log("ngOnInit()");
     if (this.redirected()) {
-      console.log(`Initial state (after): ${this.storeService.store.state}`); 
-      let initialState: string = this.storeService.store.state;
+      let initialState: string = 'test'; // get state
+      console.log(`Initial state (after): ${initialState}`); 
       this.oauthService.getAuthGrantToken(this.router.url, initialState);
     }
   }
