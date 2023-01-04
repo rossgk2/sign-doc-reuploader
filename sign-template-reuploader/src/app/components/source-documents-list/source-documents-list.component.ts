@@ -33,8 +33,8 @@ export class SourceDocumentsListComponent implements OnInit {
   private store: Store<{'variable': string}>;
   
   async getState() {
-    let state = this.store.pipe(select('variable'));
-    return state.pipe(first()).toPromise();
+    let state$ = this.store.pipe(select('variable'));
+    return state$.pipe(first()).toPromise();
   }
 
   setState(variable: string) {
@@ -57,7 +57,6 @@ export class SourceDocumentsListComponent implements OnInit {
               store: Store<{'variable': string}>
               )
   {
-
   }
 
   get documents() {
@@ -144,16 +143,16 @@ export class SourceDocumentsListComponent implements OnInit {
       /* For now, use hardcoded params. */
 
       let authGrantRequest = this.oauthService.getOAuthGrantRequest(oauthClientId, redirectUri, loginEmail);
-      // Store state
+      this.setState(authGrantRequest.initialState); // Store state
       console.log(`Authorization grant request URL: ${authGrantRequest.url}`);
       console.log(`Initial state (before): ${authGrantRequest.initialState}`); 
     }
   }
 
-  ngOnInit() {
-    console.log("ngOnInit()");
+  async ngOnInit() {
+    console.log("ngOnInit() called.");
     if (this.redirected()) {
-      let initialState: string = 'test'; // get state
+      let initialState: string = await this.getState(); // get state
       console.log(`Initial state (after): ${initialState}`); 
       this.oauthService.getAuthGrantToken(this.router.url, initialState);
     }
