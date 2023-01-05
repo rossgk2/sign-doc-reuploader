@@ -8,16 +8,16 @@ import {Observable} from 'rxjs';
 export class OAuthService {
 
   private inDevelopment: boolean = true;
-  private oauthBaseURL: string;
+  private oauthBaseUrl: string;
 
   constructor(private router: Router,
               private serializer: UrlSerializer,
               private http: HttpClient)
   {
       if (this.inDevelopment)
-        this.oauthBaseURL = 'https://secure.na1.adobesignstage.us/api/gateway/adobesignauthservice'
+        this.oauthBaseUrl = 'https://secure.na1.adobesignstage.us/api/gateway/adobesignauthservice'
       else
-        this.oauthBaseURL = 'https://secure.na1.adobesign.us/api/gateway/adobesignauthservice';
+        this.oauthBaseUrl = 'https://secure.na1.adobesign.us/api/gateway/adobesignauthservice';
    }
 
   /* Used to request an authorizaton grant. */
@@ -37,7 +37,7 @@ export class OAuthService {
       });
 
     return {
-      'url': `${this.oauthBaseURL}/api/v1/authorize` + this.serializer.serialize(tree),
+      'url': `${this.oauthBaseUrl}/api/v1/authorize` + this.serializer.serialize(tree),
       'initialState': state
     };  
   }
@@ -75,34 +75,29 @@ export class OAuthService {
   }
 
   async getToken(clientId: string, clientSecret: string, authGrant: string, redirectUri: string): Promise<any> {
-    let tree: UrlTree = this.router.createUrlTree([''], {
-      'queryParams': {
-        'client_id' : clientId,
-        'client_secret' : clientSecret,
-        'grant_type' : authGrant,
-        'code' : authGrant,
-        'redirect_uri' : redirectUri
-      }
-    });
-  
-    let url = `${this.oauthBaseURL}/api/v1/token` + this.serializer.serialize(tree);
-
-    /* Send a GET request to the url. */
+    /* Send a GET request to the /token endpoint. */
     const headers = new HttpHeaders()
        .set('Authorization', 'Bearer ' + SourceSettings.sourceIntegrationKey);
-
-    let obs: Observable<any> = this.http.get(
-      url,
+    
+    const obs: Observable<any> = this.http.get(
+      `${this.oauthBaseUrl}/api/v1/token`,
       {
         'observe': 'response',
-        'headers': headers
+        'headers': headers,
+        'params': // query params
+          {
+            'client_id' : clientId,
+            'client_secret' : clientSecret,
+            'grant_type' : 'authorization_code',
+            'code' : authGrant,
+            'redirect_uri' : redirectUri
+          }
       });
 
-    let response = await obs.toPromise();
+    const response = await obs.toPromise();
     
     /* TO-DO: handle the response body. */
-
-    console.log(response.body);
+    console.log('Response body from getToken():', response.body);
     return '';
   }
 
