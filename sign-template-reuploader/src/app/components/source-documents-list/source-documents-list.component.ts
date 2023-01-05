@@ -1,8 +1,11 @@
+/* Regular Angular stuff */
 import {Component, OnInit} from '@angular/core';
 import {FormArray, FormBuilder, FormGroup, FormControl, Validators} from '@angular/forms';
+import {UrlTree, Router, UrlSerializer} from '@angular/router';
+
+/* Services */
 import {DownloadService} from '../../services/download.service';
 import {OAuthService} from '../../services/oauth.service';
-import {UrlTree, Router, UrlSerializer} from '@angular/router';
 
 /* ngrx stores */
 import {select, Store} from '@ngrx/store';
@@ -12,6 +15,9 @@ import {reducer} from '../../store/reducer'
 /* RxJS Observables and support for vanilla JS Promises. */
 import {Observable} from 'rxjs';
 import {first} from 'rxjs/operators';
+
+/* Temp */
+import {clientSecret} from '../../client-secret';
 
 @Component({
   selector: 'app-source-documents-list',
@@ -80,16 +86,11 @@ export class SourceDocumentsListComponent implements OnInit {
     });
   }
 
-  getDocumentList(): void {
-
-    let documentsCall = this.downloadService.getAllDocuments();
-    console.log('starting call, mang! hold on a you asses!');
-
-    documentsCall.subscribe(data => {
-      console.log('we gots a thing, mang', data);
-      if (data.status === 200) {
+  async getDocumentList(): Promise<any> {
+    let response = await this.downloadService.getAllDocuments();    
+    if (response.status === 200) {
         console.log('shit was successful, mang! time a getta beer!');
-        let libraryDocumentList: any = (data.body as any).libraryDocumentList; // TS doesn't know that data.body has a libraryDocumentList without the cast
+        let libraryDocumentList: any = (response.body as any).libraryDocumentList; // TS doesn't know that response.body has a libraryDocumentList without the cast
 
         /* Initalize documentIds. */
         let oldThis = this;
@@ -100,9 +101,6 @@ export class SourceDocumentsListComponent implements OnInit {
         /* Set up the FormArray that will be used to display the list of documents to the user. */
         this.populateDocForm(libraryDocumentList); 
       }
-    }, error => {
-      console.log('oh no we hit a iceberg! ahhhhhhhhh!', error);
-    });
   }
 
   upload() {
@@ -143,31 +141,43 @@ export class SourceDocumentsListComponent implements OnInit {
       let loginEmail = '(This sensitive info has been removed by BFG repo cleaner)';
       let redirectUri = 'https://migrationtooldev.com';
 
-      /* Real program will do this: */
+      /* Real program will do the following. For now, use hardcoded params. */
       // console.log(this.oauthService.getOAuthRequestAuthGrantURL(this.oauthClientId, this.loginEmail)); 
       
-      /* For now, use hardcoded params. */
-
       let authGrantRequest = this.oauthService.getOAuthGrantRequest(oauthClientId, redirectUri, loginEmail);
-      this.setOAuthState(authGrantRequest.initialState); // Store state
+      console.log('About to store oAuthState!')
+      this.setOAuthState(authGrantRequest.initialState);
+      console.log('oAuthState has been stored.');
       console.log(`Authorization grant request URL: ${authGrantRequest.url}`);
-      console.log(`Initial state (before): ${authGrantRequest.initialState}`); 
+      console.log(`oAuthState (before): ${authGrantRequest.initialState}`);
     }
   }
 
   async ngOnInit() {
-    console.log('Testing that setOAuthState() and getOAuthState() work...')
-    this.setOAuthState('lololol');
-    console.log('getOAuthState() return value:'); 
-    console.log(await this.getOAuthState());
-
     console.log("ngOnInit() called.");
-    if (this.redirected()) {
-      let initialState = await this.getOAuthState(); // get state
-      console.log(`Initial state (after):`);
-      console.log(initialState); 
-      this.oauthService.getAuthGrantToken(this.router.url, initialState);
+
+    if (!this.redirected()) {
+      console.log('Testing that setOAuthState() and getOAuthState() work...')
+      let oAuthState0 = 'lololol';
+      console.log(`Calling setOAuthState('${oAuthState0}')`);
+      this.setOAuthState(oAuthState0);
+      console.log(`getOAuthState() return value: ${await this.getOAuthState()}`);
     }
+
+    await this.delay(2); // Thought maybe this would make sure we don't access store before it's injected
+
+    if (this.redirected()) {
+      let initialState = await this.getOAuthState();
+      console.log(`Initial state (after): ${initialState}`);
+      let authGrant = this.oauthService.getAuthGrant(this.router.url, initialState);
+      let token = this.oauthService.getToken(clientSecret, authGrant, redirectUri);
+    }
+  }
+
+  /* Helper functions for use in this .ts file. */
+
+  delay(seconds) {
+    return new Promise(resolve => setTimeout(resolve, seconds * 1000));
   }
 
   /* Helper functions for use in .html file. */
@@ -175,5 +185,4 @@ export class SourceDocumentsListComponent implements OnInit {
   getValue(event: Event): string {
     return (event.target as HTMLInputElement).value;
   }
-
 }

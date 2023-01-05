@@ -2,50 +2,54 @@ import { Injectable } from '@angular/core';
 import {SourceSettings} from '../settings/source-settings';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({providedIn: 'root'})
 export class DownloadService {
 
   private libraryDocumentsBaseURL: string = SourceSettings.sourceBaseUri + 'libraryDocuments';
 
   constructor(private http: HttpClient) { }
 
-  getAllDocuments() {
+  async getAllDocuments(): Promise<any> {
      const headers = new HttpHeaders()
        .set('Authorization', 'Bearer ' + SourceSettings.sourceIntegrationKey);
 
-     return this.http.get(
+     let obs: Observable = this.http.get(
        this.libraryDocumentsBaseURL,
        {
          'observe': 'response',
          'headers': headers
        });
+
+     return obs.toPromise();
   }
 
-  getDocument(documentId: string) {
+  async getDocument(documentId: string): Promise<any> {
     const headers = new HttpHeaders()
       .set('content-type', 'application/json')
       .set('Authorization','Bearer ' + SourceSettings.sourceIntegrationKey);
 
-    return this.http.get(
+    let obs: Observable = this.http.get(
       this.libraryDocumentsBaseURL + '/' + documentId,
       {
         'observe': 'response',
         'headers': headers
       });
+
+    return obs.toPromise();
   }
 
-  getFormFields(documentId: string) {
+  async getFormFields(documentId: string): Promise<any> {
     const headers = new HttpHeaders()
       .set('content-type', 'application/json')
       .set('Authorization','Bearer ' + SourceSettings.sourceIntegrationKey);
 
-    return this.http.get(
+    const obs: Observable = this.http.get(
       this.libraryDocumentsBaseURL + '/' + documentId + '/' + 'formFields',
       {
         'observe': 'response',
         'headers': headers
       });
+
+    return obs.toPromise();
   }
 }

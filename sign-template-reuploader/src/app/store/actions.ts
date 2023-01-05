@@ -4,4 +4,5 @@ import {ActionCreator, createAction, props} from '@ngrx/store';
 by this ActionCreator will have. */
 export const setVariable = createAction('[Variables] Set Variable', props<{'oAuthState': string}>());
 
-// Using a type declaration in the above and saying "export const setVariable: ActionCreator = ..." causes a compile error.
+/* Using a type declaration in the above and saying "export const setVariable: ActionCreator = ..." 
+causes a compile error. */
