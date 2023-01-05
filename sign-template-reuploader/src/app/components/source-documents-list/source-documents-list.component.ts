@@ -7,6 +7,9 @@ import {UrlTree, Router, UrlSerializer} from '@angular/router';
 import {DownloadService} from '../../services/download.service';
 import {OAuthService} from '../../services/oauth.service';
 
+/* User-defined configuration. */
+import {SourceSettings} from '../../settings/source-settings';
+
 /* ngrx stores */
 import {select, Store} from '@ngrx/store';
 import {setVariable} from '../../store/actions';
@@ -16,9 +19,6 @@ import {reducer} from '../../store/reducer'
 import {Observable} from 'rxjs';
 import {first} from 'rxjs/operators';
 
-/* Temp. */
-import {_oAuthClientId, _oAuthClientSecret, _loginEmail} from '../../client-secret'; 
-
 @Component({
   selector: 'app-source-documents-list',
   templateUrl: './source-documents-list.component.html',
@@ -26,11 +26,11 @@ import {_oAuthClientId, _oAuthClientSecret, _loginEmail} from '../../client-secr
 })
 
 export class SourceDocumentsListComponent implements OnInit {
-  documentListForm = this.formBuilder.group({
+  
+  /* Fields internal to this component. */
+  private documentListForm = this.formBuilder.group({
     documents: this.formBuilder.array([])
   });
-
-  /* Fields internal to this component. */
   private static previousUrl: string = window.location.href; // the URL that hosts this webapp before user is redirected
   private redirectUri = 'https://migrationtooldev.com';
   private documentIds: string[] = [];
@@ -64,6 +64,11 @@ export class SourceDocumentsListComponent implements OnInit {
   private oAuthClientId: string = '';
   private clientSecret: string = '';
   private loginEmail: string = '';
+
+  /* Temp hardcoded variables that simulate user input. */
+  private _oAuthClientId = SourceSettings._oAuthClientId;
+  private _oAuthClientSecret = SourceSettings._oAuthClientSecret;
+  private _loginEmail = SourceSettings._loginEmail;
 
   constructor(private formBuilder: FormBuilder,
               private downloadService: DownloadService,
@@ -106,7 +111,7 @@ export class SourceDocumentsListComponent implements OnInit {
       }
   }
 
-  upload() {
+  upload(): void {
     /* Get a list of all the indices cooresponding to documents that the user wants to upload. */
     let oldThis = this;
     this.documents.controls.forEach(function(group: FormGroup) {
@@ -121,10 +126,10 @@ export class SourceDocumentsListComponent implements OnInit {
     }
   }
 
-  uploadHelper(documentId: string) {
+  uploadHelper(documentId: string): void {
     console.log(`Uploading document with the following ID: ${documentId}`);
     console.log(`OAuth client_id: ${this.oAuthClientId}`);
-    console.log(`email: ${this.loginEmail}`);
+    console.log(`email: ${this._loginEmail}`);
 
     /* Adapt the existing reuploader program and put it here: */
     /* ===== */
@@ -140,14 +145,14 @@ export class SourceDocumentsListComponent implements OnInit {
     return tree.queryParams.hasOwnProperty('code') || tree.queryParams.hasOwnProperty('error');
   }
  
-  login() {
+  login(): void {
     console.log("login clicked.")
 
     if (!this.redirected()) {
       /* Real program will do the following. For now, use hardcoded params. */
       // console.log(this.oauthService.getOAuthRequestAuthGrantURL(this.oAuthClientId, this.loginEmail)); 
 
-      let authGrantRequest = this.oauthService.getOAuthGrantRequest(_oAuthClientId, this.redirectUri, _loginEmail);
+      let authGrantRequest = this.oauthService.getOAuthGrantRequest(this._oAuthClientId, this.redirectUri, this._loginEmail);
       console.log('About to store oAuthState!')
       this.setOAuthState(authGrantRequest.initialState);
       console.log('oAuthState has been stored.');
@@ -156,7 +161,7 @@ export class SourceDocumentsListComponent implements OnInit {
     }
   }
 
-  async ngOnInit() {
+  async ngOnInit(): Promise<any> {
     console.log("ngOnInit() called.");
 
     if (!this.redirected()) {
@@ -173,13 +178,13 @@ export class SourceDocumentsListComponent implements OnInit {
       let initialState = await this.getOAuthState();
       console.log(`Initial state (after): ${initialState}`);
       let authGrant = this.oauthService.getAuthGrant(this.router.url, initialState);
-      let token = this.oauthService.getToken(_oAuthClientId, _oAuthClientSecret, authGrant, this.redirectUri);
+      let token = await this.oauthService.getToken(this._oAuthClientId, this._oAuthClientSecret, authGrant, this.redirectUri);
     }
   }
 
   /* Helper functions for use in this .ts file. */
 
-  delay(seconds) {
+  delay(seconds): Promise<any> {
     return new Promise(resolve => setTimeout(resolve, seconds * 1000));
   }
 

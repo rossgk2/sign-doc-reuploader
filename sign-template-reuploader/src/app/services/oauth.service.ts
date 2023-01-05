@@ -1,5 +1,8 @@
 import {Injectable} from '@angular/core';
 import {UrlTree, Router, UrlSerializer} from '@angular/router';
+import {SourceSettings} from '../settings/source-settings';
+import {HttpClient, HttpHeaders} from '@angular/common/http';
+import {Observable} from 'rxjs';
 
 @Injectable({providedIn: 'root'})
 export class OAuthService {
@@ -7,7 +10,10 @@ export class OAuthService {
   private inDevelopment: boolean = true;
   private oauthBaseURL: string;
 
-  constructor(private router: Router, private serializer: UrlSerializer) {
+  constructor(private router: Router,
+              private serializer: UrlSerializer,
+              private http: HttpClient)
+  {
       if (this.inDevelopment)
         this.oauthBaseURL = 'https://secure.na1.adobesignstage.us/api/gateway/adobesignauthservice'
       else
@@ -68,7 +74,7 @@ export class OAuthService {
     }
   }
 
-  getToken(clientId: string, clientSecret: string, authGrant: string, redirectUri: string): string {
+  async getToken(clientId: string, clientSecret: string, authGrant: string, redirectUri: string): Promise<any> {
     let tree: UrlTree = this.router.createUrlTree([''], {
       'queryParams': {
         'client_id' : clientId,
@@ -80,8 +86,24 @@ export class OAuthService {
     });
   
     let url = `${this.oauthBaseURL}/api/v1/token` + this.serializer.serialize(tree);
-    // do something with this url
-    return '';// temp
+
+    /* Send a GET request to the url. */
+    const headers = new HttpHeaders()
+       .set('Authorization', 'Bearer ' + SourceSettings.sourceIntegrationKey);
+
+    let obs: Observable<any> = this.http.get(
+      url,
+      {
+        'observe': 'response',
+        'headers': headers
+      });
+
+    let response = await obs.toPromise();
+    
+    /* TO-DO: handle the response body. */
+
+    console.log(response.body);
+    return '';
   }
 
   private randomIdHelper(): string { // from https://stackoverflow.com/a/55365334
