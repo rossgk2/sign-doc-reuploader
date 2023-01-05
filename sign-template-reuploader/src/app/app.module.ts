@@ -1,14 +1,12 @@
 import {BrowserModule} from '@angular/platform-browser';
 import {NgModule} from '@angular/core';
 
+import {AppStoreModule} from './store/store'
 import {AppRoutingModule} from './app-routing.module';
 import {AppComponent} from './app.component';
 import {SourceDocumentsListComponent} from './components/source-documents-list/source-documents-list.component';
 import {ReactiveFormsModule} from '@angular/forms';
 import {HttpClientModule} from '@angular/common/http';
-
-import {StoreModule} from '@ngrx/store';
-import {reducer} from './store/reducer';
 
 @NgModule({
   declarations: [
@@ -17,7 +15,7 @@ import {reducer} from './store/reducer';
   ],
   imports: [
     BrowserModule,
-    StoreModule.forRoot({'oAuthState': reducer}),
+    AppStoreModule,
     AppRoutingModule,
     ReactiveFormsModule,
     HttpClientModule
@@ -25,5 +23,5 @@ import {reducer} from './store/reducer';
   providers: [],
   bootstrap: [AppComponent]
 })
-export class AppModule {
-}
+
+export class AppModule {}

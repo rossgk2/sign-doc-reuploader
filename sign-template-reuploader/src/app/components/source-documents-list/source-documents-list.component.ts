@@ -31,28 +31,25 @@ export class SourceDocumentsListComponent implements OnInit {
 
   /* An "internal" field that persists across multiple instances of this component. */
   
-  async getState() {
+  async getOAuthState() {
     let state$ = this.store.pipe(select('oAuthState'));
-    return state$.pipe(first()).toPromise();
+    return (await state$.pipe(first()).toPromise())['oAuthState'];
   }
 
-  setState(oAuthState: string) {
+  setOAuthState(oAuthState: string) {
     
     /*
-      setVariable() is an ActionCreator, which is a function that takes in a payload
-      to be attatched to the Action it creates.
+      setVariable() is an ActionCreator, which is a function that takes in a payload (the payload is
+      an object containing data to be persisted) that is to be attatched to the Action it creates.
       
-      Thus the below setVariable({ 'variable': variable }) creates an Action with payload { 'variable': variable }.
+      Thus the below setVariable({ 'oAuthState': oAuthState }) creates an Action with payload { 'oAuthState': oAuthState }.
       
-      dispatch(setVariable({ 'variable': variable })) causes all Reducers defined anywhere to process this Action.
+      dispatch(setVariable({ 'oAuthState': oAuthState })) causes all Reducers defined anywhere to process this Action.
       Only some Reducers are configured to respond to any given Action, though. In this app there is one
       Action and one Reducer, and the Reducer is configured to respond to the Action.
     */
 
-    let a = setVariable({ 'oAuthState': oAuthState });
-    console.log("Action:");
-    console.log(a);
-    this.store.dispatch(a);
+    this.store.dispatch(setVariable({ 'oAuthState': oAuthState }));
   }
 
   /* Fields input by user. */
@@ -60,16 +57,13 @@ export class SourceDocumentsListComponent implements OnInit {
   private oauthClientId: string = '';
   private loginEmail: string = '';
 
-
   constructor(private formBuilder: FormBuilder,
               private downloadService: DownloadService,
               private oauthService: OAuthService,
               private router: Router,
               private serializer: UrlSerializer,
               private store: Store<{'oAuthState': string}>
-              )
-  {
-  }
+              ) {}
 
   get documents() {
     return this.documentListForm.controls['documents'] as FormArray;
@@ -155,17 +149,23 @@ export class SourceDocumentsListComponent implements OnInit {
       /* For now, use hardcoded params. */
 
       let authGrantRequest = this.oauthService.getOAuthGrantRequest(oauthClientId, redirectUri, loginEmail);
-      this.setState(authGrantRequest.initialState); // Store state
+      this.setOAuthState(authGrantRequest.initialState); // Store state
       console.log(`Authorization grant request URL: ${authGrantRequest.url}`);
       console.log(`Initial state (before): ${authGrantRequest.initialState}`); 
     }
   }
 
   async ngOnInit() {
+    console.log('Testing that setOAuthState() and getOAuthState() work...')
+    this.setOAuthState('lololol');
+    console.log('getOAuthState() return value:'); 
+    console.log(await this.getOAuthState());
+
     console.log("ngOnInit() called.");
     if (this.redirected()) {
-      let initialState: string = await this.getState(); // get state
-      console.log(`Initial state (after): ${initialState}`); 
+      let initialState = await this.getOAuthState(); // get state
+      console.log(`Initial state (after):`);
+      console.log(initialState); 
       this.oauthService.getAuthGrantToken(this.router.url, initialState);
     }
   }
