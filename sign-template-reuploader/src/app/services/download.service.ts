@@ -1,6 +1,7 @@
-import { Injectable } from '@angular/core';
+import {Injectable} from '@angular/core';
 import {SourceSettings} from '../settings/source-settings';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
+import {Observable} from 'rxjs';
 
 @Injectable({providedIn: 'root'})
 export class DownloadService {
@@ -13,7 +14,7 @@ export class DownloadService {
      const headers = new HttpHeaders()
        .set('Authorization', 'Bearer ' + SourceSettings.sourceIntegrationKey);
 
-     let obs: Observable = this.http.get(
+     let obs: Observable<any> = this.http.get(
        this.libraryDocumentsBaseURL,
        {
          'observe': 'response',
@@ -28,7 +29,7 @@ export class DownloadService {
       .set('content-type', 'application/json')
       .set('Authorization','Bearer ' + SourceSettings.sourceIntegrationKey);
 
-    let obs: Observable = this.http.get(
+    let obs: Observable<any> = this.http.get(
       this.libraryDocumentsBaseURL + '/' + documentId,
       {
         'observe': 'response',
@@ -43,7 +44,7 @@ export class DownloadService {
       .set('content-type', 'application/json')
       .set('Authorization','Bearer ' + SourceSettings.sourceIntegrationKey);
 
-    const obs: Observable = this.http.get(
+    const obs: Observable<any> = this.http.get(
       this.libraryDocumentsBaseURL + '/' + documentId + '/' + 'formFields',
       {
         'observe': 'response',

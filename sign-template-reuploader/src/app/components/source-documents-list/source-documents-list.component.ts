@@ -16,8 +16,8 @@ import {reducer} from '../../store/reducer'
 import {Observable} from 'rxjs';
 import {first} from 'rxjs/operators';
 
-/* Temp */
-import {clientSecret} from '../../client-secret';
+/* Temp. */
+import {_oAuthClientId, _oAuthClientSecret, _loginEmail} from '../../client-secret'; 
 
 @Component({
   selector: 'app-source-documents-list',
@@ -32,6 +32,7 @@ export class SourceDocumentsListComponent implements OnInit {
 
   /* Fields internal to this component. */
   private static previousUrl: string = window.location.href; // the URL that hosts this webapp before user is redirected
+  private redirectUri = 'https://migrationtooldev.com';
   private documentIds: string[] = [];
   private readyForDownload: boolean = false;
 
@@ -60,7 +61,8 @@ export class SourceDocumentsListComponent implements OnInit {
 
   /* Fields input by user. */
   private selectedDocs: boolean[] = [];
-  private oauthClientId: string = '';
+  private oAuthClientId: string = '';
+  private clientSecret: string = '';
   private loginEmail: string = '';
 
   constructor(private formBuilder: FormBuilder,
@@ -89,8 +91,9 @@ export class SourceDocumentsListComponent implements OnInit {
   async getDocumentList(): Promise<any> {
     let response = await this.downloadService.getAllDocuments();    
     if (response.status === 200) {
-        console.log('shit was successful, mang! time a getta beer!');
-        let libraryDocumentList: any = (response.body as any).libraryDocumentList; // TS doesn't know that response.body has a libraryDocumentList without the cast
+        /* Get the libraryDocumentList from the response.
+        Note, TS doesn't know that response.body has a libraryDocumentList without the cast here. */
+        let libraryDocumentList: any = (response.body as any).libraryDocumentList;
 
         /* Initalize documentIds. */
         let oldThis = this;
@@ -120,8 +123,13 @@ export class SourceDocumentsListComponent implements OnInit {
 
   uploadHelper(documentId: string) {
     console.log(`Uploading document with the following ID: ${documentId}`);
-    console.log(`OAuth client_id: ${this.oauthClientId}`);
+    console.log(`OAuth client_id: ${this.oAuthClientId}`);
     console.log(`email: ${this.loginEmail}`);
+
+    /* Adapt the existing reuploader program and put it here: */
+    /* ===== */
+    /* TO-DO */
+    /* ===== */
   }
 
   /* There's probably a better implementation of this function. */
@@ -136,15 +144,10 @@ export class SourceDocumentsListComponent implements OnInit {
     console.log("login clicked.")
 
     if (!this.redirected()) {
-      /* Temporary: for ease of development */
-      let oauthClientId = '(This sensitive info has been removed by BFG repo cleaner)';
-      let loginEmail = '(This sensitive info has been removed by BFG repo cleaner)';
-      let redirectUri = 'https://migrationtooldev.com';
-
       /* Real program will do the following. For now, use hardcoded params. */
-      // console.log(this.oauthService.getOAuthRequestAuthGrantURL(this.oauthClientId, this.loginEmail)); 
-      
-      let authGrantRequest = this.oauthService.getOAuthGrantRequest(oauthClientId, redirectUri, loginEmail);
+      // console.log(this.oauthService.getOAuthRequestAuthGrantURL(this.oAuthClientId, this.loginEmail)); 
+
+      let authGrantRequest = this.oauthService.getOAuthGrantRequest(_oAuthClientId, this.redirectUri, _loginEmail);
       console.log('About to store oAuthState!')
       this.setOAuthState(authGrantRequest.initialState);
       console.log('oAuthState has been stored.');
@@ -170,7 +173,7 @@ export class SourceDocumentsListComponent implements OnInit {
       let initialState = await this.getOAuthState();
       console.log(`Initial state (after): ${initialState}`);
       let authGrant = this.oauthService.getAuthGrant(this.router.url, initialState);
-      let token = this.oauthService.getToken(clientSecret, authGrant, redirectUri);
+      let token = this.oauthService.getToken(_oAuthClientId, _oAuthClientSecret, authGrant, this.redirectUri);
     }
   }
 

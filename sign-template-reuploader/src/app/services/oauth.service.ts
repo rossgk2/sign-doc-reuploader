@@ -68,7 +68,7 @@ export class OAuthService {
     }
   }
 
-  getToken(clientSecret: string, authGrant: string, redirectUri: string): string {
+  getToken(clientId: string, clientSecret: string, authGrant: string, redirectUri: string): string {
     let tree: UrlTree = this.router.createUrlTree([''], {
       'queryParams': {
         'client_id' : clientId,
@@ -81,7 +81,7 @@ export class OAuthService {
   
     let url = `${this.oauthBaseURL}/api/v1/token` + this.serializer.serialize(tree);
     // do something with this url
-  
+    return '';// temp
   }
 
   private randomIdHelper(): string { // from https://stackoverflow.com/a/55365334
