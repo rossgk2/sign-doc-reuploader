@@ -30,7 +30,6 @@ export class SourceDocumentsListComponent implements OnInit {
   private readyForDownload: boolean = false;
 
   /* An "internal" field that persists across multiple instances of this component. */
-  private store: Store<{'oAuthState': 'string'}>;
   
   async getState() {
     let state$ = this.store.pipe(select('oAuthState'));
@@ -67,10 +66,7 @@ export class SourceDocumentsListComponent implements OnInit {
               private oauthService: OAuthService,
               private router: Router,
               private serializer: UrlSerializer,
-              
-              /* If we use the private keyword on "store" here in addition to using it in the above "private store",
-              then the above "private store" will NOT be initalized to whatever is injected via the constructor. */
-              store: Store<{'oAuthState': string}>
+              private store: Store<{'oAuthState': string}>
               )
   {
   }
