@@ -8,6 +8,7 @@ import {ReactiveFormsModule} from '@angular/forms';
 import {HttpClientModule} from '@angular/common/http';
 
 import {StoreModule} from '@ngrx/store';
+import {reducer} from './store/reducer';
 
 @NgModule({
   declarations: [
@@ -16,7 +17,7 @@ import {StoreModule} from '@ngrx/store';
   ],
   imports: [
     BrowserModule,
-    StoreModule.forRoot({}),
+    StoreModule.forRoot({'oAuthState': reducer}),
     AppRoutingModule,
     ReactiveFormsModule,
     HttpClientModule

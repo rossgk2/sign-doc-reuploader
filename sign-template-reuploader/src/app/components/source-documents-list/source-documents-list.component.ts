@@ -30,21 +30,37 @@ export class SourceDocumentsListComponent implements OnInit {
   private readyForDownload: boolean = false;
 
   /* An "internal" field that persists across multiple instances of this component. */
-  private store: Store<{'variable': string}>;
+  private store: Store<{'oAuthState': 'string'}>;
   
   async getState() {
-    let state$ = this.store.pipe(select('variable'));
+    let state$ = this.store.pipe(select('oAuthState'));
     return state$.pipe(first()).toPromise();
   }
 
-  setState(variable: string) {
-    this.store.dispatch(setVariable({ variable }));
+  setState(oAuthState: string) {
+    
+    /*
+      setVariable() is an ActionCreator, which is a function that takes in a payload
+      to be attatched to the Action it creates.
+      
+      Thus the below setVariable({ 'variable': variable }) creates an Action with payload { 'variable': variable }.
+      
+      dispatch(setVariable({ 'variable': variable })) causes all Reducers defined anywhere to process this Action.
+      Only some Reducers are configured to respond to any given Action, though. In this app there is one
+      Action and one Reducer, and the Reducer is configured to respond to the Action.
+    */
+
+    let a = setVariable({ 'oAuthState': oAuthState });
+    console.log("Action:");
+    console.log(a);
+    this.store.dispatch(a);
   }
 
   /* Fields input by user. */
   private selectedDocs: boolean[] = [];
   private oauthClientId: string = '';
   private loginEmail: string = '';
+
 
   constructor(private formBuilder: FormBuilder,
               private downloadService: DownloadService,
@@ -54,7 +70,7 @@ export class SourceDocumentsListComponent implements OnInit {
               
               /* If we use the private keyword on "store" here in addition to using it in the above "private store",
               then the above "private store" will NOT be initalized to whatever is injected via the constructor. */
-              store: Store<{'variable': string}>
+              store: Store<{'oAuthState': string}>
               )
   {
   }
