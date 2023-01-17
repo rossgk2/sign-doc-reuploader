@@ -14,7 +14,7 @@ export class DownloadService {
      const headers = new HttpHeaders()
        .set('Authorization', 'Bearer ' + SourceSettings.sourceIntegrationKey);
 
-     let obs: Observable<any> = this.http.get(
+     const obs: Observable<any> = this.http.get(
        this.libraryDocumentsBaseURL,
        { 'observe': 'response', 'headers': headers }
      );
@@ -27,7 +27,7 @@ export class DownloadService {
       .set('content-type', 'application/json')
       .set('Authorization','Bearer ' + SourceSettings.sourceIntegrationKey);
 
-    let obs: Observable<any> = this.http.get(
+    const obs: Observable<any> = this.http.get(
       this.libraryDocumentsBaseURL + '/' + documentId,
       {'observe': 'response', 'headers': headers }
     );
