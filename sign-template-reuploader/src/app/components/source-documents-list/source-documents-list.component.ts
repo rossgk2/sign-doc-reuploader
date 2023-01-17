@@ -8,7 +8,7 @@ import {DownloadService} from '../../services/download.service';
 import {OAuthService} from '../../services/oauth.service';
 
 /* User-defined configuration. */
-import {SourceSettings} from '../../settings/source-settings';
+import {Credentials} from '../../settings/credentials';
 
 /* ngrx stores */
 import {select, Store} from '@ngrx/store';
@@ -52,7 +52,8 @@ export class SourceDocumentsListComponent implements OnInit {
     documents: this.formBuilder.array([])
   });
   private static previousUrl: string = window.location.href; // the URL that hosts this webapp before user is redirected
-  private redirectUri = 'https://migrationtooldev.com';
+  private redirectUri: string = 'https://migrationtooldev.com';
+  private bearerAuth: string;
   private documentIds: string[] = [];
   private readyForDownload: boolean = false;
 
@@ -86,9 +87,9 @@ export class SourceDocumentsListComponent implements OnInit {
   private loginEmail: string = '';
 
   /* Temp hardcoded variables that simulate user input. */
-  private _oAuthClientId = SourceSettings._oAuthClientId;
-  private _oAuthClientSecret = SourceSettings._oAuthClientSecret;
-  private _loginEmail = SourceSettings._loginEmail;
+  private _oAuthClientId = Credentials._oAuthClientId;
+  private _oAuthClientSecret = Credentials._oAuthClientSecret;
+  private _loginEmail = Credentials._loginEmail;
 
   constructor(private formBuilder: FormBuilder,
               private downloadService: DownloadService,
@@ -114,7 +115,8 @@ export class SourceDocumentsListComponent implements OnInit {
   }
 
   async getDocumentList(): Promise<any> {
-    const response = await this.downloadService.getAllDocuments();    
+    console.log('bearerAuth:', this.bearerAuth);
+    const response = await this.downloadService.getAllDocuments(this.bearerAuth);    
     if (response.status === 200) {
         /* Get the libraryDocumentList from the response.
         Note, TS doesn't know that response.body has a libraryDocumentList without the cast here. */
@@ -198,8 +200,7 @@ export class SourceDocumentsListComponent implements OnInit {
       const initialState = await this.getOAuthState();
       console.log('Initial state (after):', initialState);
       const authGrant = this.oauthService.getAuthGrant(this.router.url, initialState);
-      const token = await this.oauthService.getToken(this._oAuthClientId, this._oAuthClientSecret, authGrant, this.redirectUri);
-      console.log('Access token:', token);
+      this.bearerAuth = await this.oauthService.getToken(this._oAuthClientId, this._oAuthClientSecret, authGrant, this.redirectUri);
     }
   }
 

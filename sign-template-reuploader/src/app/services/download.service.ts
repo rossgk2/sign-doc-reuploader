@@ -6,42 +6,42 @@ import {Observable} from 'rxjs';
 @Injectable({providedIn: 'root'})
 export class DownloadService {
 
-  private libraryDocumentsBaseURL: string = SourceSettings.sourceBaseUri + 'libraryDocuments';
+  private libraryDocumentsBaseUrl: string = SourceSettings.sourceBaseUriFedRamp + 'libraryDocuments';
 
   constructor(private http: HttpClient) { }
 
-  async getAllDocuments(): Promise<any> {
+  async getAllDocuments(bearerAuth: string): Promise<any> {
      const headers = new HttpHeaders()
-       .set('Authorization', 'Bearer ' + SourceSettings.sourceIntegrationKey);
+       .set('Authorization', 'Bearer ' + bearerAuth);
 
      const obs: Observable<any> = this.http.get(
-       this.libraryDocumentsBaseURL,
+       this.libraryDocumentsBaseUrl,
        { 'observe': 'response', 'headers': headers }
      );
 
      return obs.toPromise();
   }
 
-  async getDocument(documentId: string): Promise<any> {
+  async getDocument(documentId: string, bearerAuth: string): Promise<any> {
     const headers = new HttpHeaders()
       .set('content-type', 'application/json')
-      .set('Authorization','Bearer ' + SourceSettings.sourceIntegrationKey);
+      .set('Authorization','Bearer ' + bearerAuth);
 
     const obs: Observable<any> = this.http.get(
-      this.libraryDocumentsBaseURL + '/' + documentId,
-      {'observe': 'response', 'headers': headers }
+      this.libraryDocumentsBaseUrl + '/' + documentId,
+      { 'observe': 'response', 'headers': headers }
     );
 
     return obs.toPromise();
   }
 
-  async getFormFields(documentId: string): Promise<any> {
+  async getFormFields(documentId: string, bearerAuth: string): Promise<any> {
     const headers = new HttpHeaders()
       .set('content-type', 'application/json')
-      .set('Authorization','Bearer ' + SourceSettings.sourceIntegrationKey);
+      .set('Authorization','Bearer ' + bearerAuth);
 
     const obs: Observable<any> = this.http.get(
-      this.libraryDocumentsBaseURL + '/' + documentId + '/' + 'formFields',
+      this.libraryDocumentsBaseUrl + '/' + documentId + '/' + 'formFields',
       { 'observe': 'response', 'headers': headers }
     );
 

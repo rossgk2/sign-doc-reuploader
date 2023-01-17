@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 import {UrlTree, Router, UrlSerializer} from '@angular/router';
-import {SourceSettings} from '../settings/source-settings';
+import {Credentials} from '../settings/credentials';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {Observable} from 'rxjs';
 
@@ -104,7 +104,7 @@ export class OAuthService {
 
   async getToken(clientId: string, clientSecret: string, authGrant: string, redirectUri: string): Promise<any> {
     const headers = new HttpHeaders()
-       .set('Authorization', 'Bearer ' + SourceSettings.sourceIntegrationKey)
+       .set('Authorization', 'Bearer ' + Credentials.sourceIntegrationKey)
        .set('Content-Type', 'application/x-www-form-urlencoded');
     
     console.log('Just set headers for the associated HTTP request. Now calling getToken().')
@@ -125,7 +125,7 @@ export class OAuthService {
       }
     );
 
-    let response = (await obs.toPromise()).body;
+    const response = (await obs.toPromise()).body;
     
     /* Handle errors. If no errors, return the obtained access token. */
     if (response.hasOwnProperty('error')) {
@@ -137,6 +137,7 @@ export class OAuthService {
       if (response.token_type !== "Bearer")
         throw new Error(`The response object from the OAuth /token endpoint contains an "access_token", but the "token_type" is "${response.token_type}" instead of Bearer".`);
       
+      console.log('response', response);
       return response.access_token;
     }
     else
