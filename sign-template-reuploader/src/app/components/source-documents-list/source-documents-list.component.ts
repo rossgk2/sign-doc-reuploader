@@ -45,6 +45,28 @@ import {first} from 'rxjs/operators';
   for commercial.
 */
 
+/* TO-DO
+
+  Overall goal: migrate documents from a commercial account to a FedRamp account.
+
+  Done:
+    1. Get calls to Sign API working by using Bearer tokens from getToken().
+      - Learned: when using OAuth, have to use the Sign URL that corresponds to FedRamp.  
+  
+  To-do:
+    3. Think about what functions need to have a "commercial version" and a "FedRamp version". Make the necessary changes.
+    4. Implement uploadHelper().
+      4.1. Get the first API call from the old reupload() function to work.
+      4.2. Get the rest of reupload() working.
+    5. Rewrite the getAllDocuments() function to use an integration key (not an OAuth token), since this function
+    will only be called on the commercial account.
+
+  4. Improve the UI.
+  4.1. Make it so that user is redirected once they click "Log in" (no need for using "inspect element" to go to the OAuth redirect).
+  4.2. Make it so that the "Display documents from your Sign account" button only appears if redirected() is true.
+  
+*/
+
 export class SourceDocumentsListComponent implements OnInit {
   
   /* Fields internal to this component. */

@@ -22,6 +22,8 @@ export class DownloadService {
      return obs.toPromise();
   }
 
+  /* Deprecated functions below. */
+
   async getDocument(documentId: string, bearerAuth: string): Promise<any> {
     const headers = new HttpHeaders()
       .set('content-type', 'application/json')
