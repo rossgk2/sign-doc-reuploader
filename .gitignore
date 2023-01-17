@@ -1,2 +1,3 @@
 
 sign-template-reuploader/src/app/client-secret.ts
+sign-template-reuploader/src/app/settings/source-settings.ts
