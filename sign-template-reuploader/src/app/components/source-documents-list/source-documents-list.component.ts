@@ -25,6 +25,26 @@ import {first} from 'rxjs/operators';
   styleUrls: ['./source-documents-list.component.scss']
 })
 
+/*
+  ===================================================================
+  Helpful wiki articles
+  ===================================================================
+
+  OAuth for commercial:
+  https://secure.na1.adobesign.com/public/static/oauthDoc.jsp
+
+  OAuth for FedRamp:
+  https://wiki.corp.adobe.com/pages/viewpage.action?spaceKey=~kmashint&title=Adobe+Acrobat+Sign+and+US+Gov+Cloud+-+FedRAMP+Moderate#AdobeAcrobatSignandUSGovCloudFedRAMPModerate-Authorize
+
+  Commercial vs. FedRamp:
+  https://wiki.corp.adobe.com/display/ES/API+Application+Commercial+vs+Gov+Cloud
+  
+  ===================================================================
+
+  We are currently implementing OAuth for FedRamp. After we do that it'd probably be a good idea to add the implementation
+  for commercial.
+*/
+
 export class SourceDocumentsListComponent implements OnInit {
   
   /* Fields internal to this component. */
@@ -152,7 +172,7 @@ export class SourceDocumentsListComponent implements OnInit {
       /* Real program will do the following. For now, use hardcoded params. */
       // console.log(this.oauthService.getOAuthRequestAuthGrantURL(this.oAuthClientId, this.loginEmail)); 
 
-      let authGrantRequest = this.oauthService.getOAuthGrantRequest(this._oAuthClientId, this.redirectUri, this._loginEmail);
+      let authGrantRequest = this.oauthService.getOAuthGrantRequest(this._oAuthClientId, this.redirectUri, this._loginEmail, 'FedRamp');
       console.log('About to store oAuthState!')
       this.setOAuthState(authGrantRequest.initialState);
       console.log('oAuthState has been stored.');
@@ -176,7 +196,7 @@ export class SourceDocumentsListComponent implements OnInit {
 
     if (this.redirected()) {
       let initialState = await this.getOAuthState();
-      console.log(`Initial state (after): ${initialState}`);
+      console.log('Initial state (after):', initialState);
       let authGrant = this.oauthService.getAuthGrant(this.router.url, initialState);
       let token = await this.oauthService.getToken(this._oAuthClientId, this._oAuthClientSecret, authGrant, this.redirectUri);
     }

@@ -20,17 +20,31 @@ export class OAuthService {
         this.oauthBaseUrl = 'https://secure.na1.adobesign.us/api/gateway/adobesignauthservice';
    }
 
-  /* Used to request an authorizaton grant. */
-  getOAuthGrantRequest(clientId: string, redirectUri: string, loginEmail: string) {
-    let state = this.getRandomId();
-    let tree: UrlTree = this.router.createUrlTree([''],
+  /* Used to request an authorizaton grant.
+  
+    Ignoring case, env is either 'commercial' or 'fedramp'.
+   */
+  getOAuthGrantRequest(clientId: string, redirectUri: string, loginEmail: string, env: string) {
+    const state = this.getRandomId();
+    let scope: string;
+
+    /* The syntax for the 'scope' query param depends on whether the environment is commercial or FedRamp. */
+    if (env.toLowerCase() == 'commercial')
+      scope = 'library_read:account library_write:account agreement_write:account';
+    else if (env.toLowerCase() == 'fedramp')
+      scope = 'library_read library_write agreement_write';
+    else
+      throw new Error("env.toLowerCase() must be either 'commercial' or 'fedramp'.");
+
+    /* Build the URL that the user will be redirected to. */
+    const tree: UrlTree = this.router.createUrlTree([''],
       {
         'queryParams':
         {
               'client_id' : clientId,
               'response_type' : 'code',
               'redirect_uri' : redirectUri,
-              'scope' : 'library_read library_write agreement_write', //notice no 'library_read:account'
+              'scope' : scope,
               'state' : state,
               'login_hint' : loginEmail
         }
@@ -53,17 +67,17 @@ export class OAuthService {
     request more tokens (access tokens, ID tokens, or refresh tokens).
   */
   getAuthGrant(authGrantResponse: string, initialState: string): string {
-    let tree: UrlTree = this.serializer.parse(authGrantResponse);
+    const tree: UrlTree = this.serializer.parse(authGrantResponse);
     
     /* Whether or not the response is erronous depends on which of "error" and "code" is a query param. */
     if (tree.queryParams.hasOwnProperty('error')) {
-      let errorMessage = 'A response to a request to the OAuth /authorize endpoint is erroneous.\n' +
+      const errorMessage = 'A response to a request to the OAuth /authorize endpoint is erroneous.\n' +
       `Error: ${tree.queryParams.error}\nError description: ${tree.queryParams.error_description}`;
       throw new Error(errorMessage);
     }
     else if (tree.queryParams.hasOwnProperty('code')) {
-      let code: string = tree.queryParams.code;
-      let state: string = tree.queryParams.state;
+      const code: string = tree.queryParams.code;
+      const state: string = tree.queryParams.state;
 
       // After getting the ngrx store to work, delete "false &&" in order to enable this check.
       if (false && state !== initialState) {
@@ -75,24 +89,28 @@ export class OAuthService {
   }
 
   async getToken(clientId: string, clientSecret: string, authGrant: string, redirectUri: string): Promise<any> {
-    /* Send a GET request to the /token endpoint. */
+    /* Send a POST request to the /token endpoint. */
     const headers = new HttpHeaders()
-       .set('Authorization', 'Bearer ' + SourceSettings.sourceIntegrationKey);
+       .set('Authorization', 'Bearer ' + SourceSettings.sourceIntegrationKey)
+       .set('Content-Type', 'application/x-www-form-urlencoded');
     
-    const obs: Observable<any> = this.http.get(
-      `${this.oauthBaseUrl}/api/v1/token`,
-      {
-        'observe': 'response',
-        'headers': headers,
-        'params': // query params
-          {
-            'client_id' : clientId,
-            'client_secret' : clientSecret,
-            'grant_type' : 'authorization_code',
-            'code' : authGrant,
-            'redirect_uri' : redirectUri
-          }
-      });
+    console.log('Just set headers for the associated HTTP request. Now calling getToken().')
+    console.log('authGrant:', authGrant)
+
+    /* We need to in null for the request body; if we don't, then the
+    object with the keys 'observe', 'headers', and 'params' will be interpreted to be the request body. */
+    const obs: Observable<any> = this.http.post(`${this.oauthBaseUrl}/api/v1/token`, null,
+      {'observe': 'response', 'headers': headers,
+      'params':
+        {
+          'client_id' : clientId,
+          'client_secret' : clientSecret,
+          'grant_type' : 'authorization_code',
+          'code' : authGrant,
+          'redirect_uri' : redirectUri
+        }
+      }
+    );
 
     const response = await obs.toPromise();
     

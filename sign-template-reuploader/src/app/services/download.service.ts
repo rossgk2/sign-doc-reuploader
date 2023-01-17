@@ -16,10 +16,8 @@ export class DownloadService {
 
      let obs: Observable<any> = this.http.get(
        this.libraryDocumentsBaseURL,
-       {
-         'observe': 'response',
-         'headers': headers
-       });
+       { 'observe': 'response', 'headers': headers }
+     );
 
      return obs.toPromise();
   }
@@ -31,10 +29,8 @@ export class DownloadService {
 
     let obs: Observable<any> = this.http.get(
       this.libraryDocumentsBaseURL + '/' + documentId,
-      {
-        'observe': 'response',
-        'headers': headers
-      });
+      {'observe': 'response', 'headers': headers }
+    );
 
     return obs.toPromise();
   }
@@ -46,10 +42,8 @@ export class DownloadService {
 
     const obs: Observable<any> = this.http.get(
       this.libraryDocumentsBaseURL + '/' + documentId + '/' + 'formFields',
-      {
-        'observe': 'response',
-        'headers': headers
-      });
+      { 'observe': 'response', 'headers': headers }
+    );
 
     return obs.toPromise();
   }
