@@ -59,7 +59,7 @@ export class SourceDocumentsListComponent implements OnInit {
   /* An "internal" field that persists across multiple instances of this component. */
   
   async getOAuthState() {
-    let state$ = this.store.pipe(select('oAuthState'));
+    const state$ = this.store.pipe(select('oAuthState'));
     return (await state$.pipe(first()).toPromise())['oAuthState'];
   }
 
@@ -114,14 +114,14 @@ export class SourceDocumentsListComponent implements OnInit {
   }
 
   async getDocumentList(): Promise<any> {
-    let response = await this.downloadService.getAllDocuments();    
+    const response = await this.downloadService.getAllDocuments();    
     if (response.status === 200) {
         /* Get the libraryDocumentList from the response.
         Note, TS doesn't know that response.body has a libraryDocumentList without the cast here. */
-        let libraryDocumentList: any = (response.body as any).libraryDocumentList;
+        const libraryDocumentList: any = (response.body as any).libraryDocumentList;
 
         /* Initalize documentIds. */
-        let oldThis = this;
+        const oldThis = this;
         libraryDocumentList.forEach(function(doc: any) {
           oldThis.documentIds.push(doc.id);
         });
@@ -133,13 +133,13 @@ export class SourceDocumentsListComponent implements OnInit {
 
   upload(): void {
     /* Get a list of all the indices cooresponding to documents that the user wants to upload. */
-    let oldThis = this;
+    const oldThis = this;
     this.documents.controls.forEach(function(group: FormGroup) {
       oldThis.selectedDocs.push(group.value.include !== false); // in this context, '' functions as true and false as false
     });
 
     /* For each document: if that document was selected, upload it. */
-    let temp = 1; // once done getting uploadHelper() working, delete "&& i < temp" in the below
+    const temp = 1; // once done getting uploadHelper() working, delete "&& i < temp" in the below
     for (let i = 0; i < this.selectedDocs.length && i < temp; i ++) {
       if (this.selectedDocs[i])
         this.uploadHelper(this.documentIds[i]);
@@ -159,9 +159,9 @@ export class SourceDocumentsListComponent implements OnInit {
 
   /* There's probably a better implementation of this function. */
   redirected(): boolean {
-    let currentUrl = window.location.href;
-    let currentUrlProcessed = currentUrl.substring('https:/'.length, currentUrl.length);
-    let tree: UrlTree = this.serializer.parse(currentUrlProcessed); // urls passed to serializer.parse() must begin with '/'
+    const currentUrl = window.location.href;
+    const currentUrlProcessed = currentUrl.substring('https:/'.length, currentUrl.length);
+    const tree: UrlTree = this.serializer.parse(currentUrlProcessed); // urls passed to serializer.parse() must begin with '/'
     return tree.queryParams.hasOwnProperty('code') || tree.queryParams.hasOwnProperty('error');
   }
  
@@ -172,7 +172,7 @@ export class SourceDocumentsListComponent implements OnInit {
       /* Real program will do the following. For now, use hardcoded params. */
       // console.log(this.oauthService.getOAuthRequestAuthGrantURL(this.oAuthClientId, this.loginEmail)); 
 
-      let authGrantRequest = this.oauthService.getOAuthGrantRequest(this._oAuthClientId, this.redirectUri, this._loginEmail, 'FedRamp');
+      const authGrantRequest = this.oauthService.getOAuthGrantRequest(this._oAuthClientId, this.redirectUri, this._loginEmail, 'FedRamp');
       console.log('About to store oAuthState!')
       this.setOAuthState(authGrantRequest.initialState);
       console.log('oAuthState has been stored.');
@@ -186,7 +186,7 @@ export class SourceDocumentsListComponent implements OnInit {
 
     if (!this.redirected()) {
       console.log('Testing that setOAuthState() and getOAuthState() work...')
-      let oAuthState0 = 'lololol';
+      const oAuthState0 = 'lololol';
       console.log(`Calling setOAuthState('${oAuthState0}')`);
       this.setOAuthState(oAuthState0);
       console.log(`getOAuthState() return value: ${await this.getOAuthState()}`);
@@ -195,10 +195,10 @@ export class SourceDocumentsListComponent implements OnInit {
     await this.delay(2); // Thought maybe this would make sure we don't access store before it's injected
 
     if (this.redirected()) {
-      let initialState = await this.getOAuthState();
+      const initialState = await this.getOAuthState();
       console.log('Initial state (after):', initialState);
-      let authGrant = this.oauthService.getAuthGrant(this.router.url, initialState);
-      let token = await this.oauthService.getToken(this._oAuthClientId, this._oAuthClientSecret, authGrant, this.redirectUri);
+      const authGrant = this.oauthService.getAuthGrant(this.router.url, initialState);
+      const token = await this.oauthService.getToken(this._oAuthClientId, this._oAuthClientSecret, authGrant, this.redirectUri);
       console.log('Access token:', token);
     }
   }

@@ -135,7 +135,7 @@ export class OAuthService {
     }
     else if (response.hasOwnProperty('access_token')) {
       if (response.token_type !== "Bearer")
-        throw new Error(`The response object from the OAuth /token endpoint contains an "access_token", but the "token_type" is "${token_type}" instead of Bearer".`);
+        throw new Error(`The response object from the OAuth /token endpoint contains an "access_token", but the "token_type" is "${response.token_type}" instead of Bearer".`);
       
       return response.access_token;
     }
