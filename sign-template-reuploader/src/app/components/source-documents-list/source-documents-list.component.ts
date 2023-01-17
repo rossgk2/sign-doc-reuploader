@@ -199,6 +199,7 @@ export class SourceDocumentsListComponent implements OnInit {
       console.log('Initial state (after):', initialState);
       let authGrant = this.oauthService.getAuthGrant(this.router.url, initialState);
       let token = await this.oauthService.getToken(this._oAuthClientId, this._oAuthClientSecret, authGrant, this.redirectUri);
+      console.log('Access token:', token);
     }
   }
 

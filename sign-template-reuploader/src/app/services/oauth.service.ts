@@ -20,11 +20,18 @@ export class OAuthService {
         this.oauthBaseUrl = 'https://secure.na1.adobesign.us/api/gateway/adobesignauthservice';
    }
 
-  /* Used to request an authorizaton grant.
-  
-    Ignoring case, env is either 'commercial' or 'fedramp'.
-   */
-  getOAuthGrantRequest(clientId: string, redirectUri: string, loginEmail: string, env: string) {
+  /* 
+    Returns a URL which is an "authorizaton grant request". When the user visits this URL,
+    they are effectively requesting an authorization grant.
+
+    Also returns a randomly generated state associated with the authorizaton grant request.
+    
+    Inputs:
+      - redirectUri is the URI that the user should be redirected to once they have visited the URL
+      that is the authorizaton grant request
+      - env is such that env.toLowerCase() is either 'commercial' or 'fedramp'
+  */
+  getOAuthGrantRequest(clientId: string, redirectUri: string, loginEmail: string, env: string): {[key: string]: string} {
     const state = this.getRandomId();
     let scope: string;
 
@@ -36,7 +43,7 @@ export class OAuthService {
     else
       throw new Error("env.toLowerCase() must be either 'commercial' or 'fedramp'.");
 
-    /* Build the URL that the user will be redirected to. */
+    /* Build the URL that is the authorizaton grant request. */
     const tree: UrlTree = this.router.createUrlTree([''],
       {
         'queryParams':
@@ -50,6 +57,7 @@ export class OAuthService {
         }
       });
 
+    /* Return the authorizaton grant request and the randomly generated state associated with it. */
     return {
       'url': `${this.oauthBaseUrl}/api/v1/authorize` + this.serializer.serialize(tree),
       'initialState': state
@@ -60,7 +68,7 @@ export class OAuthService {
     Inputs:
       - authGrantResponse is a URL whose query params encode the response to the request for an authorization grant.
       - initialState is the state that is sent as a part of the authorization grant request. This function needs to know
-      initialState so that it can compare it to the authGrantResponse.initialState and thus verify that
+      initialState so that it can compare it to authGrantResponse's initialState and thus verify that
       the server sending authGrantResponse is not a malicous actor pretending to be the authorizaton server.  
 
     Returns a unique string that is the "authorization grant". This authorizaton grant is used to
@@ -69,9 +77,13 @@ export class OAuthService {
   getAuthGrant(authGrantResponse: string, initialState: string): string {
     const tree: UrlTree = this.serializer.parse(authGrantResponse);
     
-    /* Whether or not the response is erronous depends on which of "error" and "code" is a query param. */
+    /* Whether or not the request that generated authGrantResponse depends on which of 
+    "error" and "code" is a query param. */
+
+    /* Handle errors. If no errors, check that the server sending the authorizaton grant is
+    legitimate, and then return the authorizaton grant. */
     if (tree.queryParams.hasOwnProperty('error')) {
-      const errorMessage = 'A response to a request to the OAuth /authorize endpoint is erroneous.\n' +
+      const errorMessage = 'An erroneous request was made to the OAuth /authorize endpoint.\n' +
       `Error: ${tree.queryParams.error}\nError description: ${tree.queryParams.error_description}`;
       throw new Error(errorMessage);
     }
@@ -81,15 +93,16 @@ export class OAuthService {
 
       // After getting the ngrx store to work, delete "false &&" in order to enable this check.
       if (false && state !== initialState) {
-        throw new Error('State from server claiming to be authorization server does not match initial state passed to the authorization server.');
+        throw new Error('The state recieved from the server claiming to be authorization server does not match initial state passed to the authorization server.');
       }
 
       return code;
     }
+    else
+      throw new Error('The authorization grant URL does not contain a "code" or an "error" query param.');
   }
 
   async getToken(clientId: string, clientSecret: string, authGrant: string, redirectUri: string): Promise<any> {
-    /* Send a POST request to the /token endpoint. */
     const headers = new HttpHeaders()
        .set('Authorization', 'Bearer ' + SourceSettings.sourceIntegrationKey)
        .set('Content-Type', 'application/x-www-form-urlencoded');
@@ -97,8 +110,8 @@ export class OAuthService {
     console.log('Just set headers for the associated HTTP request. Now calling getToken().')
     console.log('authGrant:', authGrant)
 
-    /* We need to in null for the request body; if we don't, then the
-    object with the keys 'observe', 'headers', and 'params' will be interpreted to be the request body. */
+    /* We need to in null for the request body; if we don't, then the object with the keys
+     'observe', 'headers', and 'params' will be interpreted to be the request body. */
     const obs: Observable<any> = this.http.post(`${this.oauthBaseUrl}/api/v1/token`, null,
       {'observe': 'response', 'headers': headers,
       'params':
@@ -112,11 +125,22 @@ export class OAuthService {
       }
     );
 
-    const response = await obs.toPromise();
+    let response = (await obs.toPromise()).body;
     
-    /* TO-DO: handle the response body. */
-    console.log('Response body from getToken():', response.body);
-    return '';
+    /* Handle errors. If no errors, return the obtained access token. */
+    if (response.hasOwnProperty('error')) {
+      const errorMessage = 'An erroneous request was made to the OAuth /token endpoint.\n' +
+      `Error: ${response.error}\nError description: ${response.error_description}`;
+      throw new Error(errorMessage);
+    }
+    else if (response.hasOwnProperty('access_token')) {
+      if (response.token_type !== "Bearer")
+        throw new Error(`The response object from the OAuth /token endpoint contains an "access_token", but the "token_type" is "${token_type}" instead of Bearer".`);
+      
+      return response.access_token;
+    }
+    else
+      throw new Error('The response object from the OAuth /token endpoint does not contain a "access_token" or an "error".');
   }
 
   private randomIdHelper(): string { // from https://stackoverflow.com/a/55365334
