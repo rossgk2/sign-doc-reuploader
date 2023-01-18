@@ -189,13 +189,22 @@ export class SourceDocumentsListComponent implements OnInit {
 
   async uploadHelperDownload(documentId: string, bearerAuth: string): Promise<any> {
     const defaultRequestConfig = <any>{'observe': 'response', 'headers': {Authorization: `Bearer ${bearerAuth}`}};
-    let baseUri = await this.urlGetterService.getApiBaseUriCommercial(bearerAuth);
+    const baseUri = await this.urlGetterService.getApiBaseUriCommercial(bearerAuth);
 
     /* GET the name of the document. */
     let obs: Observable<any> = this.http.get(`${baseUri}/libraryDocuments/${documentId}`, defaultRequestConfig);
-    const docInfo = (await obs.toPromise()).body;
-    const docName = docInfo.name;
-    console.log('docName', docName);
+    const docName: string = (await obs.toPromise()).body.name;
+
+    /* GET the values the user has entered into the document's fields. */
+    obs = this.http.get(`${baseUri}/libraryDocuments/${documentId}/formFields`, defaultRequestConfig);
+    const formFields: {[key: string]: string}[] = (await obs.toPromise()).body;
+
+    console.log('formFields:', formFields);
+
+  }
+
+  uploadHelperUpload(documentId: string) {
+
   }
 
   /* There's probably a better implementation of this function. */

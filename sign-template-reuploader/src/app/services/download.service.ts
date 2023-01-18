@@ -24,13 +24,13 @@ export class DownloadService {
 
   /* Deprecated functions below. */
 
-  async getDocument(documentId: string, bearerAuth: string): Promise<any> {
-    const baseUrl = await this.urlGetterService.getApiBaseUriCommercial(bearerAuth);
-    return this.http.get(`${baseUrl}/${documentId}`, this.defaultHttpOptions(bearerAuth)).toPromise();
-  }
+  // async getDocument(documentId: string, bearerAuth: string): Promise<any> {
+  //   const baseUrl = await this.urlGetterService.getApiBaseUriCommercial(bearerAuth);
+  //   return this.http.get(`${baseUrl}/${documentId}`, this.defaultHttpOptions(bearerAuth)).toPromise();
+  // }
 
-  async getFormFields(documentId: string, bearerAuth: string): Promise<any> {
-    const baseUrl = await this.urlGetterService.getApiBaseUriCommercial(bearerAuth);
-    return this.http.get(`{baseUrl}/${documentId}/formFields`, this.defaultHttpOptions(bearerAuth)).toPromise();
-  }
+  // async getFormFields(documentId: string, bearerAuth: string): Promise<any> {
+  //   const baseUrl = await this.urlGetterService.getApiBaseUriCommercial(bearerAuth);
+  //   return this.http.get(`{baseUrl}/${documentId}/formFields`, this.defaultHttpOptions(bearerAuth)).toPromise();
+  // }
 }
