@@ -14,7 +14,7 @@ export class DownloadService {
   defaultHttpOptions(bearerAuth: string): any
   {
     const headers: HttpHeaders = new HttpHeaders().set('Authorization', `Bearer ${bearerAuth}`);
-    return <any>{'observe': 'response', 'headers': headers};
+    return {'observe': 'response', 'headers': headers};
   }
 
   async getAllDocuments(bearerAuth: string): Promise<any> {

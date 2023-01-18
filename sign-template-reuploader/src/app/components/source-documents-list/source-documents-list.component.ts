@@ -183,9 +183,6 @@ export class SourceDocumentsListComponent implements OnInit {
 
   uploadHelper(documentId: string): void {
     console.log(`Uploading document with the following ID: ${documentId}`);
-    console.log(`OAuth client_id: ${this._oAuthClientId}`);
-    console.log(`email: ${this._loginEmail}`);
-
     /* Adapt the existing reuploader program and put it here: */
     this.uploadHelperDownload(documentId, Credentials.sourceIntegrationKey);
   }
@@ -197,7 +194,7 @@ export class SourceDocumentsListComponent implements OnInit {
     /* GET the name of the document. */
     let obs: Observable<any> = this.http.get(`${baseUri}/libraryDocuments/${documentId}`, defaultRequestConfig);
     const docInfo = (await obs.toPromise()).body;
-    const docName = docInfo.data.name;
+    const docName = docInfo.name;
     console.log('docName', docName);
   }
 
