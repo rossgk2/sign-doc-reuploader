@@ -110,8 +110,9 @@ export class OAuthService {
     console.log('Just set headers for the associated HTTP request. Now calling getToken().')
     console.log('authGrant:', authGrant)
 
-    /* We need to in null for the request body; if we don't, then the object with the keys
-     'observe', 'headers', and 'params' will be interpreted to be the request body. */
+    /* The function signature for http.post() is http.post(url, body, options). We need to pass in null 
+    for the request body; if we don't, then the argument we intend to pass as 'options' will be
+    interpreted to be 'body'. */
     const obs: Observable<any> = this.http.post(`${this.oauthBaseUrl}/api/v1/token`, null,
       {'observe': 'response', 'headers': headers,
       'params':

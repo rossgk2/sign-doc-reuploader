@@ -1,52 +1,38 @@
 import {Injectable} from '@angular/core';
-import {SourceSettings} from '../settings/source-settings';
+import {UrlGetterService} from '../services/url-getter.service';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {Observable} from 'rxjs';
 
 @Injectable({providedIn: 'root'})
 export class DownloadService {
 
-  private libraryDocumentsBaseUrl: string = SourceSettings.sourceBaseUriFedRamp + 'libraryDocuments';
+  constructor(private urlGetterService: UrlGetterService,
+              private http: HttpClient) 
+  { }
 
-  constructor(private http: HttpClient) { }
+  /* Helper function. */
+  defaultHttpOptions(bearerAuth: string): any
+  {
+    const headers: HttpHeaders = new HttpHeaders().set('Authorization', `Bearer ${bearerAuth}`);
+    return <any>{'observe': 'response', 'headers': headers};
+  }
 
   async getAllDocuments(bearerAuth: string): Promise<any> {
-     const headers = new HttpHeaders()
-       .set('Authorization', 'Bearer ' + bearerAuth);
-
-     const obs: Observable<any> = this.http.get(
-       this.libraryDocumentsBaseUrl,
-       { 'observe': 'response', 'headers': headers }
-     );
-
-     return obs.toPromise();
+    const baseUrl = await this.urlGetterService.getApiBaseUriCommercial(bearerAuth);
+    const headers: HttpHeaders = new HttpHeaders().set('Authorization', 'Bearer ' + bearerAuth);
+    console.log('baseUri:', baseUrl);
+    return this.http.get(baseUrl + '/libraryDocuments', {observe: 'response', headers: headers}).toPromise();
   }
 
   /* Deprecated functions below. */
 
   async getDocument(documentId: string, bearerAuth: string): Promise<any> {
-    const headers = new HttpHeaders()
-      .set('content-type', 'application/json')
-      .set('Authorization','Bearer ' + bearerAuth);
-
-    const obs: Observable<any> = this.http.get(
-      this.libraryDocumentsBaseUrl + '/' + documentId,
-      { 'observe': 'response', 'headers': headers }
-    );
-
-    return obs.toPromise();
+    const baseUrl = await this.urlGetterService.getApiBaseUriCommercial(bearerAuth);
+    return this.http.get(baseUrl + '/' + documentId, this.defaultHttpOptions(bearerAuth)).toPromise();
   }
 
   async getFormFields(documentId: string, bearerAuth: string): Promise<any> {
-    const headers = new HttpHeaders()
-      .set('content-type', 'application/json')
-      .set('Authorization','Bearer ' + bearerAuth);
-
-    const obs: Observable<any> = this.http.get(
-      this.libraryDocumentsBaseUrl + '/' + documentId + '/' + 'formFields',
-      { 'observe': 'response', 'headers': headers }
-    );
-
-    return obs.toPromise();
+    const baseUrl = await this.urlGetterService.getApiBaseUriCommercial(bearerAuth);
+    return this.http.get(baseUrl + '/' + documentId + '/' + 'formFields', this.defaultHttpOptions(bearerAuth)).toPromise();
   }
 }

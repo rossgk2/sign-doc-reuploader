@@ -2,8 +2,10 @@
 import {Component, OnInit} from '@angular/core';
 import {FormArray, FormBuilder, FormGroup, FormControl, Validators} from '@angular/forms';
 import {UrlTree, Router, UrlSerializer} from '@angular/router';
+import {HttpClient, HttpHeaders} from '@angular/common/http';
 
 /* Services */
+import {UrlGetterService} from '../../services/url-getter.service';
 import {DownloadService} from '../../services/download.service';
 import {OAuthService} from '../../services/oauth.service';
 
@@ -65,6 +67,14 @@ import {first} from 'rxjs/operators';
   4.1. Make it so that user is redirected once they click "Log in" (no need for using "inspect element" to go to the OAuth redirect).
   4.2. Make it so that the "Display documents from your Sign account" button only appears if redirected() is true.
   
+  5. Code style
+  5.1. Replace let with const where possible.
+  5.2. Replace ' with "
+  5.3. Replace objects of the in the style of the example {'a': 1, 'b': 2} with objects of the form in the style
+  of {a: 1, b: 2}. I.e., don't use quotes on object properties.
+    - Suppose we have const x = {'a': 1, 'b': 2}. Then x.a is the string literal '1' and not the number 1.
+    So it's better to define x as const x = {a: 1, b: 2}.
+
 */
 
 export class SourceDocumentsListComponent implements OnInit {
@@ -114,11 +124,13 @@ export class SourceDocumentsListComponent implements OnInit {
   private _loginEmail = Credentials._loginEmail;
 
   constructor(private formBuilder: FormBuilder,
+              private urlGetterService: UrlGetterService,
               private downloadService: DownloadService,
               private oauthService: OAuthService,
               private router: Router,
               private serializer: UrlSerializer,
-              private store: Store<{'oAuthState': string}>
+              private store: Store<{'oAuthState': string}>,
+              private http: HttpClient
               ) {}
 
   get documents() {
@@ -137,8 +149,7 @@ export class SourceDocumentsListComponent implements OnInit {
   }
 
   async getDocumentList(): Promise<any> {
-    console.log('bearerAuth:', this.bearerAuth);
-    const response = await this.downloadService.getAllDocuments(this.bearerAuth);    
+    const response = await this.downloadService.getAllDocuments(Credentials.sourceIntegrationKey);    
     if (response.status === 200) {
         /* Get the libraryDocumentList from the response.
         Note, TS doesn't know that response.body has a libraryDocumentList without the cast here. */
@@ -172,13 +183,22 @@ export class SourceDocumentsListComponent implements OnInit {
 
   uploadHelper(documentId: string): void {
     console.log(`Uploading document with the following ID: ${documentId}`);
-    console.log(`OAuth client_id: ${this.oAuthClientId}`);
+    console.log(`OAuth client_id: ${this._oAuthClientId}`);
     console.log(`email: ${this._loginEmail}`);
 
     /* Adapt the existing reuploader program and put it here: */
-    /* ===== */
-    /* TO-DO */
-    /* ===== */
+    this.uploadHelperDownload(documentId, Credentials.sourceIntegrationKey);
+  }
+
+  async uploadHelperDownload(documentId: string, bearerAuth: string): Promise<any> {
+    const defaultRequestConfig = <any>{'observe': 'response', 'headers': {Authorization: `Bearer ${bearerAuth}`}};
+    let baseUri = await this.urlGetterService.getApiBaseUriCommercial(bearerAuth);
+
+    /* GET the name of the document. */
+    let obs: Observable<any> = this.http.get(`${baseUri}/libraryDocuments/${documentId}`, defaultRequestConfig);
+    const docInfo = (await obs.toPromise()).body;
+    const docName = docInfo.data.name;
+    console.log('docName', docName);
   }
 
   /* There's probably a better implementation of this function. */
