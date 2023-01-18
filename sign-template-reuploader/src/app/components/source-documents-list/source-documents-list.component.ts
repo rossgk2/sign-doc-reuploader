@@ -199,8 +199,11 @@ export class SourceDocumentsListComponent implements OnInit {
     obs = this.http.get(`${baseUri}/libraryDocuments/${documentId}/formFields`, defaultRequestConfig);
     const formFields: {[key: string]: string}[] = (await obs.toPromise()).body;
 
-    console.log('formFields:', formFields);
+    /* GET the PDF on which the custom form fields that the user field out were placed.*/
+    obs = this.http.get(`${baseUri}/libraryDocuments/${documentId}/combinedDocument/url`, defaultRequestConfig);
+    const combinedDocumentUrl = (await obs.toPromise()).body.url;
 
+    console.log('combinedDocUrl:', combinedDocumentUrl);
   }
 
   uploadHelperUpload(documentId: string) {
