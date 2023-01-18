@@ -19,9 +19,7 @@ export class DownloadService {
 
   async getAllDocuments(bearerAuth: string): Promise<any> {
     const baseUrl = await this.urlGetterService.getApiBaseUriCommercial(bearerAuth);
-    const headers: HttpHeaders = new HttpHeaders().set('Authorization', 'Bearer ' + bearerAuth);
-    console.log('baseUri:', baseUrl);
-    return this.http.get(baseUrl + '/libraryDocuments', {observe: 'response', headers: headers}).toPromise();
+    return this.http.get(baseUrl + '/libraryDocuments', this.defaultHttpOptions(bearerAuth)).toPromise();
   }
 
   /* Deprecated functions below. */
