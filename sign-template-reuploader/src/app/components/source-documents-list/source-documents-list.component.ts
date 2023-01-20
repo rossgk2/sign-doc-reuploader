@@ -92,6 +92,7 @@ export class SourceDocumentsListComponent implements OnInit {
   private bearerAuth: string;
   private documentIds: string[] = [];
   private readyForDownload: boolean = false;
+  private inDevelopment: boolean = true;
 
   /* An "internal" field that persists across multiple instances of this component. */
   
@@ -171,7 +172,12 @@ export class SourceDocumentsListComponent implements OnInit {
       }
   }
 
-  upload(): void {
+  /* ===========================================================================
+   * ===========================================================================
+   * =========================================================================== 
+   */
+
+  async upload(): Promise<any> {
     /* Get a list of all the indices cooresponding to documents that the user wants to upload. */
     const oldThis = this;
     this.documents.controls.forEach(function(group: FormGroup) {
@@ -182,20 +188,23 @@ export class SourceDocumentsListComponent implements OnInit {
     const temp = 1; // once done getting uploadHelper() working, delete "&& i < temp" in the below
     for (let i = 0; i < this.selectedDocs.length && i < temp; i ++) {
       if (this.selectedDocs[i])
-        this.uploadHelper(this.documentIds[i]);
+        await this.uploadHelper(this.documentIds[i]);
     }
   }
 
-  uploadHelper(documentId: string): void {
+  async uploadHelper(documentId: string): Promise<any> {
     console.log(`Uploading document with the following ID: ${documentId}`);
     /* Adapt the existing reuploader program and put it here: */
-    this.uploadHelperDownload(documentId, Credentials.sourceIntegrationKey);
+    const pdf: Blob = await this.uploadHelperDownload(documentId, Credentials.sourceIntegrationKey);
+    
+    /* Save the blob to a PDF to check that we downloaded the PDF correctly. The PDF will be saved
+     to the Downloads folder. */
+    saveAs(pdf, 'debug.pdf');
   }
 
-  async uploadHelperDownload(documentId: string, bearerAuth: string): Promise<any> {
-    const defaultHeaders = new HttpHeaders().set('Authorization', `Bearer ${bearerAuth}`);
-    const defaultRequestConfig = <any>{'observe': 'response', 'headers': defaultHeaders};
-    const baseUri = await this.urlGetterService.getApiBaseUriCommercial(bearerAuth);
+  async uploadHelperDownload(documentId: string, bearerAuth: string): Promise<Blob> {
+    const baseUri = await this.urlGetterService.getApiBaseUriCommercial(bearerAuth);    
+    const defaultRequestConfig = this.getDefaultRequestConfig(bearerAuth);
 
     /* GET the name of the document. */
     let obs: Observable<any> = this.http.get(`${baseUri}/libraryDocuments/${documentId}`, defaultRequestConfig);
@@ -219,25 +228,41 @@ export class SourceDocumentsListComponent implements OnInit {
     const combinedDocumentUrlSuffix = combinedDocumentUrl.substring(prefixEndIndex + 1, endIndex + 1);
     const proxiedCombinedDocumentUrl = `/doc-pdf-api/${combinedDocumentUrlSuffix}`;
     obs = this.http.get(proxiedCombinedDocumentUrl, requestConfig);
-    const blob = (await obs.toPromise()).body;
-    
-    // Save the blob to a PDF to check that we downloaded the PDF correctly. The PDF will be saved
-    // in the Downloads folder.
-    saveAs(blob, 'debug.pdf');
+    const pdf = (await obs.toPromise()).body;
+
+    return pdf;
   }
+
+  // uploadHelperUpload(documentId: string) {
+  //   const baseUri = await getApiBaseUriFedRamp(inDevelopment);
+  //   const defaultRequestConfig = await getDefaultRequestConfig(this.bearerAuth);
+
+  //   /* POST the same document (but without any custom form fields) as a transient document and get its ID.
+  //   (Informed by https://stackoverflow.com/questions/53038900/nodejs-axios-post-file-from-local-server-to-another-server). */
+  //   const form = new FormData();
+  //   form.append('File-Name', docName);
+  //   form.append('File', arrayBuffer, `${savedFileName}.pdf`);
+  //   const requestConfig = { 'headers' : {...getDefaultHeadersConfig(newToken), ...form.getHeaders()} };
+
+
+  //   const response = await this.http.post(`${baseUri}/transientDocuments`, form, requestConfig);
+  // }
+
+  getDefaultRequestConfig(bearerAuth: string): any {
+    const defaultHeaders = new HttpHeaders().set('Authorization', `Bearer ${bearerAuth}`);
+    return {'observe': 'response', 'headers': defaultHeaders};
+  }
+
+  /* ===========================================================================
+   * ===========================================================================
+   * =========================================================================== 
+   */
 
   uploadPdf(file: Blob, endpointUrl: string) {
     const formData = new FormData();
     formData.append('File', file);
-
     const headers = new HttpHeaders().append('Content-Type', 'multipart/form-data');
-
     return this.http.post(endpointUrl, formData, { 'headers': headers });
-  }
-
-
-  uploadHelperUpload(documentId: string) {
-
   }
 
   /* There's probably a better implementation of this function. */
@@ -282,7 +307,6 @@ export class SourceDocumentsListComponent implements OnInit {
       console.log('Initial state (after):', initialState);
       const authGrant = this.oauthService.getAuthGrant(this.router.url, initialState);
       this.bearerAuth = await this.oauthService.getToken(this._oAuthClientId, this._oAuthClientSecret, authGrant, this.redirectUri);
-      console.log('getToken() finished.');
       console.log('bearerAuth:', this.bearerAuth);
     } 
   }
