@@ -108,10 +108,9 @@ export class OAuthService {
     console.log('Just set headers for the associated HTTP request. Now calling getToken().')
     console.log('authGrant:', authGrant)
 
-    /* The function signature for http.post() is http.post(url, body, options). We need to pass in null 
-    for the request body; if we don't, then the argument we intend to pass as 'options' will be
-    interpreted to be 'body'. */
-    const obs: Observable<any> = this.http.post(`${this.oAuthProxyUri}/api/v1/token`, null, 
+    /* We use a proxied URL to avoid CORS errors. */
+    const body = null;
+    const obs: Observable<any> = this.http.post(`${this.oAuthProxyUri}/api/v1/token`, body, 
       {'observe': 'response', 'headers': headers,
       'params':
         {

@@ -209,16 +209,16 @@ export class SourceDocumentsListComponent implements OnInit {
     const combinedDocumentUrl = (await obs.toPromise()).body.url;
     console.log('combinedDocumentUrl:', combinedDocumentUrl)
 
-    // maybe?
-    const headers = new HttpHeaders()
-                    .set('Access-Control-Allow-Origin', '*')
-                    .set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-                    .set('Access-Control-Allow-Headers', 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With')
-                    .set('Access-Control-Allow-Credentials', 'true');
-
-                    //.set('Authorization', `Bearer ${bearerAuth}`);
-    const requestConfig = <any>{'observe': 'response', 'headers': headers, 'responseType': 'blob'};
-    obs = this.http.get(combinedDocumentUrl, requestConfig);
+    /* Save the PDF. */
+    const requestConfig = <any>{'observe': 'response', 'responseType': 'blob'};
+    
+    // To avoid CORS errors, use a proxied URL to make the request.
+    const prefixEndIndex = 'https://secure.na4.adobesign.com/document/cp/'.length - 1;
+    const endIndex = combinedDocumentUrl.length - 1;
+    const combinedDocumentUrlSuffix = combinedDocumentUrl.substring(prefixEndIndex + 1, endIndex + 1);
+    const proxiedCombinedDocumentUrl = `/doc-pdf-api/${combinedDocumentUrlSuffix}`; //hardcoded
+    obs = this.http.get(proxiedCombinedDocumentUrl, requestConfig);
+    
     const blob: Blob = await obs.toPromise();
     this.viewPdf(blob);
 
