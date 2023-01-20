@@ -10,7 +10,7 @@ export class OAuthService {
 
   private inDevelopment: boolean = true;
   private oAuthBaseUri: string;
-  private oAuthProxyUri: string = 'oauth-api';
+  private oAuthProxyUri: string = '/oauth-api';
 
   constructor(private router: Router,
               private serializer: UrlSerializer,
@@ -111,7 +111,7 @@ export class OAuthService {
     /* The function signature for http.post() is http.post(url, body, options). We need to pass in null 
     for the request body; if we don't, then the argument we intend to pass as 'options' will be
     interpreted to be 'body'. */
-    const obs: Observable<any> = this.http.post(`${this.oAuthProxyUri}/api/v1/token`, null,
+    const obs: Observable<any> = this.http.post(`${this.oAuthProxyUri}/api/v1/token`, null, 
       {'observe': 'response', 'headers': headers,
       'params':
         {
