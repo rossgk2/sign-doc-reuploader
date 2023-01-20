@@ -22,6 +22,9 @@ import {reducer} from '../../store/reducer'
 import {Observable} from 'rxjs';
 import {first} from 'rxjs/operators';
 
+/* For debug purposes. */
+import {saveAs} from 'file-saver';
+
 @Component({
   selector: 'app-source-documents-list',
   templateUrl: './source-documents-list.component.html',
@@ -89,8 +92,6 @@ export class SourceDocumentsListComponent implements OnInit {
   private bearerAuth: string;
   private documentIds: string[] = [];
   private readyForDownload: boolean = false;
-
-  private pdfUrl;
 
   /* An "internal" field that persists across multiple instances of this component. */
   
@@ -213,22 +214,16 @@ export class SourceDocumentsListComponent implements OnInit {
     const requestConfig = <any>{'observe': 'response', 'responseType': 'blob'};
     
     // To avoid CORS errors, use a proxied URL to make the request.
-    const prefixEndIndex = 'https://secure.na4.adobesign.com/document/cp/'.length - 1;
+    const prefixEndIndex = 'https://secure.na4.adobesign.com/document/cp/'.length - 1; // hardcoded
     const endIndex = combinedDocumentUrl.length - 1;
     const combinedDocumentUrlSuffix = combinedDocumentUrl.substring(prefixEndIndex + 1, endIndex + 1);
-    const proxiedCombinedDocumentUrl = `/doc-pdf-api/${combinedDocumentUrlSuffix}`; //hardcoded
+    const proxiedCombinedDocumentUrl = `/doc-pdf-api/${combinedDocumentUrlSuffix}`;
     obs = this.http.get(proxiedCombinedDocumentUrl, requestConfig);
+    const blob = (await obs.toPromise()).body;
     
-    const blob: Blob = await obs.toPromise();
-    this.viewPdf(blob);
-
-    // const file = new Blob([blob], {type: 'application/pdf'});
-    // const fileURL = URL.createObjectURL(file);
-    // window.open(fileURL, '_blank', 'width=1000, height=800');
-  }
-  
-  viewPdf(pdf: Blob) {
-    this.pdfUrl = this.domSanitizer.bypassSecurityTrustResourceUrl(URL.createObjectURL(pdf));
+    // Save the blob to a PDF to check that we downloaded the PDF correctly. The PDF will be saved
+    // in the Downloads folder.
+    saveAs(blob, 'debug.pdf');
   }
 
   uploadPdf(file: Blob, endpointUrl: string) {
