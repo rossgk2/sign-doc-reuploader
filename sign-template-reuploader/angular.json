@@ -65,7 +65,7 @@
             "browserTarget": "sign-template-reuploader:build",
             "port": 443, // default port for HTTPS; default port for HTTP is 80
             "ssl": true, // use HTTPS
-            "proxyConfig": "proxy.conf.json"
+            "proxyConfig": "proxy.conf.ts"
           },
           "configurations": {
             "production": {

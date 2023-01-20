@@ -2,23 +2,21 @@ import {Injectable} from '@angular/core';
 import {UrlTree, Router, UrlSerializer} from '@angular/router';
 import {Credentials} from '../settings/credentials';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
+import {UrlGetterService} from './url-getter.service';
 import {Observable} from 'rxjs';
 
 @Injectable({providedIn: 'root'})
 export class OAuthService {
 
   private inDevelopment: boolean = true;
-  private oauthBaseUrl: string;
+  private oAuthBaseUri: string;
+  private oAuthProxyUri: string = 'oauth-api';
 
   constructor(private router: Router,
               private serializer: UrlSerializer,
-              private http: HttpClient)
-  {
-      if (this.inDevelopment)
-        this.oauthBaseUrl = 'https://secure.na1.adobesignstage.us/api/gateway/adobesignauthservice'
-      else
-        this.oauthBaseUrl = 'https://secure.na1.adobesign.us/api/gateway/adobesignauthservice';
-   }
+              private http: HttpClient,
+              private urlGetterService: UrlGetterService)
+  { this.oAuthBaseUri = urlGetterService.getOAuthBaseUri(this.inDevelopment); }
 
   /* 
     Returns a URL which is an "authorizaton grant request". When the user visits this URL,
@@ -59,7 +57,7 @@ export class OAuthService {
 
     /* Return the authorizaton grant request and the randomly generated state associated with it. */
     return {
-      'url': `${this.oauthBaseUrl}/api/v1/authorize` + this.serializer.serialize(tree),
+      'url': `${this.oAuthBaseUri}/api/v1/authorize` + this.serializer.serialize(tree),
       'initialState': state
     };  
   }
@@ -113,7 +111,7 @@ export class OAuthService {
     /* The function signature for http.post() is http.post(url, body, options). We need to pass in null 
     for the request body; if we don't, then the argument we intend to pass as 'options' will be
     interpreted to be 'body'. */
-    const obs: Observable<any> = this.http.post(`${this.oauthBaseUrl}/api/v1/token`, null,
+    const obs: Observable<any> = this.http.post(`${this.oAuthProxyUri}/api/v1/token`, null,
       {'observe': 'response', 'headers': headers,
       'params':
         {

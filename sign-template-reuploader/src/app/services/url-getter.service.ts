@@ -22,4 +22,11 @@ export class UrlGetterService
     baseUri = baseUri.substring(0, baseUri.length - 1) + "/api/rest/v6";
     return baseUri;
   }
+
+  getOAuthBaseUri(inDevelopment: boolean): string {
+    if (inDevelopment)
+      return 'https://secure.na1.adobesignstage.us/api/gateway/adobesignauthservice';
+    else
+      return 'https://secure.na1.adobesign.us/api/gateway/adobesignauthservice';
+  }
 }

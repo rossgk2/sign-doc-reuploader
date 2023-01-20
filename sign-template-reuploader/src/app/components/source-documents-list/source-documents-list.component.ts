@@ -3,6 +3,7 @@ import {Component, OnInit} from '@angular/core';
 import {FormArray, FormBuilder, FormGroup, FormControl, Validators} from '@angular/forms';
 import {UrlTree, Router, UrlSerializer} from '@angular/router';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
+import {DomSanitizer} from '@angular/platform-browser';
 
 /* Services */
 import {UrlGetterService} from '../../services/url-getter.service';
@@ -89,6 +90,8 @@ export class SourceDocumentsListComponent implements OnInit {
   private documentIds: string[] = [];
   private readyForDownload: boolean = false;
 
+  private pdfUrl;
+
   /* An "internal" field that persists across multiple instances of this component. */
   
   async getOAuthState() {
@@ -126,6 +129,7 @@ export class SourceDocumentsListComponent implements OnInit {
   constructor(private formBuilder: FormBuilder,
               private urlGetterService: UrlGetterService,
               private downloadService: DownloadService,
+              private domSanitizer: DomSanitizer,
               private oauthService: OAuthService,
               private router: Router,
               private serializer: UrlSerializer,
@@ -188,7 +192,8 @@ export class SourceDocumentsListComponent implements OnInit {
   }
 
   async uploadHelperDownload(documentId: string, bearerAuth: string): Promise<any> {
-    const defaultRequestConfig = <any>{'observe': 'response', 'headers': {Authorization: `Bearer ${bearerAuth}`}};
+    const defaultHeaders = new HttpHeaders().set('Authorization', `Bearer ${bearerAuth}`);
+    const defaultRequestConfig = <any>{'observe': 'response', 'headers': defaultHeaders};
     const baseUri = await this.urlGetterService.getApiBaseUriCommercial(bearerAuth);
 
     /* GET the name of the document. */
@@ -202,9 +207,39 @@ export class SourceDocumentsListComponent implements OnInit {
     /* GET the PDF on which the custom form fields that the user field out were placed.*/
     obs = this.http.get(`${baseUri}/libraryDocuments/${documentId}/combinedDocument/url`, defaultRequestConfig);
     const combinedDocumentUrl = (await obs.toPromise()).body.url;
+    console.log('combinedDocumentUrl:', combinedDocumentUrl)
 
-    console.log('combinedDocUrl:', combinedDocumentUrl);
+    // maybe?
+    const headers = new HttpHeaders()
+                    .set('Access-Control-Allow-Origin', '*')
+                    .set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                    .set('Access-Control-Allow-Headers', 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With')
+                    .set('Access-Control-Allow-Credentials', 'true');
+
+                    //.set('Authorization', `Bearer ${bearerAuth}`);
+    const requestConfig = <any>{'observe': 'response', 'headers': headers, 'responseType': 'blob'};
+    obs = this.http.get(combinedDocumentUrl, requestConfig);
+    const blob: Blob = await obs.toPromise();
+    this.viewPdf(blob);
+
+    // const file = new Blob([blob], {type: 'application/pdf'});
+    // const fileURL = URL.createObjectURL(file);
+    // window.open(fileURL, '_blank', 'width=1000, height=800');
   }
+  
+  viewPdf(pdf: Blob) {
+    this.pdfUrl = this.domSanitizer.bypassSecurityTrustResourceUrl(URL.createObjectURL(pdf));
+  }
+
+  uploadPdf(file: Blob, endpointUrl: string) {
+    const formData = new FormData();
+    formData.append('File', file);
+
+    const headers = new HttpHeaders().append('Content-Type', 'multipart/form-data');
+
+    return this.http.post(endpointUrl, formData, { 'headers': headers });
+  }
+
 
   uploadHelperUpload(documentId: string) {
 
@@ -252,7 +287,8 @@ export class SourceDocumentsListComponent implements OnInit {
       console.log('Initial state (after):', initialState);
       const authGrant = this.oauthService.getAuthGrant(this.router.url, initialState);
       this.bearerAuth = await this.oauthService.getToken(this._oAuthClientId, this._oAuthClientSecret, authGrant, this.redirectUri);
-    }
+      console.log('getToken() finished.');
+    } 
   }
 
   /* Helper functions for use in this .ts file. */
