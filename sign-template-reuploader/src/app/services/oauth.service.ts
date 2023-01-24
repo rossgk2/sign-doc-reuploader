@@ -11,7 +11,6 @@ import {Settings} from '../settings/settings';
 export class OAuthService {
 
   private oAuthBaseUri: string;
-  private oAuthProxyUri: string = '/oauth-api';
 
   constructor(private router: Router,
               private serializer: UrlSerializer,
@@ -108,9 +107,9 @@ export class OAuthService {
     console.log('Just set headers for the associated HTTP request. Now calling getToken().')
     console.log('authGrant:', authGrant)
 
-    /* We use a proxied URL to avoid CORS errors. */
+    /* We use a proxied URL to avoid CORS errors. See proxy.conf.ts. */
     const body = null;
-    const obs: Observable<any> = this.http.post(`${this.oAuthProxyUri}/api/v1/token`, body, 
+    const obs: Observable<any> = this.http.post(`/oauth-api/api/v1/token`, body,
       {'observe': 'response', 'headers': headers,
       'params':
         {

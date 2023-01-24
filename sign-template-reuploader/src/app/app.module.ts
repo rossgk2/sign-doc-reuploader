@@ -7,6 +7,8 @@ import {AppComponent} from './app.component';
 import {SourceDocumentsListComponent} from './components/source-documents-list/source-documents-list.component';
 import {ReactiveFormsModule} from '@angular/forms';
 import {HttpClientModule} from '@angular/common/http';
+import {ProxyDebug} from './services/proxy-debug';
+import {HTTP_INTERCEPTORS} from '@angular/common/http';
 
 @NgModule({
   declarations: [
@@ -20,7 +22,13 @@ import {HttpClientModule} from '@angular/common/http';
     ReactiveFormsModule,
     HttpClientModule
   ],
-  providers: [],
+  providers: [ // uncomment to enable proxy debugging. proxy debugging produces another runtime error though.
+    // {
+    //   provide: HTTP_INTERCEPTORS,
+    //   useClass: ProxyDebug,
+    //   multi: true
+    // }
+  ],
   bootstrap: [AppComponent]
 })
 

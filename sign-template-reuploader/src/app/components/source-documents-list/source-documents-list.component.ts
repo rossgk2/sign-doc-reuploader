@@ -232,7 +232,7 @@ export class SourceDocumentsListComponent implements OnInit {
     const prefixEndIndex = 'https://secure.na4.adobesign.com/document/cp/'.length - 1; // hardcoded
     const endIndex = combinedDocumentUrl.length - 1;
     const combinedDocumentUrlSuffix = combinedDocumentUrl.substring(prefixEndIndex + 1, endIndex + 1);
-    const proxiedCombinedDocumentUrl = `/doc-pdf-api/${combinedDocumentUrlSuffix}`;
+    const proxiedCombinedDocumentUrl = `/doc-pdf-api/${combinedDocumentUrlSuffix}`; // See proxy.conf.ts.
     obs = this.http.get(proxiedCombinedDocumentUrl, requestConfig);
     const pdfBlob = (await obs.toPromise()).body;
 
@@ -253,9 +253,10 @@ export class SourceDocumentsListComponent implements OnInit {
     const requestConfig = <any>{'observe': 'response', 'headers': headers};
 
     console.log('right before POST to /transientDocuments');
-    let obs: Observable<any> = this.http.post(`${baseUri}/transientDocuments`, formData, requestConfig);
-    const transientDocumentId = (await obs.toPromise()).body;
-    console.log('transientDocumentId:', transientDocumentId);
+    let obs: Observable<any> = this.http.post(`/fedramp-api/transientDocuments`, formData, requestConfig); // See proxy.conf.ts.
+    const response = (await obs.toPromise()).body;
+    console.log('transientDocumentId:', response);
+    // const transientDocumentId = response.transientDocumentId;
 
     /* Create a library document from the just-created transient document. */
     // const libraryDocumentInfo = 
@@ -323,6 +324,7 @@ export class SourceDocumentsListComponent implements OnInit {
       console.log('Initial state (after):', initialState);
       const authGrant = this.oauthService.getAuthGrant(this.router.url, initialState);
       this.bearerAuth = await this.oauthService.getToken(this._oAuthClientId, this._oAuthClientSecret, authGrant, this.redirectUri);
+      console.log('bearerAuth', this.bearerAuth);
     } 
   }
 
