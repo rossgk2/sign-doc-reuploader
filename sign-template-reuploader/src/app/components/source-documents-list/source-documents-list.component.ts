@@ -6,11 +6,14 @@ import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {DomSanitizer} from '@angular/platform-browser';
 
 /* Services */
-import {UrlGetterService} from '../../services/url-getter.service';
 import {DownloadService} from '../../services/download.service';
 import {OAuthService} from '../../services/oauth.service';
 
-/* User-defined configuration. */
+/* Utilities */
+import {getRandomId} from '../../util/random';
+import {getApiBaseUriFedRamp, getApiBaseUriCommercial, getOAuthBaseUri} from '../../util/url-getter';
+
+/* User-defined configuration */
 import {Credentials} from '../../settings/credentials';
 
 /* ngrx stores */
@@ -18,9 +21,12 @@ import {select, Store} from '@ngrx/store';
 import {setVariable} from '../../store/actions';
 import {reducer} from '../../store/reducer'
 
-/* RxJS Observables and support for vanilla JS Promises. */
+/* RxJS Observables and support for vanilla JS Promises */
 import {Observable} from 'rxjs';
 import {first} from 'rxjs/operators';
+
+/* Settings */
+import {Settings} from '../../settings/settings';
 
 /* For debug purposes. */
 import {saveAs} from 'file-saver';
@@ -92,7 +98,6 @@ export class SourceDocumentsListComponent implements OnInit {
   private bearerAuth: string;
   private documentIds: string[] = [];
   private readyForDownload: boolean = false;
-  private inDevelopment: boolean = true;
 
   /* An "internal" field that persists across multiple instances of this component. */
   
@@ -129,7 +134,6 @@ export class SourceDocumentsListComponent implements OnInit {
   private _loginEmail = Credentials._loginEmail;
 
   constructor(private formBuilder: FormBuilder,
-              private urlGetterService: UrlGetterService,
               private downloadService: DownloadService,
               private domSanitizer: DomSanitizer,
               private oauthService: OAuthService,
@@ -195,15 +199,17 @@ export class SourceDocumentsListComponent implements OnInit {
   async uploadHelper(documentId: string): Promise<any> {
     console.log(`Uploading document with the following ID: ${documentId}`);
     /* Adapt the existing reuploader program and put it here: */
-    const pdf: Blob = await this.uploadHelperDownload(documentId, Credentials.sourceIntegrationKey);
+    const result = await this.uploadHelperDownload(documentId, Credentials.sourceIntegrationKey);
     
     /* Save the blob to a PDF to check that we downloaded the PDF correctly. The PDF will be saved
      to the Downloads folder. */
-    saveAs(pdf, 'debug.pdf');
+    saveAs(result.pdfBlob, 'debug.pdf');
+
+    await this.uploadHelperUpload(result.docName, result.pdfBlob, documentId);
   }
 
-  async uploadHelperDownload(documentId: string, bearerAuth: string): Promise<Blob> {
-    const baseUri = await this.urlGetterService.getApiBaseUriCommercial(bearerAuth);    
+  async uploadHelperDownload(documentId: string, bearerAuth: string): Promise<any> {
+    const baseUri = await getApiBaseUriCommercial(bearerAuth);    
     const defaultRequestConfig = this.getDefaultRequestConfig(bearerAuth);
 
     /* GET the name of the document. */
@@ -228,25 +234,42 @@ export class SourceDocumentsListComponent implements OnInit {
     const combinedDocumentUrlSuffix = combinedDocumentUrl.substring(prefixEndIndex + 1, endIndex + 1);
     const proxiedCombinedDocumentUrl = `/doc-pdf-api/${combinedDocumentUrlSuffix}`;
     obs = this.http.get(proxiedCombinedDocumentUrl, requestConfig);
-    const pdf = (await obs.toPromise()).body;
+    const pdfBlob = (await obs.toPromise()).body;
 
-    return pdf;
+    return {'docName': docName, 'pdfBlob' : pdfBlob};
   }
 
-  // uploadHelperUpload(documentId: string) {
-  //   const baseUri = await getApiBaseUriFedRamp(inDevelopment);
-  //   const defaultRequestConfig = await getDefaultRequestConfig(this.bearerAuth);
+  async uploadHelperUpload(docName: string, pdfBlob: Blob, documentId: string) {
+    const baseUri = await getApiBaseUriFedRamp(Settings.inDevelopment);
+    const defaultRequestConfig = await this.getDefaultRequestConfig(this.bearerAuth);
 
-  //   /* POST the same document (but without any custom form fields) as a transient document and get its ID.
-  //   (Informed by https://stackoverflow.com/questions/53038900/nodejs-axios-post-file-from-local-server-to-another-server). */
-  //   const form = new FormData();
-  //   form.append('File-Name', docName);
-  //   form.append('File', arrayBuffer, `${savedFileName}.pdf`);
-  //   const requestConfig = { 'headers' : {...getDefaultHeadersConfig(newToken), ...form.getHeaders()} };
+    /* POST the same document (but without any custom form fields) as a transient document and get its ID.
+    (Informed by https://stackoverflow.com/questions/53038900/nodejs-axios-post-file-from-local-server-to-another-server). */
+    const formData = new FormData();
+    formData.append('File-Name', docName);
+    formData.append('File', pdfBlob);
+    const headers = defaultRequestConfig.headers.append('Content-Type', 'multipart/form-data')
+                                                .append('boundary', getRandomId());
+    const requestConfig = <any>{'observe': 'response', 'headers': headers};
 
+    console.log('right before POST to /transientDocuments');
+    let obs: Observable<any> = this.http.post(`${baseUri}/transientDocuments`, formData, requestConfig);
+    const transientDocumentId = (await obs.toPromise()).body;
+    console.log('transientDocumentId:', transientDocumentId);
 
-  //   const response = await this.http.post(`${baseUri}/transientDocuments`, form, requestConfig);
-  // }
+    /* Create a library document from the just-created transient document. */
+    // const libraryDocumentInfo = 
+    // {
+    //   'fileInfos' : [{'transientDocumentId' : transientDocumentId}],
+    //   'name': savedFileName,
+    //   'sharingMode': 'ACCOUNT', // can be 'USER' or 'GROUP' or 'ACCOUNT' or 'GLOBAL'
+    //   'state': 'AUTHORING', // can be 'AUTHORING' or 'ACTIVE'
+    //   'templateTypes': ['DOCUMENT'] // each array elt can be 'DOCUMENT' or 'FORM_FIELD_LAYER'
+    // };
+  
+    // obs = this.http.post(`${baseUri}/libraryDocuments`, JSON.stringify(libraryDocumentInfo), defaultRequestConfig);
+    // const newLibraryDocumentId = (await obs.toPromise()).body.id;
+  }
 
   getDefaultRequestConfig(bearerAuth: string): any {
     const defaultHeaders = new HttpHeaders().set('Authorization', `Bearer ${bearerAuth}`);
@@ -257,13 +280,6 @@ export class SourceDocumentsListComponent implements OnInit {
    * ===========================================================================
    * =========================================================================== 
    */
-
-  uploadPdf(file: Blob, endpointUrl: string) {
-    const formData = new FormData();
-    formData.append('File', file);
-    const headers = new HttpHeaders().append('Content-Type', 'multipart/form-data');
-    return this.http.post(endpointUrl, formData, { 'headers': headers });
-  }
 
   /* There's probably a better implementation of this function. */
   redirected(): boolean {
@@ -307,7 +323,6 @@ export class SourceDocumentsListComponent implements OnInit {
       console.log('Initial state (after):', initialState);
       const authGrant = this.oauthService.getAuthGrant(this.router.url, initialState);
       this.bearerAuth = await this.oauthService.getToken(this._oAuthClientId, this._oAuthClientSecret, authGrant, this.redirectUri);
-      console.log('bearerAuth:', this.bearerAuth);
     } 
   }
 

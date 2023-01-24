@@ -2,21 +2,21 @@ import {Injectable} from '@angular/core';
 import {UrlTree, Router, UrlSerializer} from '@angular/router';
 import {Credentials} from '../settings/credentials';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
-import {UrlGetterService} from './url-getter.service';
 import {Observable} from 'rxjs';
+import {getRandomId} from '../util/random';
+import {getApiBaseUriFedRamp, getApiBaseUriCommercial, getOAuthBaseUri} from '../util/url-getter';
+import {Settings} from '../settings/settings';
 
 @Injectable({providedIn: 'root'})
 export class OAuthService {
 
-  private inDevelopment: boolean = true;
   private oAuthBaseUri: string;
   private oAuthProxyUri: string = '/oauth-api';
 
   constructor(private router: Router,
               private serializer: UrlSerializer,
-              private http: HttpClient,
-              private urlGetterService: UrlGetterService)
-  { this.oAuthBaseUri = urlGetterService.getOAuthBaseUri(this.inDevelopment); }
+              private http: HttpClient)
+  { this.oAuthBaseUri = getOAuthBaseUri(Settings.inDevelopment); }
 
   /* 
     Returns a URL which is an "authorizaton grant request". When the user visits this URL,
@@ -27,10 +27,10 @@ export class OAuthService {
     Inputs:
       - redirectUri is the URI that the user should be redirected to once they have visited the URL
       that is the authorizaton grant request
-      - env is such that env.toLowerCase() is either 'commercial' or 'fedramp'
+      - env must be such that env.toLowerCase() is either 'commercial' or 'fedramp'
   */
   getOAuthGrantRequest(clientId: string, redirectUri: string, loginEmail: string, env: string): {[key: string]: string} {
-    const state = this.getRandomId();
+    const state = getRandomId();
     let scope: string;
 
     /* The syntax for the 'scope' query param depends on whether the environment is commercial or FedRamp. */
@@ -140,13 +140,5 @@ export class OAuthService {
     }
     else
       throw new Error('The response object from the OAuth /token endpoint does not contain a "access_token" or an "error".');
-  }
-
-  private randomIdHelper(): string { // from https://stackoverflow.com/a/55365334
-    return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
-  }
-
-  private getRandomId(): string { // from https://stackoverflow.com/a/55365334
-    return `${this.randomIdHelper()}${this.randomIdHelper()}-${this.randomIdHelper()}-${this.randomIdHelper()}-${this.randomIdHelper()}-${this.randomIdHelper()}${this.randomIdHelper()}${this.randomIdHelper()}`;
   }
 }
