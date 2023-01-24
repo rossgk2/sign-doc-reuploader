@@ -205,7 +205,7 @@ export class SourceDocumentsListComponent implements OnInit {
      to the Downloads folder. */
     saveAs(result.pdfBlob, 'debug.pdf');
 
-    await this.uploadHelperUpload(result.docName, result.pdfBlob, documentId);
+    await this.uploadHelperUpload(result.docName, result.formFields, result.pdfBlob, documentId);
   }
 
   async uploadHelperDownload(documentId: string, bearerAuth: string): Promise<any> {
@@ -236,10 +236,10 @@ export class SourceDocumentsListComponent implements OnInit {
     obs = this.http.get(proxiedCombinedDocumentUrl, requestConfig);
     const pdfBlob = (await obs.toPromise()).body;
 
-    return {'docName': docName, 'pdfBlob' : pdfBlob};
+    return {'docName': docName, 'formFields': formFields, 'pdfBlob' : pdfBlob};
   }
 
-  async uploadHelperUpload(docName: string, pdfBlob: Blob, documentId: string) {
+  async uploadHelperUpload(docName: string, formFields: {[key: string]: string}, pdfBlob: Blob, documentId: string) {
     const baseUri = await getApiBaseUriFedRamp(Settings.inDevelopment);
     const defaultRequestConfig = await this.getDefaultRequestConfig(this.bearerAuth);
 
@@ -268,13 +268,17 @@ export class SourceDocumentsListComponent implements OnInit {
     };
   
     // http.post() is supposed to use 'Content-Type': 'application/json' by default,
-    // but that doesn't happen with this request for some reason. So,
+    // but that doesn't happen with this request for some reason. So
     // we can't use defaultRequestConfig for this request.
     const headers2 = defaultRequestConfig.headers.append('Content-Type', 'application/json');
     const requestConfig2 = <any>{'observe': 'response', 'headers': headers2};
     obs = this.http.post(`/fedramp-api/libraryDocuments`, JSON.stringify(libraryDocumentInfo), requestConfig2);
     const newLibraryDocumentId = (await obs.toPromise()).body.id;
     console.log('newLibraryDocumentId:', newLibraryDocumentId);
+
+    /* Use a PUT request to add the custom form fields and the values entered earlier to the document. */
+    obs = this.http.put(`${baseUri}/libraryDocuments/${newLibraryDocumentId}/formFields`, JSON.stringify(formFields), requestConfig2);
+    console.log('PUT response:', (await obs.toPromise()).body);
   }
 
   getDefaultRequestConfig(bearerAuth: string): any {
