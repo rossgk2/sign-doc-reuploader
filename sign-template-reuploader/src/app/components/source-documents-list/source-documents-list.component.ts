@@ -251,24 +251,30 @@ export class SourceDocumentsListComponent implements OnInit {
     const headers = defaultRequestConfig.headers.append('boundary', getRandomId());
     const requestConfig = <any>{'observe': 'response', 'headers': headers};
 
-    console.log('right before POST to /transientDocuments');
     let obs: Observable<any> = this.http.post(`/fedramp-api/transientDocuments`, formData, requestConfig); // See proxy.conf.ts.
     const response = (await obs.toPromise()).body;
-    console.log('transientDocumentId:', response);
-    // const transientDocumentId = response.transientDocumentId;
+    const transientDocumentId = response.transientDocumentId;
+
+    console.log('transientDocumentId:', transientDocumentId);
 
     /* Create a library document from the just-created transient document. */
-    // const libraryDocumentInfo = 
-    // {
-    //   'fileInfos' : [{'transientDocumentId' : transientDocumentId}],
-    //   'name': savedFileName,
-    //   'sharingMode': 'ACCOUNT', // can be 'USER' or 'GROUP' or 'ACCOUNT' or 'GLOBAL'
-    //   'state': 'AUTHORING', // can be 'AUTHORING' or 'ACTIVE'
-    //   'templateTypes': ['DOCUMENT'] // each array elt can be 'DOCUMENT' or 'FORM_FIELD_LAYER'
-    // };
+    const libraryDocumentInfo = 
+    {
+      'fileInfos' : [{'transientDocumentId' : transientDocumentId}],
+      'name': '(From Angular reuploader program) ' + docName,
+      'sharingMode': 'ACCOUNT', // can be 'USER' or 'GROUP' or 'ACCOUNT' or 'GLOBAL'
+      'state': 'AUTHORING', // can be 'AUTHORING' or 'ACTIVE'
+      'templateTypes': ['DOCUMENT'] // each array elt can be 'DOCUMENT' or 'FORM_FIELD_LAYER'
+    };
   
-    // obs = this.http.post(`${baseUri}/libraryDocuments`, JSON.stringify(libraryDocumentInfo), defaultRequestConfig);
-    // const newLibraryDocumentId = (await obs.toPromise()).body.id;
+    // http.post() is supposed to use 'Content-Type': 'application/json' by default,
+    // but that doesn't happen with this request for some reason. So,
+    // we can't use defaultRequestConfig for this request.
+    const headers2 = defaultRequestConfig.headers.append('Content-Type', 'application/json');
+    const requestConfig2 = <any>{'observe': 'response', 'headers': headers2};
+    obs = this.http.post(`/fedramp-api/libraryDocuments`, JSON.stringify(libraryDocumentInfo), requestConfig2);
+    const newLibraryDocumentId = (await obs.toPromise()).body.id;
+    console.log('newLibraryDocumentId:', newLibraryDocumentId);
   }
 
   getDefaultRequestConfig(bearerAuth: string): any {

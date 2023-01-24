@@ -4,9 +4,9 @@ import {Observable} from 'rxjs';
 
 export function getApiBaseUriFedRamp(inDevelopment: boolean): string {
   if (inDevelopment)
-    return 'https://api.na1.adobesignstage.us/api/rest/v6/';
+    return 'https://api.na1.adobesignstage.us/api/rest/v6';
   else
-    return 'https://api.na1.adobesign.us/api/rest/v6/'
+    return 'https://api.na1.adobesign.us/api/rest/v6'
 }
 
 export async function getApiBaseUriCommercial(http: HttpClient, bearerAuth: string): Promise<any> { // having the HttpClient as an arg is kind of hacky
