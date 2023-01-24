@@ -248,8 +248,7 @@ export class SourceDocumentsListComponent implements OnInit {
     const formData = new FormData();
     formData.append('File-Name', docName);
     formData.append('File', pdfBlob);
-    const headers = defaultRequestConfig.headers.append('Content-Type', 'multipart/form-data')
-                                                .append('boundary', getRandomId());
+    const headers = defaultRequestConfig.headers.append('boundary', getRandomId());
     const requestConfig = <any>{'observe': 'response', 'headers': headers};
 
     console.log('right before POST to /transientDocuments');
