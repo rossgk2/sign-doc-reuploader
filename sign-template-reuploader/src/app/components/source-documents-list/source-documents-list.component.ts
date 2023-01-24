@@ -209,7 +209,7 @@ export class SourceDocumentsListComponent implements OnInit {
   }
 
   async uploadHelperDownload(documentId: string, bearerAuth: string): Promise<any> {
-    const baseUri = await getApiBaseUriCommercial(bearerAuth);    
+    const baseUri = await getApiBaseUriCommercial(this.http, bearerAuth);    
     const defaultRequestConfig = this.getDefaultRequestConfig(bearerAuth);
 
     /* GET the name of the document. */
