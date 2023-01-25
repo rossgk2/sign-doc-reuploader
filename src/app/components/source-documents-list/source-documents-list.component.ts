@@ -60,14 +60,6 @@ import {saveAs} from 'file-saver';
 
   Overall goal: migrate documents from a commercial account to a FedRamp account.
 
-  Done:
-    1. Get calls to Sign API working by using Bearer tokens from getToken().
-      - Learned: when using OAuth, have to use the Sign URL that corresponds to FedRamp.  
-  
-  To-do:
-    3. Think about what functions need to have a "commercial version" and a "FedRamp version". Make the necessary changes.
-    will only be called on the commercial account.
-
   4. Improve the UI.
   4.1. Make it so that user is redirected once they click "Log in" (no need for using "inspect element" to go to the OAuth redirect).
   4.2. Make it so that the "Display documents from your Sign account" button only appears if redirected() is true.
