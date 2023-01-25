@@ -174,8 +174,7 @@ export class SourceDocumentsListComponent implements OnInit {
     });
 
     /* For each document: if that document was selected, upload it. */
-    const temp = 1; // once done getting reuploadHelper() working, delete "&& i < temp" in the below
-    for (let i = 0; i < this.selectedDocs.length && i < temp; i ++) {
+    for (let i = 0; i < this.selectedDocs.length; i ++) {
       if (this.selectedDocs[i])
         await this.reuploadHelper(this.documentIds[i]);
     }
@@ -186,9 +185,9 @@ export class SourceDocumentsListComponent implements OnInit {
     /* Adapt the existing reuploader program and put it here: */
     const result = await this.download(documentId, Credentials.sourceIntegrationKey);
     
-    /* Save the blob to a PDF to check that we downloaded the PDF correctly. The PDF will be saved
-     to the Downloads folder. */
-    saveAs(result.pdfBlob, 'debug.pdf');
+    /* For debug purposes, save the blob to a PDF to check that we downloaded the PDF correctly. 
+    The PDF will be saved to the Downloads folder. */
+    // saveAs(result.pdfBlob, 'debug.pdf');
 
     await this.upload(result.docName, result.formFields, result.pdfBlob, documentId);
   }
