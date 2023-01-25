@@ -50,16 +50,3 @@ Assuming that the Angular app *is* hosted on port 443, the above steps are all t
 3. Ask an administrator to add `http://some.url` to the list of forwarding URLs that your Adobe Sign account recognizes as legitimate.
 
 Taking advantage of this special case is probably necessary because Adobe Sign might not be able to store a URL-with-port in its list of legitimate forwarding URLs.
-
-## Miscellaneous documentation
-
-### Enable CORS for development
-
-Use [this](https://webbrowsertools.com/test-cors/) Chrome plugin to enable [CORS](https://www.stackhawk.com/blog/what-is-cors/) (cross-origin resource sharing). This prevents errors being thrown due a "same origin" policy. See [this](https://www.stackhawk.com/blog/angular-cors-guide-examples-and-how-to-enable-it/) for more info.
-
-A more permanent solution will be necessary when finishing development... working on it!
-
-### tsconfig.json
-
-The tsconfig.json used in the top level-directory of this project is informed by these two links: [(1)](https://stackoverflow.com/a/55701637) [(2)](
-https://blog.appsignal.com/2022/01/19/how-to-set-up-a-nodejs-project-with-typescript.html). Specifically, we learn from (1) that since TypeScript's `File` type is defined in the `dom` library,  we have to add `dom` to `complierOptions` in order for TypeScript to know about the `File` type.
