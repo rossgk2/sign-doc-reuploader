@@ -67,10 +67,6 @@ import {saveAs} from 'file-saver';
   
   To-do:
     3. Think about what functions need to have a "commercial version" and a "FedRamp version". Make the necessary changes.
-    4. Implement uploadHelper().
-      4.1. Get the first API call from the old reupload() function to work.
-      4.2. Get the rest of reupload() working.
-    5. Rewrite the getAllDocuments() function to use an integration key (not an OAuth token), since this function
     will only be called on the commercial account.
 
   4. Improve the UI.
@@ -159,21 +155,20 @@ export class SourceDocumentsListComponent implements OnInit {
   }
 
   async getDocumentList(): Promise<any> {
-    const response = await this.downloadService.getAllDocuments(Credentials.sourceIntegrationKey);    
-    if (response.status === 200) {
-        /* Get the libraryDocumentList from the response.
-        Note, TS doesn't know that response.body has a libraryDocumentList without the cast here. */
-        const libraryDocumentList: any = (response.body as any).libraryDocumentList;
+    const baseUrl = await getApiBaseUriCommercial(this.http, Credentials.sourceIntegrationKey);
+    const requestConfig =this.getDefaultRequestConfig(Credentials.sourceIntegrationKey);
+    const obs: Observable<any> = this.http.get(`${baseUrl}/libraryDocuments`, requestConfig);
+    const response = (await obs.toPromise());
+    const libraryDocumentList: any = (response.body as any).libraryDocumentList;
 
-        /* Initalize documentIds. */
-        const oldThis = this;
-        libraryDocumentList.forEach(function(doc: any) {
-          oldThis.documentIds.push(doc.id);
-        });
-        
-        /* Set up the FormArray that will be used to display the list of documents to the user. */
-        this.populateDocForm(libraryDocumentList); 
-      }
+    /* Initalize documentIds. */
+    const oldThis = this;
+    libraryDocumentList.forEach(function(doc: any) {
+      oldThis.documentIds.push(doc.id);
+    });
+    
+    /* Set up the FormArray that will be used to display the list of documents to the user. */
+    this.populateDocForm(libraryDocumentList); 
   }
 
   /* ===========================================================================
