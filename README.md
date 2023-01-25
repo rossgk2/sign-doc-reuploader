@@ -23,7 +23,7 @@ There are two versions of this tool: a proof of concept command line tool and an
 3. [Download](https://github.com/rossgk2/sign-doc-reuploader/archive/refs/heads/main.zip) the zip of this repo and extract it.
 4. Rename the extracted folder to something (e.g. `fldr`).
 5. In a command prompt `cd` to `fldr/sign-template-reuploader`.
-6. (Possibly not necessary). If running for the first time, execute `npm install`.
+6. If running for the first time, execute `npm install`.
 7. Execute `ng serve --disableHostCheck true`. (We use `disableHostCheck` to allow traffic outside the local machine, i.e., traffic from the OAuth authentication server).
 8. Navigate to https://localhost.
 
