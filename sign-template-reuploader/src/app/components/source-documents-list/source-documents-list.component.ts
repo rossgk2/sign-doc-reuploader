@@ -6,7 +6,6 @@ import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {DomSanitizer} from '@angular/platform-browser';
 
 /* Services */
-import {DownloadService} from '../../services/download.service';
 import {OAuthService} from '../../services/oauth.service';
 
 /* Utilities */
