@@ -121,7 +121,6 @@ export class SourceDocumentsListComponent implements OnInit {
   private _loginEmail = Credentials._loginEmail;
 
   constructor(private formBuilder: FormBuilder,
-              private downloadService: DownloadService,
               private domSanitizer: DomSanitizer,
               private oauthService: OAuthService,
               private router: Router,
@@ -167,7 +166,7 @@ export class SourceDocumentsListComponent implements OnInit {
    * =========================================================================== 
    */
 
-  async upload(): Promise<any> {
+  async reupload(): Promise<any> {
     /* Get a list of all the indices cooresponding to documents that the user wants to upload. */
     const oldThis = this;
     this.documents.controls.forEach(function(group: FormGroup) {
@@ -175,26 +174,26 @@ export class SourceDocumentsListComponent implements OnInit {
     });
 
     /* For each document: if that document was selected, upload it. */
-    const temp = 1; // once done getting uploadHelper() working, delete "&& i < temp" in the below
+    const temp = 1; // once done getting reuploadHelper() working, delete "&& i < temp" in the below
     for (let i = 0; i < this.selectedDocs.length && i < temp; i ++) {
       if (this.selectedDocs[i])
-        await this.uploadHelper(this.documentIds[i]);
+        await this.reuploadHelper(this.documentIds[i]);
     }
   }
 
-  async uploadHelper(documentId: string): Promise<any> {
+  async reuploadHelper(documentId: string): Promise<any> {
     console.log(`Uploading document with the following ID: ${documentId}`);
     /* Adapt the existing reuploader program and put it here: */
-    const result = await this.uploadHelperDownload(documentId, Credentials.sourceIntegrationKey);
+    const result = await this.download(documentId, Credentials.sourceIntegrationKey);
     
     /* Save the blob to a PDF to check that we downloaded the PDF correctly. The PDF will be saved
      to the Downloads folder. */
     saveAs(result.pdfBlob, 'debug.pdf');
 
-    await this.uploadHelperUpload(result.docName, result.formFields, result.pdfBlob, documentId);
+    await this.upload(result.docName, result.formFields, result.pdfBlob, documentId);
   }
 
-  async uploadHelperDownload(documentId: string, bearerAuth: string): Promise<any> {
+  async download(documentId: string, bearerAuth: string): Promise<any> {
     const baseUri = await getApiBaseUriCommercial(this.http, bearerAuth);    
     const defaultRequestConfig = this.getDefaultRequestConfig(bearerAuth);
 
@@ -225,7 +224,7 @@ export class SourceDocumentsListComponent implements OnInit {
     return {'docName': docName, 'formFields': formFields, 'pdfBlob' : pdfBlob};
   }
 
-  async uploadHelperUpload(docName: string, formFields: {[key: string]: string}, pdfBlob: Blob, documentId: string) {
+  async upload(docName: string, formFields: {[key: string]: string}, pdfBlob: Blob, documentId: string) {
     const baseUri = await getApiBaseUriFedRamp(Settings.inDevelopment);
     const defaultRequestConfig = await this.getDefaultRequestConfig(this.bearerAuth);
 
