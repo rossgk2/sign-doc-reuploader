@@ -100,9 +100,7 @@ export class OAuthService {
   }
 
   async getToken(clientId: string, clientSecret: string, authGrant: string, redirectUri: string): Promise<any> {
-    const headers = new HttpHeaders()
-       .set('Authorization', 'Bearer ' + Credentials.sourceIntegrationKey)
-       .set('Content-Type', 'application/x-www-form-urlencoded');
+    const headers = new HttpHeaders().set('Content-Type', 'application/x-www-form-urlencoded');
     
     console.log('Just set headers for the associated HTTP request. Now calling getToken().')
     console.log('authGrant:', authGrant)

@@ -1,3 +1,4 @@
 export const Settings = {
-	inDevelopment: true
+	inDevelopment: true,
+	forceUseTestCredentials: true
 };

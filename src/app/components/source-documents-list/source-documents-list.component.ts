@@ -111,17 +111,41 @@ export class SourceDocumentsListComponent implements OnInit {
 
   /* Fields input by user. */
   private selectedDocs: boolean[] = [];
-  private oAuthClientId: string = '';
-  private clientSecret: string = '';
-  private loginEmail: string = '';
+  
+  private _commercialIntegrationKey: string = '';
+  private _oAuthClientId: string = '';
+  private _oAuthClientSecret: string = '';
+  private _loginEmail: string = '';
 
-  /* Temp hardcoded variables that simulate user input. */
-  private _oAuthClientId = Credentials._oAuthClientId;
-  private _oAuthClientSecret = Credentials._oAuthClientSecret;
-  private _loginEmail = Credentials._loginEmail;
+  get commercialIntegrationKey() {
+    if (Settings.forceUseTestCredentials)
+      return Credentials.commercialIntegrationKey;
+    else
+      return this._commercialIntegrationKey;
+  }
+
+  get oAuthClientId() {
+    if (Settings.forceUseTestCredentials)
+      return Credentials.oAuthClientId;
+    else
+      return this._oAuthClientId;
+  }
+
+  get oAuthClientSecret() {
+    if (Settings.forceUseTestCredentials)
+      return Credentials.oAuthClientSecret;
+    else
+      return this._oAuthClientSecret;
+  }
+  
+  get loginEmail() {
+    if (Settings.forceUseTestCredentials)
+      return Credentials.loginEmail;
+    else
+      return this._loginEmail;
+  } 
 
   constructor(private formBuilder: FormBuilder,
-              private domSanitizer: DomSanitizer,
               private oauthService: OAuthService,
               private router: Router,
               private serializer: UrlSerializer,
@@ -145,8 +169,8 @@ export class SourceDocumentsListComponent implements OnInit {
   }
 
   async getDocumentList(): Promise<any> {
-    const baseUrl = await getApiBaseUriCommercial(this.http, Credentials.sourceIntegrationKey);
-    const requestConfig =this.getDefaultRequestConfig(Credentials.sourceIntegrationKey);
+    const baseUrl = await getApiBaseUriCommercial(this.http, this.commercialIntegrationKey);
+    const requestConfig =this.getDefaultRequestConfig(this.commercialIntegrationKey);
     const obs: Observable<any> = this.http.get(`${baseUrl}/libraryDocuments`, requestConfig);
     const response = (await obs.toPromise());
     const libraryDocumentList: any = (response.body as any).libraryDocumentList;
@@ -183,7 +207,7 @@ export class SourceDocumentsListComponent implements OnInit {
   async reuploadHelper(documentId: string): Promise<any> {
     console.log(`Uploading document with the following ID: ${documentId}`);
     /* Adapt the existing reuploader program and put it here: */
-    const result = await this.download(documentId, Credentials.sourceIntegrationKey);
+    const result = await this.download(documentId, this.commercialIntegrationKey);
     
     /* For debug purposes, save the blob to a PDF to check that we downloaded the PDF correctly. 
     The PDF will be saved to the Downloads folder. */
@@ -290,7 +314,7 @@ export class SourceDocumentsListComponent implements OnInit {
       /* Real program will do the following. For now, use hardcoded params. */
       // console.log(this.oauthService.getOAuthRequestAuthGrantURL(this.oAuthClientId, this.loginEmail)); 
 
-      const authGrantRequest = this.oauthService.getOAuthGrantRequest(this._oAuthClientId, this.redirectUri, this._loginEmail, 'FedRamp');
+      const authGrantRequest = this.oauthService.getOAuthGrantRequest(this.oAuthClientId, this.redirectUri, this.loginEmail, 'FedRamp');
       console.log('About to store oAuthState!')
       this.setOAuthState(authGrantRequest.initialState);
       console.log('oAuthState has been stored.');
@@ -316,7 +340,7 @@ export class SourceDocumentsListComponent implements OnInit {
       const initialState = await this.getOAuthState();
       console.log('Initial state (after):', initialState);
       const authGrant = this.oauthService.getAuthGrant(this.router.url, initialState);
-      this.bearerAuth = await this.oauthService.getToken(this._oAuthClientId, this._oAuthClientSecret, authGrant, this.redirectUri);
+      this.bearerAuth = await this.oauthService.getToken(this.oAuthClientId, this.oAuthClientSecret, authGrant, this.redirectUri);
       console.log('bearerAuth', this.bearerAuth);
     } 
   }
