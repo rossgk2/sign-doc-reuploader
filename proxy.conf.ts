@@ -31,6 +31,6 @@ module.exports = [
       target: 'https://api.na4.adobesign.com/api/rest/v6', // getApiBaseUriCommercial(Settings.inDevelopment)
       changeOrigin: true,
       secure: false,
-      pathRewrite: {'^/fedramp-api': ''}
+      pathRewrite: {'^/commercial-api': ''}
    }
 ];

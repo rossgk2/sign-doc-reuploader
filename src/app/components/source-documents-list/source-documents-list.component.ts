@@ -361,7 +361,8 @@ export class SourceDocumentsListComponent implements OnInit {
 
     /* For each document: if that document was selected, upload it. */
     for (let i = 0; i < numCopies; i ++) {
-        await this.reuploadHelperCommercial(this.documentIds[0], i);
+      await this.reuploadHelperCommercial(this.documentIds[0], i);
+      console.log(`Uploaded "TEST DOC ${i}". Overall progress: ${i}/${numCopies}.`); 
     }
   }
 
