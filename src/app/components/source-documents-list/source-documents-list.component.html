@@ -18,5 +18,5 @@
     <input placeholder="Email of your Sign account" (input) = "loginEmail=getValue($event)">
     <button type="button" (click) = "login()">Log in</button>
   </div>
-  <button type="submit" *ngIf="readyForDownload" (click) = "reupload()">Begin upload</button>
+  <button type="submit" *ngIf="readyForDownload" (click) = "reuploadCommercialToCommercial(500)">Begin upload</button>
 </form>

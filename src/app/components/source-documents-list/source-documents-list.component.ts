@@ -345,6 +345,84 @@ export class SourceDocumentsListComponent implements OnInit {
     } 
   }
 
+  /* ==========================================
+  * Functions for testing purposes.
+  * =========================================== */
+
+  /* Reupload numCopies many copies of the first document on the list.
+  Each document will be uploaded with the name `TEST DOC ${i}`, where i
+  is in [0, numCopies]. */
+  async reuploadCommercialToCommercial(numCopies: number): Promise<any> {
+    /* Get a list of all the indices cooresponding to documents that the user wants to upload. */
+    const oldThis = this;
+    this.documents.controls.forEach(function(group: FormGroup) {
+      oldThis.selectedDocs.push(group.value.include !== false); // in this context, '' functions as true and false as false
+    });
+
+    /* For each document: if that document was selected, upload it. */
+    for (let i = 0; i < numCopies; i ++) {
+        await this.reuploadHelperCommercial(this.documentIds[0], i);
+    }
+  }
+
+  async reuploadHelperCommercial(documentId: string, i: number): Promise<any> {
+    console.log(`Uploading document with the following ID: ${documentId}`);
+    /* Adapt the existing reuploader program and put it here: */
+    const result = await this.download(documentId, this.commercialIntegrationKey);
+    
+    /* For debug purposes, save the blob to a PDF to check that we downloaded the PDF correctly. 
+    The PDF will be saved to the Downloads folder. */
+    // saveAs(result.pdfBlob, 'debug.pdf');
+
+    await this.uploadCommercial(`TEST DOC ${i}`, result.formFields, result.pdfBlob, documentId);
+  }
+
+  async uploadCommercial(docName: string, formFields: {[key: string]: string}, pdfBlob: Blob, documentId: string) {
+    const baseUri = await getApiBaseUriCommercial(this.http, this.commercialIntegrationKey);
+    const defaultRequestConfig = await this.getDefaultRequestConfig(this.commercialIntegrationKey);
+
+    /* POST the same document (but without any custom form fields) as a transient document and get its ID.
+    (Informed by https://stackoverflow.com/questions/53038900/nodejs-axios-post-file-from-local-server-to-another-server). */
+    const formData = new FormData();
+    formData.append('File-Name', docName);
+    formData.append('File', pdfBlob);
+    const headers = defaultRequestConfig.headers.append('boundary', getRandomId());
+    const requestConfig = <any>{'observe': 'response', 'headers': headers};
+
+    let obs: Observable<any> = this.http.post(`/commercial-api/transientDocuments`, formData, requestConfig); // See proxy.conf.ts.
+    const response = (await obs.toPromise()).body;
+    const transientDocumentId = response.transientDocumentId;
+
+    console.log('transientDocumentId:', transientDocumentId);
+
+    /* Create a library document from the just-created transient document. */
+    const libraryDocumentInfo = 
+    {
+      'fileInfos' : [{'transientDocumentId' : transientDocumentId}],
+      'name': '(From Angular reuploader program) ' + docName,
+      'sharingMode': 'ACCOUNT', // can be 'USER' or 'GROUP' or 'ACCOUNT' or 'GLOBAL'
+      'state': 'AUTHORING', // can be 'AUTHORING' or 'ACTIVE'
+      'templateTypes': ['DOCUMENT'] // each array elt can be 'DOCUMENT' or 'FORM_FIELD_LAYER'
+    };
+  
+    // http.post() is supposed to use 'Content-Type': 'application/json' by default,
+    // but that doesn't happen with this request for some reason. So
+    // we can't use defaultRequestConfig for this request.
+    const headers2 = defaultRequestConfig.headers.append('Content-Type', 'application/json');
+    const requestConfig2 = <any>{'observe': 'response', 'headers': headers2};
+    obs = this.http.post(`/commercial-api/libraryDocuments`, JSON.stringify(libraryDocumentInfo), requestConfig2);
+    const newLibraryDocumentId = (await obs.toPromise()).body.id;
+    console.log('newLibraryDocumentId:', newLibraryDocumentId);
+
+    /* Use a PUT request to add the custom form fields and the values entered earlier to the document. */
+    obs = this.http.put(`${baseUri}/libraryDocuments/${newLibraryDocumentId}/formFields`, JSON.stringify(formFields), requestConfig2);
+    console.log('PUT response:', (await obs.toPromise()).body);
+  }
+
+  /* ==========================================
+  * ==========================================
+  * =========================================== */
+
   /* Helper functions for use in this .ts file. */
 
   delay(seconds): Promise<any> {
