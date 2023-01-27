@@ -198,13 +198,23 @@ export class SourceDocumentsListComponent implements OnInit {
     });
 
     /* For each document: if that document was selected, upload it. */
-    for (let i = 0; i < this.selectedDocs.length; i ++) {
-      if (this.selectedDocs[i])
-        await this.reuploadHelper(this.documentIds[i]);
+    for (let i = 0; i < 500 || i < this.selectedDocs.length; ) { // after testing delete "i < 500 ||"
+      let error = false;
+      try {
+        // if (this.selectedDocs[i])
+        await this.reuploadHelper(this.documentIds[0], i); // after testing replace with this.reuploadHelper(this.documentIds[i])
+      } catch (err) {
+        error = true;
+        console.log(`Iteration ${i} failed. Retrying.`);
+      }
+      if (!error) {
+        i ++;
+        console.log(`Completed iteration ${i}.`);
+      }
     }
   }
 
-  async reuploadHelper(documentId: string): Promise<any> {
+  async reuploadHelper(documentId: string, i: number): Promise<any> { // after testing remove the argument i
     console.log(`Uploading document with the following ID: ${documentId}`);
     /* Adapt the existing reuploader program and put it here: */
     const result = await this.download(documentId, this.commercialIntegrationKey);
@@ -213,7 +223,7 @@ export class SourceDocumentsListComponent implements OnInit {
     The PDF will be saved to the Downloads folder. */
     // saveAs(result.pdfBlob, 'debug.pdf');
 
-    await this.upload(result.docName, result.formFields, result.pdfBlob, documentId);
+    await this.upload(`(1/27/23) Test doc ${i}` + result.docName, result.formFields, result.pdfBlob, documentId);
   }
 
   async download(documentId: string, bearerAuth: string): Promise<any> {
