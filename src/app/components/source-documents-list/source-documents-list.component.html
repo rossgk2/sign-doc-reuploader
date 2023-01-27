@@ -14,8 +14,10 @@
     </ng-container>
   </ng-container>
   <div style = "float:right">
-    <input placeholder="OAuth client_id" (input) = "oauthClientId=getValue($event)">
-    <input placeholder="Email of your Sign account" (input) = "loginEmail=getValue($event)">
+    <input placeholder="Commercial integration key" (input) = "_commercialIntegrationKey=getValue($event)">
+    <input placeholder="OAuth client ID" (input) = "_oAuthClientId=getValue($event)">
+    <input placeholder="OAuth client secret" type = "password" (input) = "_oAuthClientSecret=getValue($event)">
+    <input placeholder="Email of your Sign account" (input) = "_loginEmail=getValue($event)">
     <button type="button" (click) = "login()">Log in</button>
   </div>
   <button type="submit" *ngIf="readyForDownload" (click) = "reupload()">Begin upload</button>
