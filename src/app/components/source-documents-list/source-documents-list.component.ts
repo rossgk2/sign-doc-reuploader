@@ -83,6 +83,7 @@ export class SourceDocumentsListComponent implements OnInit {
   private static previousUrl: string = window.location.href; // the URL that hosts this webapp before user is redirected
   private redirectUri: string = 'https://migrationtooldev.com';
   private bearerAuth: string;
+  private refreshToken: string;
   private documentIds: string[] = [];
   private readyForDownload: boolean = false;
 
@@ -146,7 +147,7 @@ export class SourceDocumentsListComponent implements OnInit {
   } 
 
   constructor(private formBuilder: FormBuilder,
-              private oauthService: OAuthService,
+              private oAuthService: OAuthService,
               private router: Router,
               private serializer: UrlSerializer,
               private store: Store<{'oAuthState': string}>,
@@ -198,7 +199,27 @@ export class SourceDocumentsListComponent implements OnInit {
     });
 
     /* For each document: if that document was selected, upload it. */
+    const startTime = Date.now();
+    const minutesPerMillisecond = 1.667E-5;
+    const timeoutPeriodInMinutes = 5; // hardcoded for now; later we can grab this value from initial response from /token
+    const epsilonInMinutes = (1/50) * timeoutPeriodInMinutes; 
     for (let i = 0; i < 500 || i < this.selectedDocs.length; ) { // after testing delete "i < 500 ||"
+      /* Determine how much time has elapsed since the start of this function and declare a helper function. */
+      const totalTimeElapsedInMinutes = (Date.now() - startTime) * minutesPerMillisecond;
+      console.log('totalTimeElapsedInMinutes:', totalTimeElapsedInMinutes);
+      function currentTimeCloseToNonzeroMultipleOf(t: number): boolean {
+        return (totalTimeElapsedInMinutes > epsilonInMinutes) && ((totalTimeElapsedInMinutes % t) < epsilonInMinutes);
+      }
+
+      console.log('closeness', `${totalTimeElapsedInMinutes % (timeoutPeriodInMinutes - 1)} < ${epsilonInMinutes}?`);
+    
+      /* If the token is about to expire, use a refresh token to get a new token and a new refresh token. */
+      if (currentTimeCloseToNonzeroMultipleOf(timeoutPeriodInMinutes - 1)) {
+        const tokenResponse = await this.oAuthService.refreshToken(this.oAuthClientId, this.oAuthClientSecret, this.refreshToken);
+        this.bearerAuth = tokenResponse.accessToken; this.refreshToken = tokenResponse.refreshToken;
+      }
+
+      /* Try to reupload the ith document. Only proceed to the next iteration if we succeed. */
       let error = false;
       try {
         // if (this.selectedDocs[i])
@@ -322,9 +343,9 @@ export class SourceDocumentsListComponent implements OnInit {
 
     if (!this.redirected()) {
       /* Real program will do the following. For now, use hardcoded params. */
-      // console.log(this.oauthService.getOAuthRequestAuthGrantURL(this.oAuthClientId, this.loginEmail)); 
+      // console.log(this.oAuthService.getOAuthRequestAuthGrantURL(this.oAuthClientId, this.loginEmail)); 
 
-      const authGrantRequest = this.oauthService.getOAuthGrantRequest(this.oAuthClientId, this.redirectUri, this.loginEmail, 'FedRamp');
+      const authGrantRequest = this.oAuthService.getOAuthGrantRequest(this.oAuthClientId, this.redirectUri, this.loginEmail, 'FedRamp');
       console.log('About to store oAuthState!')
       this.setOAuthState(authGrantRequest.initialState);
       console.log('oAuthState has been stored.');
@@ -349,8 +370,9 @@ export class SourceDocumentsListComponent implements OnInit {
     if (this.redirected()) {
       const initialState = await this.getOAuthState();
       console.log('Initial state (after):', initialState);
-      const authGrant = this.oauthService.getAuthGrant(this.router.url, initialState);
-      this.bearerAuth = await this.oauthService.getToken(this.oAuthClientId, this.oAuthClientSecret, authGrant, this.redirectUri);
+      const authGrant = this.oAuthService.getAuthGrant(this.router.url, initialState);
+      const tokenResponse = await this.oAuthService.getToken(this.oAuthClientId, this.oAuthClientSecret, authGrant, this.redirectUri);
+      this.bearerAuth = tokenResponse.accessToken; this.refreshToken = tokenResponse.refreshToken;
       console.log('bearerAuth', this.bearerAuth);
     } 
   }

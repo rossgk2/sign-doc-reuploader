@@ -36,7 +36,8 @@ export class OAuthService {
     if (env.toLowerCase() == 'commercial')
       scope = 'library_read:account library_write:account agreement_write:account';
     else if (env.toLowerCase() == 'fedramp')
-      scope = 'library_read library_write agreement_write';
+      /* 'offline_access' is crucial. Instructs the POST to /token in getToken() to return a refresh token. */
+      scope = 'library_read library_write agreement_write offline_access';
     else
       throw new Error("env.toLowerCase() must be either 'commercial' or 'fedramp'.");
 
@@ -121,19 +122,46 @@ export class OAuthService {
     );
 
     const response = (await obs.toPromise()).body;
+    console.log('/token response:', response);
     
-    /* Handle errors. If no errors, return the obtained access token. */
-    if (response.hasOwnProperty('error')) {
+    return this.handleTokenEndpointErrorsAndReturn(response);
+  }
+
+  async refreshToken(clientId: string, clientSecret: string, refreshToken: string): Promise<any> {
+    const headers = new HttpHeaders().set('Content-Type', 'application/x-www-form-urlencoded');
+
+    /* We use a proxied URL to avoid CORS errors. See proxy.conf.ts. */
+    const body = null;
+    const obs: Observable<any> = this.http.post(`/oauth-api/api/v1/token`, body,
+      {'observe': 'response', 'headers': headers,
+      'params':
+        {
+          'client_id' : clientId,
+          'client_secret' : clientSecret,
+          'grant_type' : 'refresh_token',
+          'refresh_token': refreshToken
+        }
+      }
+    );
+
+    const response = (await obs.toPromise()).body;
+    console.log('refreshToken() response:', response);
+
+    return this.handleTokenEndpointErrorsAndReturn(response);
+  }
+
+  /* Helper function. */
+  handleTokenEndpointErrorsAndReturn(tokenResponse) {
+    if (tokenResponse.hasOwnProperty('error')) {
       const errorMessage = 'An erroneous request was made to the OAuth /token endpoint.\n' +
-      `Error: ${response.error}\nError description: ${response.error_description}`;
+      `Error: ${tokenResponse.error}\nError description: ${tokenResponse.error_description}`;
       throw new Error(errorMessage);
     }
-    else if (response.hasOwnProperty('access_token')) {
-      if (response.token_type !== "Bearer")
-        throw new Error(`The response object from the OAuth /token endpoint contains an "access_token", but the "token_type" is "${response.token_type}" instead of Bearer".`);
+    else if (tokenResponse.hasOwnProperty('access_token')) {
+      if (tokenResponse.token_type !== "Bearer")
+        throw new Error(`The response object from the OAuth /token endpoint contains an "access_token", but the "token_type" is "${tokenResponse.token_type}" instead of Bearer".`);
       
-      console.log('response', response);
-      return response.access_token;
+      return {'accessToken': tokenResponse.access_token, 'refreshToken': tokenResponse.refresh_token};
     }
     else
       throw new Error('The response object from the OAuth /token endpoint does not contain a "access_token" or an "error".');
