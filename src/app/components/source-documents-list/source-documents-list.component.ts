@@ -1,5 +1,5 @@
 /* Regular Angular stuff */
-import {Component, OnInit} from '@angular/core';
+import {Component, OnInit, HostListener, ElementRef, ViewChild, Renderer2} from '@angular/core';
 import {FormArray, FormBuilder, FormGroup, FormControl, Validators} from '@angular/forms';
 import {UrlTree, Router, UrlSerializer} from '@angular/router';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
@@ -29,12 +29,6 @@ import {Settings} from '../../settings/settings';
 
 /* For debug purposes. */
 import {saveAs} from 'file-saver';
-
-@Component({
-  selector: 'app-source-documents-list',
-  templateUrl: './source-documents-list.component.html',
-  styleUrls: ['./source-documents-list.component.scss']
-})
 
 /*
   ===================================================================
@@ -74,12 +68,15 @@ import {saveAs} from 'file-saver';
 
 */
 
+@Component({
+  selector: 'app-source-documents-list',
+  templateUrl: './source-documents-list.component.html',
+  styleUrls: ['./source-documents-list.component.scss']
+})
 export class SourceDocumentsListComponent implements OnInit {
   
   /* Fields internal to this component. */
-  private documentListForm = this.formBuilder.group({
-    documents: this.formBuilder.array([])
-  });
+  private documentListForm = this.formBuilder.group({ documents: this.formBuilder.array([]) });
   private static previousUrl: string = window.location.href; // the URL that hosts this webapp before user is redirected
   private redirectUri: string = 'https://migrationtooldev.com';
   private bearerAuth: string;
@@ -147,6 +144,8 @@ export class SourceDocumentsListComponent implements OnInit {
   } 
 
   constructor(private formBuilder: FormBuilder,
+              private elementRef: ElementRef,
+              private renderer: Renderer2,
               private oAuthService: OAuthService,
               private router: Router,
               private serializer: UrlSerializer,
@@ -184,6 +183,14 @@ export class SourceDocumentsListComponent implements OnInit {
     
     /* Set up the FormArray that will be used to display the list of documents to the user. */
     this.populateDocForm(libraryDocumentList); 
+  }
+
+  @ViewChild('myElement', { static: true }) selectedElement: ElementRef;
+
+  logToConsole(message: string) {
+    const oldInnerHtml: string = this.selectedElement.nativeElement.innerHTML;
+    const newHtml = oldInnerHtml + `<p> ${message} </p>\n`;
+    this.renderer.setProperty(this.selectedElement.nativeElement, 'innerHTML', newHtml);
   }
 
   /* ===========================================================================
@@ -294,7 +301,7 @@ export class SourceDocumentsListComponent implements OnInit {
     const response = (await obs.toPromise()).body;
     const transientDocumentId = response.transientDocumentId;
 
-    console.log('transientDocumentId:', transientDocumentId);
+    this.logToConsole(`transientDocumentId: ${transientDocumentId}`);
 
     /* Create a library document from the just-created transient document. */
     const libraryDocumentInfo = 

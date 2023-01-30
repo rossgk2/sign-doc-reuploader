@@ -13,12 +13,18 @@
       </div>
     </ng-container>
   </ng-container>
-  <div style = "float:right">
+
+  <div class="scrollable-div">
+      <p class = "console-message">message 1</p>
+      <p class = "console-message">message 2</p>
+  </div>
+
+  <div id="input-container">
     <input placeholder="Commercial integration key" (input) = "_commercialIntegrationKey=getValue($event)">
     <input placeholder="OAuth client ID" (input) = "_oAuthClientId=getValue($event)">
     <input placeholder="OAuth client secret" type = "password" (input) = "_oAuthClientSecret=getValue($event)">
     <input placeholder="Email of your Sign account" (input) = "_loginEmail=getValue($event)">
-    <button type="button" (click) = "login()">Log in</button>
+    <button type="button" (click) = "login()" id="login-button">Log in</button>
   </div>
   <button type="submit" *ngIf="readyForDownload" (click) = "reupload()">Begin upload</button>
 </form>

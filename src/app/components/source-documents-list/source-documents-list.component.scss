@@ -1,0 +1,34 @@
+.scrollable-div {
+	height: 50vh;
+	overflow: auto;
+	border:3px solid black;
+	padding-top: 0px;
+	padding-bottom: 0px;
+	padding-left: 10px;
+	padding-right: 10px;
+	background: rgb(11, 97, 184);
+}
+
+.console-message {
+	margin-top: 2.5px;
+	margin-bottom: 2.5px;
+	margin-left: 0px;
+	margin-right: 0px;
+	padding: 0px 0px 0px 0px;
+	color: white;
+	font-family: monaco, Consolas, "Lucida Console", monospace;
+}
+
+input {
+	display: block;
+	margin: 10px 2.5px 2.5px 2.5px;
+}
+
+#input-container {
+	display: flex;
+	justify-content: center;
+}
+
+#login-button {
+	margin-top: 10px;
+}
