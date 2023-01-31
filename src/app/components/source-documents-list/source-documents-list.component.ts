@@ -1,5 +1,5 @@
 /* Regular Angular stuff */
-import {Component, OnInit, HostListener, ElementRef, ViewChild, Renderer2} from '@angular/core';
+import {Component, OnInit, HostListener} from '@angular/core';
 import {FormArray, FormBuilder, FormGroup, FormControl, Validators} from '@angular/forms';
 import {UrlTree, Router, UrlSerializer} from '@angular/router';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
@@ -75,14 +75,45 @@ import {saveAs} from 'file-saver';
 })
 export class SourceDocumentsListComponent implements OnInit {
   
-  /* Fields internal to this component. */
-  private documentListForm = this.formBuilder.group({ documents: this.formBuilder.array([]) });
+  /* Reactive forms. */
+
+  private documentListForm = this.formBuilder.group(
+  {
+    documents: this.formBuilder.array([]),
+    consoleMessages: this.formBuilder.array([])
+  });
+
+  get documents() {
+    return this.documentListForm.controls['documents'] as FormArray;
+  }
+
+  private readyForDownload: boolean = false;
+
+  populateDocForm(libraryDocumentList: any) {
+    this.readyForDownload = true;
+    libraryDocumentList.forEach(template => {
+      const documentForm = this.formBuilder.group({
+        name: [template.name],
+        isSelected: ['']
+      });
+      this.documents.push(documentForm);
+    });
+  }
+
+  get consoleMessages() {
+    return this.documentListForm.controls['consoleMessages'] as FormArray;
+  }
+
+  logToConsole(message: string) {
+    this.consoleMessages.push(this.formBuilder.control(message));
+  }
+
+  /* Internal variables. */
   private static previousUrl: string = window.location.href; // the URL that hosts this webapp before user is redirected
   private redirectUri: string = 'https://migrationtooldev.com';
   private bearerAuth: string;
   private refreshToken: string;
   private documentIds: string[] = [];
-  private readyForDownload: boolean = false;
 
   /* An "internal" field that persists across multiple instances of this component. */
   
@@ -144,29 +175,12 @@ export class SourceDocumentsListComponent implements OnInit {
   } 
 
   constructor(private formBuilder: FormBuilder,
-              private elementRef: ElementRef,
-              private renderer: Renderer2,
               private oAuthService: OAuthService,
               private router: Router,
               private serializer: UrlSerializer,
               private store: Store<{'oAuthState': string}>,
               private http: HttpClient
               ) {}
-
-  get documents() {
-    return this.documentListForm.controls['documents'] as FormArray;
-  }
-
-  populateDocForm(libraryDocumentList: any) {
-    this.readyForDownload = true;
-    libraryDocumentList.forEach(template => {
-      const documentForm = this.formBuilder.group({
-        name: [template.name],
-        include: ['']
-      });
-      this.documents.push(documentForm);
-    });
-  }
 
   async getDocumentList(): Promise<any> {
     const baseUrl = await getApiBaseUriCommercial(this.http, this.commercialIntegrationKey);
@@ -183,14 +197,6 @@ export class SourceDocumentsListComponent implements OnInit {
     
     /* Set up the FormArray that will be used to display the list of documents to the user. */
     this.populateDocForm(libraryDocumentList); 
-  }
-
-  @ViewChild('myElement', { static: true }) selectedElement: ElementRef;
-
-  logToConsole(message: string) {
-    const oldInnerHtml: string = this.selectedElement.nativeElement.innerHTML;
-    const newHtml = oldInnerHtml + `<p> ${message} </p>\n`;
-    this.renderer.setProperty(this.selectedElement.nativeElement, 'innerHTML', newHtml);
   }
 
   /* ===========================================================================
@@ -301,7 +307,7 @@ export class SourceDocumentsListComponent implements OnInit {
     const response = (await obs.toPromise()).body;
     const transientDocumentId = response.transientDocumentId;
 
-    this.logToConsole(`transientDocumentId: ${transientDocumentId}`);
+    console.log(`transientDocumentId: ${transientDocumentId}`);
 
     /* Create a library document from the just-created transient document. */
     const libraryDocumentInfo = 
@@ -362,7 +368,7 @@ export class SourceDocumentsListComponent implements OnInit {
   }
 
   async ngOnInit(): Promise<any> {
-    console.log("ngOnInit() called.");
+    this.logToConsole("ngOnInit() called.");
 
     if (!this.redirected()) {
       console.log('Testing that setOAuthState() and getOAuthState() work...')
@@ -383,7 +389,7 @@ export class SourceDocumentsListComponent implements OnInit {
       console.log('bearerAuth', this.bearerAuth);
     } 
   }
-  
+
   /* Helper functions for use in this .ts file. */
 
   delay(seconds): Promise<any> {
