@@ -359,17 +359,18 @@ export class SourceDocumentsListComponent implements OnInit {
     console.log("login clicked.")
 
     if (!this.redirected()) {
-      /* Real program will do the following. For now, use hardcoded params. */
-      // console.log(this.oAuthService.getOAuthRequestAuthGrantURL(this.oAuthClientId, this.loginEmail)); 
-
+      /* Get the URL, the "authorization grant request", that the user must be redirected to in order to log in.*/
       const authGrantRequest = this.oAuthService.getOAuthGrantRequest(this.oAuthClientId, this.redirectUri, this.loginEmail, 'FedRamp');
+      console.log(`Authorization grant request URL: ${authGrantRequest.url}`);
+
+      /* Redirect the user to the URL that is the authGrantRequest. */
+      window.location.href = authGrantRequest.url;
+
+      /* Experimentation with ngrx stores. Ignore this. */
       console.log('About to store oAuthState!')
       this.setOAuthState(authGrantRequest.initialState);
       console.log('oAuthState has been stored.');
-      console.log(`Authorization grant request URL: ${authGrantRequest.url}`);
       console.log(`oAuthState (before): ${authGrantRequest.initialState}`);
-
-      window.location.href = authGrantRequest;
     }
   }
 
