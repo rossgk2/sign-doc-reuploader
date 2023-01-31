@@ -1,11 +1,10 @@
 Code
 
-1. Get button to redirect on click.
-2. Change reupload() so that it's not that same document is being reuploaded every time.
-3. Disable `inDevelopment` and `forceUseTestCredentials`. Delete `credentials.ts`.
-4. Hardcode URLs in`proxy.conf.ts` to be prod URLs rather than stage URLs.
+1. Disable `inDevelopment` and `forceUseTestCredentials`. Delete `credentials.ts`.
+2. Hardcode URLs in`proxy.conf.ts` to be prod URLs rather than stage URLs.
    1. It would be better if we could get `import` statements to work in `proxy.conf.ts` so that we don't have to hardcode the URLs.
-5. Add "select all" and "deselect all" buttons to the document selection UI.
+3. Add "select all" and "deselect all" buttons to the document selection UI.
+4. Remove need for `--disableHostCheck=true`; find a way to add OAuth server URL to allowed hosts or something
 
 Add to documentation
 

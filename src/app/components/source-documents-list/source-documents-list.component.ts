@@ -211,14 +211,15 @@ export class SourceDocumentsListComponent implements OnInit {
       oldThis.selectedDocs.push(group.value.include !== false); // in this context, '' functions as true and false as false
     });
 
-    const numSelectedDocs = this.selectedDocs.length;
+    const numSelectedDocs = this.selectedDocs.filter(function(b) { return b; }).length;
+    console.log(numSelectedDocs);
 
     /* For each document: if that document was selected, upload it. */
     const startTime = Date.now();
     const minutesPerMillisecond = 1.667E-5;
     const timeoutPeriodInMinutes = 5; // hardcoded for now; later we can grab this value from initial response from /token
     const epsilonInMinutes = (1/50) * timeoutPeriodInMinutes; 
-    for (let i = 0; i < 500 || i < this.selectedDocs.length; ) { // after testing delete "i < 500 ||"
+    for (let i = 0; i < this.selectedDocs.length; ) {
       /* Determine how much time has elapsed since the start of this function and declare a helper function. */
       const totalTimeElapsedInMinutes = (Date.now() - startTime) * minutesPerMillisecond;
       console.log('totalTimeElapsedInMinutes:', totalTimeElapsedInMinutes);
@@ -239,8 +240,8 @@ export class SourceDocumentsListComponent implements OnInit {
       /* Try to reupload the ith document. Only proceed to the next iteration if we succeed. */
       let error = false;
       try {
-        // if (this.selectedDocs[i])
-        await this.reuploadHelper(this.documentIds[0], i); // after testing replace with this.reuploadHelper(this.documentIds[i])
+        if (this.selectedDocs[i])
+          await this.reuploadHelper(this.documentIds[i]);
       } catch (err) {
         error = true;
         this.logToConsole(`Migration of document ${i + 1} of the ${numSelectedDocs} failed. Retrying migration of document ${i + 1}.`);
@@ -252,16 +253,15 @@ export class SourceDocumentsListComponent implements OnInit {
     }
   }
 
-  async reuploadHelper(documentId: string, i: number): Promise<any> { // after testing remove the argument i
+  async reuploadHelper(documentId: string): Promise<any> {
     this.logToConsole(`Migrating document whose ID in the commercial account is ${documentId}.`);
-    /* Adapt the existing reuploader program and put it here: */
     const result = await this.download(documentId, this.commercialIntegrationKey);
     
     /* For debug purposes, save the blob to a PDF to check that we downloaded the PDF correctly. 
     The PDF will be saved to the Downloads folder. */
     // saveAs(result.pdfBlob, 'debug.pdf');
 
-    await this.upload(`(1/27/23) Test doc ${i}` + result.docName, result.formFields, result.pdfBlob, documentId);
+    await this.upload(result.docName, result.formFields, result.pdfBlob, documentId);
   }
 
   async download(documentId: string, bearerAuth: string): Promise<any> {

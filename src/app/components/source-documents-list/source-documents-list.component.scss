@@ -17,14 +17,14 @@
 }
 
 #console {
-	height: 50vh;
+	height: 65vh;
 	overflow: auto;
 	border:3px solid black;
 	padding-top: 0px;
 	padding-bottom: 0px;
 	padding-left: 10px;
 	padding-right: 10px;
-	background: rgb(11, 97, 184);
+	background: black;
 }
 
 .console-message {
@@ -35,6 +35,7 @@
 	padding: 0px 0px 0px 0px;
 	color: white;
 	font-family: monaco, Consolas, "Lucida Console", monospace;
+	font-size: 20px;
 }
 
 input {

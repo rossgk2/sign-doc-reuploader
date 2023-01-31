@@ -15,7 +15,7 @@ export class OAuthService {
   constructor(private router: Router,
               private serializer: UrlSerializer,
               private http: HttpClient)
-  { this.oAuthBaseUri = getOAuthBaseUri(Settings.inDevelopment); }
+  { this.oAuthBaseUri = '/oauth-api/api/v1'; }
 
   /* 
     Returns a URL which is an "authorizaton grant request". When the user visits this URL,
@@ -57,7 +57,7 @@ export class OAuthService {
 
     /* Return the authorizaton grant request and the randomly generated state associated with it. */
     return {
-      'url': `${this.oAuthBaseUri}/api/v1/authorize` + this.serializer.serialize(tree),
+      'url': `${this.oAuthBaseUri}/authorize` + this.serializer.serialize(tree),
       'initialState': state
     };  
   }
@@ -108,7 +108,7 @@ export class OAuthService {
 
     /* We use a proxied URL to avoid CORS errors. See proxy.conf.ts. */
     const body = null;
-    const obs: Observable<any> = this.http.post(`/oauth-api/api/v1/token`, body,
+    const obs: Observable<any> = this.http.post(`${this.oAuthBaseUri}/token`, body,
       {'observe': 'response', 'headers': headers,
       'params':
         {
