@@ -110,7 +110,7 @@ export class SourceDocumentsListComponent implements OnInit {
 
   /* Internal variables. */
   private static previousUrl: string = window.location.href; // the URL that hosts this webapp before user is redirected
-  private redirectUri: string = 'https://migrationtooldev.com';
+  private redirectUri: string = 'https://migrationtool.com';
   private bearerAuth: string;
   private refreshToken: string;
   private documentIds: string[] = [];
@@ -211,6 +211,8 @@ export class SourceDocumentsListComponent implements OnInit {
       oldThis.selectedDocs.push(group.value.include !== false); // in this context, '' functions as true and false as false
     });
 
+    const numSelectedDocs = this.selectedDocs.length;
+
     /* For each document: if that document was selected, upload it. */
     const startTime = Date.now();
     const minutesPerMillisecond = 1.667E-5;
@@ -224,7 +226,8 @@ export class SourceDocumentsListComponent implements OnInit {
         return (totalTimeElapsedInMinutes > epsilonInMinutes) && ((totalTimeElapsedInMinutes % t) < epsilonInMinutes);
       }
 
-      console.log('closeness', `${totalTimeElapsedInMinutes % (timeoutPeriodInMinutes - 1)} < ${epsilonInMinutes}?`);
+      console.log('If in the following comparison we have LHS < RHS, then the current time is considered close to the time at which the token expires.');
+      console.log(`${totalTimeElapsedInMinutes % (timeoutPeriodInMinutes - 1)} < ${epsilonInMinutes}`);
     
       /* If the token is about to expire, use a refresh token to get a new token and a new refresh token. */
       if (currentTimeCloseToNonzeroMultipleOf(timeoutPeriodInMinutes - 1)) {
@@ -232,6 +235,7 @@ export class SourceDocumentsListComponent implements OnInit {
         this.bearerAuth = tokenResponse.accessToken; this.refreshToken = tokenResponse.refreshToken;
       }
 
+      this.logToConsole(`Beginning migration of document ${i + 1} of the ${numSelectedDocs} documents.`);
       /* Try to reupload the ith document. Only proceed to the next iteration if we succeed. */
       let error = false;
       try {
@@ -239,17 +243,17 @@ export class SourceDocumentsListComponent implements OnInit {
         await this.reuploadHelper(this.documentIds[0], i); // after testing replace with this.reuploadHelper(this.documentIds[i])
       } catch (err) {
         error = true;
-        console.log(`Iteration ${i} failed. Retrying.`);
+        this.logToConsole(`Migration of document ${i + 1} of the ${numSelectedDocs} failed. Retrying migration of document ${i + 1}.`);
       }
       if (!error) {
+        this.logToConsole(`Document ${i + 1} of the ${numSelectedDocs} documents has been sucessfully migrated.`);
         i ++;
-        console.log(`Completed iteration ${i}.`);
       }
     }
   }
 
   async reuploadHelper(documentId: string, i: number): Promise<any> { // after testing remove the argument i
-    console.log(`Uploading document with the following ID: ${documentId}`);
+    logToConsole(`Migrating document whose ID in the commercial account is ${documentId}.`);
     /* Adapt the existing reuploader program and put it here: */
     const result = await this.download(documentId, this.commercialIntegrationKey);
     
@@ -275,7 +279,7 @@ export class SourceDocumentsListComponent implements OnInit {
     /* GET the PDF on which the custom form fields that the user field out were placed.*/
     obs = this.http.get(`${baseUri}/libraryDocuments/${documentId}/combinedDocument/url`, defaultRequestConfig);
     const combinedDocumentUrl = (await obs.toPromise()).body.url;
-    console.log('combinedDocumentUrl:', combinedDocumentUrl)
+    this.logToConsole(`Obtained a combinedDocumentUrl of ${combinedDocumentUrl}.`);
 
     /* Save the PDF. */
     const requestConfig = <any>{'observe': 'response', 'responseType': 'blob'};
