@@ -1,14 +1,16 @@
 <form [formGroup]="migrationToolForm">
   
   <div class="flex-container">
-    <div id="document-list-container">
-      <button (click)="getDocumentList()"> Display documents from your Sign account </button>
-      <ng-container formArrayName="documents" *ngFor="let group of documents.controls; let i = index">
-        <div class="document-row" [formGroup]="group">
-          <input type="checkbox" [checked]="true" formControlName="isSelected" placeholder="true">
-          <input formControlName="name" placeholder="document name" readonly>
-        </div>
-      </ng-container>
+    <div style="flex:1">
+      <div id="document-list-container" *ngIf="redirected()">
+        <button (click)="getDocumentList()"> Display documents from your Sign account </button>
+        <ng-container formArrayName="documents" *ngFor="let group of documents.controls; let i = index">
+          <div class="document-row" [formGroup]="group">
+            <input type="checkbox" [checked]="true" formControlName="isSelected" placeholder="true">
+            <input formControlName="name" placeholder="document name" readonly>
+          </div>
+        </ng-container>
+      </div>
     </div>
   
     <div id="console" style="flex:3">
@@ -20,7 +22,7 @@
     <div style="flex:1"> <!-- This div is just used to occupy horizontal space. --> </div>
   </div>  
 
-  <div id="input-container">
+  <div id="input-container" *ngIf="!redirected()">
     <input placeholder="Commercial integration key" (input) = "_commercialIntegrationKey=getValue($event)">
     <input placeholder="OAuth client ID" (input) = "_oAuthClientId=getValue($event)">
     <input placeholder="OAuth client secret" type = "password" (input) = "_oAuthClientSecret=getValue($event)">
