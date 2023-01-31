@@ -10,6 +10,7 @@ import {OAuthService} from '../../services/oauth.service';
 
 /* Utilities */
 import {getRandomId} from '../../util/random';
+import {tab} from '../../util/spacing';
 import {getApiBaseUriFedRamp, getApiBaseUriCommercial, getOAuthBaseUri} from '../../util/url-getter';
 
 /* User-defined configuration */
@@ -223,15 +224,12 @@ export class SourceDocumentsListComponent implements OnInit {
       /* Determine how much time has elapsed since the start of this function and declare a helper function. */
       const totalTimeElapsedInMinutes = (Date.now() - startTime) * minutesPerMillisecond;
       console.log('totalTimeElapsedInMinutes:', totalTimeElapsedInMinutes);
-      function currentTimeCloseToNonzeroMultipleOf(t: number): boolean {
-        return (totalTimeElapsedInMinutes > epsilonInMinutes) && ((totalTimeElapsedInMinutes % t) < epsilonInMinutes);
-      }
-
       console.log('If in the following comparison we have LHS < RHS, then the current time is considered close to the time at which the token expires.');
       console.log(`${totalTimeElapsedInMinutes % (timeoutPeriodInMinutes - 1)} < ${epsilonInMinutes}`);
     
       /* If the token is about to expire, use a refresh token to get a new token and a new refresh token. */
-      if (currentTimeCloseToNonzeroMultipleOf(timeoutPeriodInMinutes - 1)) {
+      const tokenAboutToExpire: boolean = this.closeToNonzeroMultipleOf(totalTimeElapsedInMinutes, timeoutPeriodInMinutes - 1, epsilonInMinutes);
+      if (tokenAboutToExpire) {
         const tokenResponse = await this.oAuthService.refreshToken(this.oAuthClientId, this.oAuthClientSecret, this.refreshToken);
         this.bearerAuth = tokenResponse.accessToken; this.refreshToken = tokenResponse.refreshToken;
       }
@@ -248,13 +246,15 @@ export class SourceDocumentsListComponent implements OnInit {
       }
       if (!error) {
         this.logToConsole(`Document ${i + 1} of the ${numSelectedDocs} documents has been sucessfully migrated.`);
+        this.logToConsole('========================================================================');
         i ++;
       }
     }
   }
 
   async reuploadHelper(documentId: string): Promise<any> {
-    this.logToConsole(`Migrating document whose ID in the commercial account is ${documentId}.`);
+    this.logToConsole('About to download this document from the commercial account.');
+    this.logToConsole(`${tab()}The ID of this document in the commercial account is ${documentId}.`);
     const result = await this.download(documentId, this.commercialIntegrationKey);
     
     /* For debug purposes, save the blob to a PDF to check that we downloaded the PDF correctly. 
@@ -271,10 +271,12 @@ export class SourceDocumentsListComponent implements OnInit {
     /* GET the name of the document. */
     let obs: Observable<any> = this.http.get(`${baseUri}/libraryDocuments/${documentId}`, defaultRequestConfig);
     const docName: string = (await obs.toPromise()).body.name;
+    this.logToConsole(`The name of the document in the commercial account is ${docName}`);
 
     /* GET the values the user has entered into the document's fields. */
     obs = this.http.get(`${baseUri}/libraryDocuments/${documentId}/formFields`, defaultRequestConfig);
     const formFields: {[key: string]: string}[] = (await obs.toPromise()).body;
+    this.logToConsole(`Obtained the values the user entered into the document's fields.`);
 
     /* GET the PDF on which the custom form fields that the user field out were placed.*/
     obs = this.http.get(`${baseUri}/libraryDocuments/${documentId}/combinedDocument/url`, defaultRequestConfig);
@@ -378,7 +380,7 @@ export class SourceDocumentsListComponent implements OnInit {
     console.log("ngOnInit() called.");
 
     if (!this.redirected()) {
-      this.logToConsole('Welcome to the Adobe Sign Commercial-to-FedRamp Migration Tool.');
+      this.logToConsole(`Welcome to the Adobe Sign Commercial-to-FedRamp Migration Tool.`);
 
       console.log('Testing that setOAuthState() and getOAuthState() work...')
       const oAuthState0 = 'test12345';
@@ -400,6 +402,11 @@ export class SourceDocumentsListComponent implements OnInit {
   }
 
   /* Helper functions for use in this .ts file. */
+
+  /* Returns true if and only if s is not epsilon-close to zero and s is epsilon-close to a multiple of t. */
+  private closeToNonzeroMultipleOf(s: number, t: number, epsilon: number): boolean {
+    return (s > epsilon) && ((s % t) < epsilon);
+  }
 
   delay(seconds): Promise<any> {
     return new Promise(resolve => setTimeout(resolve, seconds * 1000));
