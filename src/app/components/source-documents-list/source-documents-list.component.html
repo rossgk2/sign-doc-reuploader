@@ -5,19 +5,29 @@
 <br/>
 
 <form [formGroup]="documentListForm">
-  <ng-container formArrayName="documents">
-    <ng-container *ngFor="let group of documents.controls; let i = index">
-      <div class="lesson-form-row" [formGroup]="group">
-        <input type="checkbox" [checked]="true" formControlName="include" placeholder="true">
-        <input formControlName="name" placeholder="document name" readonly>
-      </div>
-    </ng-container>
-  </ng-container>
-
-  <div class="scrollable-div">
+  
+  <div class="flex-container">
+    <div style="flex-direction:column; flex-grow:1">
+      <ng-container formArrayName="documents">
+        <ng-container *ngFor="let group of documents.controls; let i = index">
+          <div class="lesson-form-row" [formGroup]="group">
+            <input type="checkbox" [checked]="true" formControlName="include" placeholder="true">
+            <input formControlName="name" placeholder="document name" readonly>
+          </div>
+        </ng-container>
+      </ng-container>
+    </div>
+  
+    <div class="scrollable-div" style="flex-grow:3">
       <p class = "console-message">message 1</p>
       <p class = "console-message">message 2</p>
+    </div>
+
+    <div style="flex-grow:1"> </div>
   </div>
+
+  
+  
 
   <div id="input-container">
     <input placeholder="Commercial integration key" (input) = "_commercialIntegrationKey=getValue($event)">
