@@ -1,28 +1,25 @@
-<button (click)="getDocumentList()">Display documents from your Sign account</button>
-<p>
-</p>
-<br/>
-<br/>
-
 <form [formGroup]="migrationToolForm">
   
   <div class="flex-container">
-    <div style="flex-direction:column; flex-grow:1">
-      <ng-container formArrayName="documents" *ngFor="let group of documents.controls; let i = index">
-        <div class="lesson-form-row" [formGroup]="group">
-          <input type="checkbox" [checked]="true" formControlName="isSelected" placeholder="true">
-          <input formControlName="name" placeholder="document name" readonly>
-        </div>
-      </ng-container>
+    <div style="flex-direction:column; flex:1">
+      <div id="document-list-container">
+        <button (click)="getDocumentList()"> Display documents from your Sign account </button>
+        <ng-container formArrayName="documents" *ngFor="let group of documents.controls; let i = index">
+          <div class="lesson-form-row" [formGroup]="group">
+            <input type="checkbox" [checked]="true" formControlName="isSelected" placeholder="true">
+            <input formControlName="name" placeholder="document name" readonly>
+          </div>
+        </ng-container>
+      </div>
     </div>
   
-    <div class="scrollable-div" style="flex-grow:3">
+    <div class="scrollable-div" style="flex:3">
       <ng-container formArrayName="consoleMessages" *ngFor="let message of consoleMessages.controls; let i = index">
         <p class="console-message">{{message.value}}</p>
       </ng-container>
     </div>
 
-    <div style="flex-grow:1"> <!-- This div is just used to occupy horizontal space. --> </div>
+    <div style="flex:1"> <!-- This div is just used to occupy horizontal space. --> </div>
   </div>  
 
   <div id="input-container">

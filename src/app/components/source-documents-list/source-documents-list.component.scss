@@ -1,6 +1,11 @@
 .flex-container {
 	display: flex;
-	flex-direction: row
+	flex-direction: row;
+}
+
+#document-list-container {
+	overflow: auto;
+	height: 75vh;
 }
 
 .scrollable-div {
