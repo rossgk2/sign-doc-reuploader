@@ -4,7 +4,7 @@
 <br/>
 <br/>
 
-<form [formGroup]="documentListForm">
+<form [formGroup]="migrationToolForm">
   
   <div class="flex-container">
     <div style="flex-direction:column; flex-grow:1">
@@ -22,11 +22,8 @@
       </ng-container>
     </div>
 
-    <div style="flex-grow:1"> </div>
-  </div>
-
-  
-  
+    <div style="flex-grow:1"> <!-- This div is just used to occupy horizontal space. --> </div>
+  </div>  
 
   <div id="input-container">
     <input placeholder="Commercial integration key" (input) = "_commercialIntegrationKey=getValue($event)">

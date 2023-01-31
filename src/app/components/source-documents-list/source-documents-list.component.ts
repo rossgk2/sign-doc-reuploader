@@ -77,14 +77,14 @@ export class SourceDocumentsListComponent implements OnInit {
   
   /* Reactive forms. */
 
-  private documentListForm = this.formBuilder.group(
+  private migrationToolForm = this.formBuilder.group(
   {
     documents: this.formBuilder.array([]),
     consoleMessages: this.formBuilder.array([])
   });
 
   get documents() {
-    return this.documentListForm.controls['documents'] as FormArray;
+    return this.migrationToolForm.controls['documents'] as FormArray;
   }
 
   private readyForDownload: boolean = false;
@@ -101,7 +101,7 @@ export class SourceDocumentsListComponent implements OnInit {
   }
 
   get consoleMessages() {
-    return this.documentListForm.controls['consoleMessages'] as FormArray;
+    return this.migrationToolForm.controls['consoleMessages'] as FormArray;
   }
 
   logToConsole(message: string) {
@@ -368,11 +368,13 @@ export class SourceDocumentsListComponent implements OnInit {
   }
 
   async ngOnInit(): Promise<any> {
-    this.logToConsole("ngOnInit() called.");
+    console.log("ngOnInit() called.");
 
     if (!this.redirected()) {
+      this.logToConsole('Welcome to the Adobe Sign Commercial-to-FedRamp Migration Tool.');
+
       console.log('Testing that setOAuthState() and getOAuthState() work...')
-      const oAuthState0 = 'lololol';
+      const oAuthState0 = 'test12345';
       console.log(`Calling setOAuthState('${oAuthState0}')`);
       this.setOAuthState(oAuthState0);
       console.log(`getOAuthState() return value: ${await this.getOAuthState()}`);
