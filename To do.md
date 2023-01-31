@@ -1,8 +1,11 @@
 Code
 
-1. Add "select all" and "deselect all" buttons to the document selection UI.
-2. Hardcode URLs in`proxy.conf.ts` to be prod URLs rather than stage URLs.
+1. Get button to redirect on click.
+2. Change reupload() so that it's not that same document is being reuploaded every time.
+3. Disable `inDevelopment` and `forceUseTestCredentials`. Delete `credentials.ts`.
+4. Hardcode URLs in`proxy.conf.ts` to be prod URLs rather than stage URLs.
    1. It would be better if we could get `import` statements to work in `proxy.conf.ts` so that we don't have to hardcode the URLs.
+5. Add "select all" and "deselect all" buttons to the document selection UI.
 
 Add to documentation
 
@@ -15,4 +18,6 @@ Later
 
 1. Get ngrx store to work.
    1. Use it to persist `state` across multiple instances of source-documents-list.component
-   2. In source-documents-list.component, create a boolean instance variable `loggedIn`, and persist it across multiple instances of source-documents-list.component. Modify the code so that `getToken()` is only called when `redirected() && loggedIn`.
+   2. In source-documents-list.component, create a boolean instance variable `loggedIn`, and persist it across multiple instances of source-documents-list.component.
+      1. Modify the code so that `getToken()` is only called when `redirected() && loggedIn`.
+      2. Modify the code so that the "Display documents from your Sign account" button is only visible when `loggedIn`.

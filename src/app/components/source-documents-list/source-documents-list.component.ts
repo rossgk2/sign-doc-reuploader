@@ -253,7 +253,7 @@ export class SourceDocumentsListComponent implements OnInit {
   }
 
   async reuploadHelper(documentId: string, i: number): Promise<any> { // after testing remove the argument i
-    logToConsole(`Migrating document whose ID in the commercial account is ${documentId}.`);
+    this.logToConsole(`Migrating document whose ID in the commercial account is ${documentId}.`);
     /* Adapt the existing reuploader program and put it here: */
     const result = await this.download(documentId, this.commercialIntegrationKey);
     
@@ -368,6 +368,8 @@ export class SourceDocumentsListComponent implements OnInit {
       console.log('oAuthState has been stored.');
       console.log(`Authorization grant request URL: ${authGrantRequest.url}`);
       console.log(`oAuthState (before): ${authGrantRequest.initialState}`);
+
+      window.location.href = authGrantRequest;
     }
   }
 

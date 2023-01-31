@@ -6,9 +6,17 @@
 #document-list-container {
 	overflow: auto;
 	height: 75vh;
+	margin-right: 10px;
+	flex-direction: row;
 }
 
-.scrollable-div {
+.document-row {
+	display: flex; /* Should inherit display: flex but doesn't. */
+	flex-direction: row;
+	width: 100%;
+}
+
+#console {
 	height: 50vh;
 	overflow: auto;
 	border:3px solid black;
