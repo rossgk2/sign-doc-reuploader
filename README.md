@@ -2,30 +2,17 @@
 
 ## Dependencies
 
-You need to have v16 of [node.js](https://nodejs.org/en/) installed.
+1. Install v16 of node.js. You can use one of [these](https://nodejs.org/download/release/v16.19.0/) installer executables for node.js v16.19.0.
+2. Follow the instructions [here]() to install whatever version of the Angular CLI is compatible with the version of node.js installed.
 
-## Install and run
-
-There are two versions of this tool: a proof of concept command line tool and an Angular app. The Angluar app is still in development.
-
-### Command line tool
-
-1. [Download](https://github.com/rossgk2/sign-doc-reuploader/archive/refs/heads/main.zip) the zip of this repo and extract it.
-2. Rename the extracted folder to something (e.g. `fldr`).
-3. In a command prompt `cd` to `fldr`.
-4. If running for the first time, execute `npm install`.
-5. Execute `npx ts-node reuploader.ts` (not `node reuploader.ts`, since we're using TypeScript).
-
-### Angular app
+## Running the app for the first time
 
 1. You don't need to do anything for this step; it's included for pedagogy. (Ensure the Angular app is hosted on port 443 by adding `"port" = 443` to `projects.<project>.architect.serve.options`, where `<project>` is the name of the associated Angular project.)
 2. Follow the instructions of the below **Redirecting via the `hosts` file** section. Perform step (3) as described in the **Special case** subsection.
-3. [Download](https://github.com/rossgk2/sign-doc-reuploader/archive/refs/heads/main.zip) the zip of this repo and extract it.
-4. Rename the extracted folder to something (e.g. `fldr`).
-5. In a command prompt `cd` to `fldr/sign-template-reuploader`.
+3. Clone this repo and `cd` into the `sign-doc-reuploader` folder that results.
 6. If running for the first time, execute `npm install`.
-7. Execute `ng serve --disableHostCheck=true`. (This allows traffic from outside the local machine, i.e., traffic from the OAuth authentication server).
-8. Navigate to https://localhost.
+7. Execute `ng serve`.
+8. Navigate to https://localhost. Make sure you use https and not http.
 
 ## Redirecting via the `hosts` file
 

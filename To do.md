@@ -1,14 +1,16 @@
+## Build and run the app
+
+1. Install dependencies.
+   1. `choco install openssl`
+   2. `npm install http-server -g`. Yes, the `-g` is necessary.
+2. Build the app by running`ng build` within the sign-doc-reuploader folder. This creates the folder dist/sign-doc-reuploader that contains the files needed to run the server.
+3. `cd dist/sign-doc-reuploader`
+4. Generate key.pem and cert.pem files, which are needed for SSL (i.e. HTTPS), by executing `openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -keyout key.pem -out cert.pem`. (See [this Stack Overflow](https://stackoverflow.com/a/35231213) answer).
+5. `http-server --ssl --port=443`.
+
 ## Code
 
-1. Use `http-server` to run the built Angular app.
-   1. Generate key.pem and cert.pem files. These are needed for SSL (i.e. HTTPS).
-      1. `choco install openssl`
-      2. `openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -keyout key.pem -out cert.pem` from [this Stack Overflow](https://stackoverflow.com/a/35231213) answer.
-   2. Install a simple webserver, `http-server`. Then build the Angular app and use the webserver to run it.
-      1. `npm install http-server -g`
-      2. `ng build --prod`. This creates a folder called dist that contains the files needed to run the server.
-      3. `cd dist`
-      4. `http-server --ssl`.
+1. For some reason GET /libraryDocumentList only returns 100 documents. Is this because stage accounts are limited to having 100 templates?
 2. Disable `inDevelopment` and `forceUseTestCredentials`. Delete `credentials.ts`.
 3. Hardcode URLs in`proxy.conf.ts` to be prod URLs rather than stage URLs.
    1. It would be better if we could get `import` statements to work in `proxy.conf.ts` so that we don't have to hardcode the URLs.

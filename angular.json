@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "sign-template-reuploader": {
+    "sign-doc-reuploader": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -17,7 +17,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "outputPath": "dist/sign-template-reuploader",
+            "outputPath": "dist/sign-doc-reuploader",
             "index": "src/index.html",
             "main": "src/main.ts",
             "polyfills": "src/polyfills.ts",
@@ -62,7 +62,7 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "sign-template-reuploader:build",
+            "browserTarget": "sign-doc-reuploader:build",
             "ssl": true, // use HTTPS
             "port": 443, // default port for HTTPS; default port for HTTP is 80
             "proxyConfig": "proxy.conf.ts",
@@ -70,14 +70,14 @@
           },
           "configurations": {
             "production": {
-              "browserTarget": "sign-template-reuploader:build:production"
+              "browserTarget": "sign-doc-reuploader:build:production"
             }
           }
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "sign-template-reuploader:build"
+            "browserTarget": "sign-doc-reuploader:build"
           }
         },
         "test": {
@@ -114,15 +114,15 @@
           "builder": "@angular-devkit/build-angular:protractor",
           "options": {
             "protractorConfig": "e2e/protractor.conf.js",
-            "devServerTarget": "sign-template-reuploader:serve"
+            "devServerTarget": "sign-doc-reuploader:serve"
           },
           "configurations": {
             "production": {
-              "devServerTarget": "sign-template-reuploader:serve:production"
+              "devServerTarget": "sign-doc-reuploader:serve:production"
             }
           }
         }
       }
     }},
-  "defaultProject": "sign-template-reuploader"
+  "defaultProject": "sign-doc-reuploader"
 }
