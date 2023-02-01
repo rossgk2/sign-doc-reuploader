@@ -15,7 +15,10 @@
   
     <div id="console" style="flex:3">
       <ng-container formArrayName="consoleMessages" *ngFor="let message of consoleMessages.controls; let i = index">
-        <p class="console-message">{{message.value}}</p>
+        <p class="console-message" [innerHTML] = "message.value"></p>
+        <!-- Don't do <p class="console-message"> {{message.value}} </p>. This will cause '&nbsp;' that 
+          is pushed to the FormControl associated with this <p> to be HTML-endoded; i.e. a literal
+            &nbsp; will be represented, not an actual non-breaking space. -->
       </ng-container>
     </div>
 

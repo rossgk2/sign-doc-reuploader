@@ -379,7 +379,7 @@ export class SourceDocumentsListComponent implements OnInit {
     console.log("ngOnInit() called.");
 
     if (!this.redirected()) {
-      this.logToConsole(`Welcome to the Adobe Sign Commercial-to-FedRamp Migration Tool.`);
+      this.logToConsole('&nbsp;Welcome to the Adobe Sign Commercial-to-FedRamp Migration Tool.');
 
       console.log('Testing that setOAuthState() and getOAuthState() work...')
       const oAuthState0 = 'test12345';
