@@ -209,11 +209,10 @@ export class SourceDocumentsListComponent implements OnInit {
     /* Get a list of all the indices cooresponding to documents that the user wants to upload. */
     const oldThis = this;
     this.documents.controls.forEach(function(group: FormGroup) {
-      oldThis.selectedDocs.push(group.value.include !== false); // in this context, '' functions as true and false as false
+      oldThis.selectedDocs.push(group.value.isSelected !== false); // in this context, '' functions as true and false as false
     });
 
     const numSelectedDocs = this.selectedDocs.filter(function(b) { return b; }).length;
-    console.log(numSelectedDocs);
 
     /* For each document: if that document was selected, upload it. */
     const startTime = Date.now();
