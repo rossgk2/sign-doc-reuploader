@@ -78,7 +78,7 @@ export class SourceDocumentsListComponent implements OnInit {
   
   /* Reactive forms. */
 
-  private migrationToolForm = this.formBuilder.group(
+  migrationToolForm = this.formBuilder.group(
   {
     documents: this.formBuilder.array([]),
     consoleMessages: this.formBuilder.array([])
@@ -88,7 +88,7 @@ export class SourceDocumentsListComponent implements OnInit {
     return this.migrationToolForm.controls['documents'] as FormArray;
   }
 
-  private readyForDownload: boolean = false;
+  readyForDownload: boolean = false;
 
   populateDocForm(libraryDocumentList: any) {
     this.readyForDownload = true;
