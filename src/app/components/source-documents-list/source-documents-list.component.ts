@@ -109,6 +109,10 @@ export class SourceDocumentsListComponent implements OnInit {
     this.consoleMessages.push(this.formBuilder.control(message));
   }
 
+  logToConsoleTabbed(message: string) {
+    this.logToConsole(tab() + message);
+  }
+
   /* Internal variables. */
   private static previousUrl: string = window.location.href; // the URL that hosts this webapp before user is redirected
   private redirectUri: string = 'https://migrationtool.com';
@@ -223,7 +227,7 @@ export class SourceDocumentsListComponent implements OnInit {
       /* Determine how much time has elapsed since the start of this function and declare a helper function. */
       const totalTimeElapsedInMinutes = (Date.now() - startTime) * minutesPerMillisecond;
       console.log('totalTimeElapsedInMinutes:', totalTimeElapsedInMinutes);
-      console.log('If in the following comparison we have LHS < RHS, then the current time is considered close to the time at which the token expires.');
+      console.log('If in the following comparison if we have LHS < RHS, then the current time is considered close to the time at which the token expires.');
       console.log(`${totalTimeElapsedInMinutes % (timeoutPeriodInMinutes - 1)} < ${epsilonInMinutes}`);
     
       /* If the token is about to expire, use a refresh token to get a new token and a new refresh token. */
@@ -252,14 +256,15 @@ export class SourceDocumentsListComponent implements OnInit {
   }
 
   async reuploadHelper(documentId: string): Promise<any> {
-    this.logToConsole('About to download this document from the commercial account.');
-    this.logToConsole(`${tab()}The ID of this document in the commercial account is ${documentId}.`);
+    this.logToConsole('About to inspect this document in the commercial account and then download it from the commercial account.');
+    this.logToConsoleTabbed(`The ID of this document in the commercial account is ${documentId}.`);
     const result = await this.download(documentId, this.commercialIntegrationKey);
     
     /* For debug purposes, save the blob to a PDF to check that we downloaded the PDF correctly. 
     The PDF will be saved to the Downloads folder. */
     // saveAs(result.pdfBlob, 'debug.pdf');
 
+    this.logToConsole('About to upload this document to the FedRamp account.');
     await this.upload(result.docName, result.formFields, result.pdfBlob, documentId);
   }
 
@@ -270,17 +275,17 @@ export class SourceDocumentsListComponent implements OnInit {
     /* GET the name of the document. */
     let obs: Observable<any> = this.http.get(`${baseUri}/libraryDocuments/${documentId}`, defaultRequestConfig);
     const docName: string = (await obs.toPromise()).body.name;
-    this.logToConsole(`The name of the document in the commercial account is ${docName}`);
+    this.logToConsoleTabbed(`The name of this document in the commercial account is ${docName}`);
 
     /* GET the values the user has entered into the document's fields. */
     obs = this.http.get(`${baseUri}/libraryDocuments/${documentId}/formFields`, defaultRequestConfig);
     const formFields: {[key: string]: string}[] = (await obs.toPromise()).body;
-    this.logToConsole(`Obtained the values the user entered into the document's fields.`);
+    this.logToConsoleTabbed(`Obtained the values the user entered into this document's fields.`);
 
     /* GET the PDF on which the custom form fields that the user field out were placed.*/
     obs = this.http.get(`${baseUri}/libraryDocuments/${documentId}/combinedDocument/url`, defaultRequestConfig);
     const combinedDocumentUrl = (await obs.toPromise()).body.url;
-    this.logToConsole(`Obtained a combinedDocumentUrl of ${combinedDocumentUrl}.`);
+    this.logToConsoleTabbed(`The PDF representation of this document is located at "${combinedDocumentUrl}".`);
 
     /* Save the PDF. */
     const requestConfig = <any>{'observe': 'response', 'responseType': 'blob'};
@@ -292,6 +297,7 @@ export class SourceDocumentsListComponent implements OnInit {
     const proxiedCombinedDocumentUrl = `/doc-pdf-api/${combinedDocumentUrlSuffix}`; // See proxy.conf.ts.
     obs = this.http.get(proxiedCombinedDocumentUrl, requestConfig);
     const pdfBlob = (await obs.toPromise()).body;
+    this.logToConsoleTabbed(`Downloaded the PDF of this document.`);
 
     return {'docName': docName, 'formFields': formFields, 'pdfBlob' : pdfBlob};
   }
@@ -312,7 +318,7 @@ export class SourceDocumentsListComponent implements OnInit {
     const response = (await obs.toPromise()).body;
     const transientDocumentId = response.transientDocumentId;
 
-    console.log(`transientDocumentId: ${transientDocumentId}`);
+    this.logToConsoleTabbed(`Uploaded the downloaded PDF to the FedRamp account as a transient document with a transientDocumentId of ${transientDocumentId}.`);
 
     /* Create a library document from the just-created transient document. */
     const libraryDocumentInfo = 
@@ -331,11 +337,12 @@ export class SourceDocumentsListComponent implements OnInit {
     const requestConfig2 = <any>{'observe': 'response', 'headers': headers2};
     obs = this.http.post(`/fedramp-api/libraryDocuments`, JSON.stringify(libraryDocumentInfo), requestConfig2);
     const newLibraryDocumentId = (await obs.toPromise()).body.id;
-    console.log('newLibraryDocumentId:', newLibraryDocumentId);
+    this.logToConsoleTabbed(`Created a library document (a template) in the FedRamp account from the transient document with a libraryDocumentId of ${newLibraryDocumentId}.`);
 
     /* Use a PUT request to add the custom form fields and the values entered earlier to the document. */
     obs = this.http.put(`${baseUri}/libraryDocuments/${newLibraryDocumentId}/formFields`, JSON.stringify(formFields), requestConfig2);
     console.log('PUT response:', (await obs.toPromise()).body);
+    this.logToConsoleTabbed("Wrote the values the user entered into this document's fields to the library document in the FedRamp account.");
   }
 
   getDefaultRequestConfig(bearerAuth: string): any {
@@ -379,7 +386,8 @@ export class SourceDocumentsListComponent implements OnInit {
     console.log("ngOnInit() called.");
 
     if (!this.redirected()) {
-      this.logToConsole('&nbsp;Welcome to the Adobe Sign Commercial-to-FedRamp Migration Tool.');
+      this.logToConsole('Welcome to the Adobe Sign Commercial-to-FedRamp Migration Tool.');
+      this.logToConsole('Please enter credentials below and then click "Log in".');
 
       console.log('Testing that setOAuthState() and getOAuthState() work...')
       const oAuthState0 = 'test12345';
