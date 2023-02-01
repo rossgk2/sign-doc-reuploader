@@ -4,7 +4,7 @@ Code
 2. Hardcode URLs in`proxy.conf.ts` to be prod URLs rather than stage URLs.
    1. It would be better if we could get `import` statements to work in `proxy.conf.ts` so that we don't have to hardcode the URLs.
 3. Add "select all" and "deselect all" buttons to the document selection UI.
-4. Remove need for `--disableHostCheck=true`; find a way to add OAuth server URL to allowed hosts or something
+4. Remove need for `"disableHostCheck": true` in angular.json. Create a .env file with the content `ALLOWED_HOST=your-host-name.com`, and then add `"allowedHosts": ["${ALLOWED_HOST}"]` as a key-value pair to architect.serve.builder.options in angular.json.
 5. After get `loggedIn`to work, use `loggedIn` rather than `redirected()` to check for redirection and redirect user from https://migrationtool.com/?code=someCode&state=someState to https://migrationtool.com.
 
 Add to documentation

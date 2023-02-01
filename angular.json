@@ -63,9 +63,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
             "browserTarget": "sign-template-reuploader:build",
-            "port": 443, // default port for HTTPS; default port for HTTP is 80
             "ssl": true, // use HTTPS
-            "proxyConfig": "proxy.conf.ts"
+            "port": 443, // default port for HTTPS; default port for HTTP is 80
+            "proxyConfig": "proxy.conf.ts",
+            "disableHostCheck": true // temporary
           },
           "configurations": {
             "production": {
