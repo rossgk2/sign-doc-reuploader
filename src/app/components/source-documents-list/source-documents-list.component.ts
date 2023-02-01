@@ -275,7 +275,7 @@ export class SourceDocumentsListComponent implements OnInit {
     /* GET the name of the document. */
     let obs: Observable<any> = this.http.get(`${baseUri}/libraryDocuments/${documentId}`, defaultRequestConfig);
     const docName: string = (await obs.toPromise()).body.name;
-    this.logToConsoleTabbed(`The name of this document in the commercial account is ${docName}`);
+    this.logToConsoleTabbed(`The name of this document in the commercial account is "${docName}"`);
 
     /* GET the values the user has entered into the document's fields. */
     obs = this.http.get(`${baseUri}/libraryDocuments/${documentId}/formFields`, defaultRequestConfig);
@@ -285,7 +285,7 @@ export class SourceDocumentsListComponent implements OnInit {
     /* GET the PDF on which the custom form fields that the user field out were placed.*/
     obs = this.http.get(`${baseUri}/libraryDocuments/${documentId}/combinedDocument/url`, defaultRequestConfig);
     const combinedDocumentUrl = (await obs.toPromise()).body.url;
-    this.logToConsoleTabbed(`The PDF representation of this document is located at "${combinedDocumentUrl}".`);
+    this.logToConsoleTabbed(`The PDF representation of this document is located at ${combinedDocumentUrl}.`);
 
     /* Save the PDF. */
     const requestConfig = <any>{'observe': 'response', 'responseType': 'blob'};
