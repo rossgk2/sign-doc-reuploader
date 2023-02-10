@@ -56,8 +56,10 @@ export class OAuthService {
       });
 
     /* Return the authorizaton grant request and the randomly generated state associated with it. */
+    let queryParams: string = this.serializer.serialize(tree);
+    queryParams = queryParams.substring(1, queryParams.length); // remove the / at the beginning
     return {
-      'url': `${this.oAuthBaseUri}/authorize` + this.serializer.serialize(tree),
+      'url': `${this.oAuthBaseUri}/authorize` + queryParams,
       'initialState': state
     };  
   }
