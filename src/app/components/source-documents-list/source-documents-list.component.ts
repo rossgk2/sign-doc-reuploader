@@ -189,19 +189,36 @@ export class SourceDocumentsListComponent implements OnInit {
 
   async getDocumentList(): Promise<any> {
     const baseUrl = await getApiBaseUriCommercial(this.http, this.commercialIntegrationKey);
-    const requestConfig =this.getDefaultRequestConfig(this.commercialIntegrationKey);
-    const obs: Observable<any> = this.http.get(`${baseUrl}/libraryDocuments`, requestConfig);
-    const response = (await obs.toPromise());
-    const libraryDocumentList: any = (response.body as any).libraryDocumentList;
+    const requestConfig = this.getDefaultRequestConfig(this.commercialIntegrationKey);
+    
+    /* Get all library documents. */
+    const pageSize = 100;
+    let libraryDocuments = [];
+    let obs: Observable<any>; let response;
+    let cursorQueryString = '';
+    let done = false;
+    for (let i = 1; !done; i ++) {
+      obs = this.http.get(`${baseUrl}/libraryDocuments?pageSize=${pageSize}` + cursorQueryString, requestConfig);
+      response = (await obs.toPromise()).body;
+      libraryDocuments = libraryDocuments.concat(response.libraryDocumentList);
+      const cursor = response.page.nextCursor;
+      if (cursor !== undefined)
+        cursorQueryString = `&cursor=${cursor}`;
+      else
+        done = true;
+
+      this.logToConsole(`Loaded <= ${i * pageSize} documents from the commercial account.`);
+    }
+    this.logToConsole(`Done loading. Loaded ${libraryDocuments.length} documents from the commercial account.`)
 
     /* Initalize documentIds. */
     const oldThis = this;
-    libraryDocumentList.forEach(function(doc: any) {
+    libraryDocuments.forEach(function(doc: any) {
       oldThis.documentIds.push(doc.id);
     });
     
     /* Set up the FormArray that will be used to display the list of documents to the user. */
-    this.populateDocForm(libraryDocumentList); 
+    this.populateDocForm(libraryDocuments); 
   }
 
   /* ===========================================================================

@@ -3,7 +3,7 @@
   <div class="flex-container">
     <div style="flex:1">
       <div id="document-list-container" *ngIf="redirected()">
-        <button (click)="getDocumentList()"> Display documents from your Sign account </button>
+        <button (click)="getDocumentList()"> Display documents from your commercial Sign account </button>
         <ng-container formArrayName="documents" *ngFor="let group of documents.controls; let i = index">
           <div class="document-row" [formGroup]="group">
             <input type="checkbox" [checked]="true" formControlName="isSelected" placeholder="true">
