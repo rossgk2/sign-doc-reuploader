@@ -1,12 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 
-import { UploadService } from './upload.service';
+import { OAuthService } from './oauth.service';
 
-describe('UploadService', () => {
+describe('OAuthService', () => {
   beforeEach(() => TestBed.configureTestingModule({}));
 
   it('should be created', () => {
-    const service: UploadService = TestBed.get(UploadService);
+    const service: OAuthService = TestBed.get(OAuthService);
     expect(service).toBeTruthy();
   });
 });

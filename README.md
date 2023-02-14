@@ -1,65 +1,48 @@
 # sign-doc-reuploader
 
-## Dependencies
+This is a "migration tool" that copies selected documents from a specified commercial Adobe Sign account to a specified FedRAMP Adobe Sign account. The most common use case is the copying of *all* documents over from a commercial account to a FedRAMP account.
 
-You need to have v16 of [node.js](https://nodejs.org/en/) installed.
+## Installation
 
-## Install and run
+1. Install v16 of node.js. You can use one of [these](https://nodejs.org/download/release/v16.19.0/) installer executables for node.js v16.19.0, for example.
+2. Follow the instructions [here]() to install whatever version of the Angular CLI is compatible with the version of node.js installed.
 
-There are two versions of this tool: a proof of concept command line tool and an Angular app. The Angluar app is still in development.
+## Running the app for the first time
 
-### Command line tool
+1. Request via ticket that https://migrationtool.com be added to the list of forwarding URLs that your FedRAMP account recognizes as legitimate:
 
-1. [Download](https://github.com/rossgk2/sign-doc-reuploader/archive/refs/heads/main.zip) the zip of this repo and extract it.
-2. Rename the extracted folder to something (e.g. `fldr`).
-3. In a command prompt `cd` to `fldr`.
+   > Please add https://migrationtool.com to the Redirect URI field of the Configure OAuth menu for the API Application owned by &lt;*your FedRAMP account email here*&gt;.
+
+2. Edit the Windows `hosts` file so that it has the following new line: `127.0.0.1 migrationtool.com`. To edit the Windows hosts file, open Notepad as an admin and then File > Open >  `C:\Windows\System32\drivers\etc\hosts`.
+
+3. Clone this repo and `cd` into the `sign-doc-reuploader` folder that results.
+
 4. If running for the first time, execute `npm install`.
-5. Execute `npx ts-node reuploader.ts` (not `node reuploader.ts`, since we're using TypeScript).
 
-### Angular app
+5. Execute `ng serve`.
 
-1. You don't need to do anything for this step; it's included for pedagogy. (Ensure the Angular app is hosted on port 443 by adding `"port" = 443` to `projects.<project>.architect.serve.options`, where `<project>` is the name of the associated Angular project.)
-2. Follow the instructions of the below **Redirecting via the `hosts` file** section. Perform step (3) as described in the **Special case** subsection.
-3. [Download](https://github.com/rossgk2/sign-doc-reuploader/archive/refs/heads/main.zip) the zip of this repo and extract it.
-4. Rename the extracted folder to something (e.g. `fldr`).
-5. In a command prompt `cd` to `fldr/sign-template-reuploader`.
-6. (Possibly not necessary). If running for the first time, execute `npm install`.
-7. Execute `ng serve --disableHostCheck true`. (We use `disableHostCheck` to allow traffic outside the local machine, i.e., traffic from the OAuth authentication server).
-8. Navigate to https://localhost.
+6. Navigate to https://localhost. Make sure you use https and not http.
 
-## Redirecting via the `hosts` file
+# Pedagogy
 
-1. Add the line `127.0.0.1 some.url` to the Windows `hosts` file, which is in the directory `C:\Windows\System32\drivers\etc`. `localhost` is really just an alias for 127.0.0.1, so this line specifies that http://some.url should be forwarded to http://localhost. (To edit the `hosts` file, open a text editor with admin priveleges and then use the File > Open menu to open `hosts`).
+It is not necessary to read this section for the sake of using the migration tool.
 
-After saving this change to the `hosts` file, then, assuming you have a webserver listening to `localhost:<port>`, you should be able to navigate to `http://some.url:<port>` and consequently be redirected to `http://localhost:<port>`.
+#### Explanation for editing the Windows hosts file
 
-2. Now change the Angular webserver so that it uses HTTPS instead of HTTP by adding the option `"ssl": true` to `projects.<project>.architect.serve.options`, where `<project>` is the name of the associated Angular project.
+`localhost` is really just an alias for 127.0.0.1, so adding the line `127.0.0.1 migrationtool.com` to the `hosts` file specifies that http://migrationtool.com should be forwarded to http://localhost and that https://migrationtool.com should be forwarded to https://localhost.
 
-Now, assuming the webserver is running, you should be able navigate to `https://localhost:<port>` and consequently be redirected to `https://some.url:<port>`.
+After the user has successfully logged in, the OAuth authentication server will redirect the user to https://migrationtool.com. Due to the edit in the `hosts` file, the user is again redirected from `https://migrationtool.com` to `https://localhost`, which is interpreted as https://localhost (since 443 is the default port for HTTPS). It is necessary that the user is ultimately redirected to https://localhost so that the webserver hosting the migration tool can receive further requests.
 
-3. Ask an administrator to add `http://some.url:<port>` to the list of forwarding URLs that your Adobe Sign account recognizes as legitimate.
+#### Necessary dev webserver configuration
 
-### Special case: using the default port for HTTPS
+- We need to ensure the dev webserver uses HTTPS. This is done by including `"ssl": true` in`projects.<project>.architect.serve.options`, where `<project>` is the name of the associated Angular project.
+- The default HTTPS port is 443 (the default HTTP port is 80). We need to ensure the Angular app is hosted on the default HTTPS port so that requests to https://migrationtool.com, which are interpreted as requests to https://migrationtool.com:443, are received by the dev webserver. This is done by including `"port" = 443` in `projects.<project>.architect.serve.options`, where `<project>` is the name of the associated Angular project.
 
-After performing the above steps (1) and (2), you can navigate to https://some.url and be redirected to https://localhost. 
+# Disclaimer
 
-This is not useful if the Angular app is not hosted on the default port for HTTPS, however, since if the Angular app is not hosted on the default port for HTTPS (443), then you will get an error if you are redirected to https://localhost: the error will say that there is no server hosted on port 443. If you want to navigate to https://some.url, consequently be redirected to https://localhost, and then consequently *have the Angular app load*, then the Angular app must be hosted on port 443.
+Any organization who uses this tool implicitly acknowledges the following.
 
-Assuming that the Angular app *is* hosted on port 443, the above steps are all the same, except for step (3):
-
-3. Ask an administrator to add `http://some.url` to the list of forwarding URLs that your Adobe Sign account recognizes as legitimate.
-
-Taking advantage of this special case is probably necessary because Adobe Sign might not be able to store a URL-with-port in its list of legitimate forwarding URLs.
-
-## Miscellaneous documentation
-
-### Enable CORS for development
-
-Use [this](https://webbrowsertools.com/test-cors/) Chrome plugin to enable [CORS](https://www.stackhawk.com/blog/what-is-cors/) (cross-origin resource sharing). This prevents errors being thrown due a "same origin" policy. See [this](https://www.stackhawk.com/blog/angular-cors-guide-examples-and-how-to-enable-it/) for more info.
-
-A more permanent solution will be necessary when finishing development... working on it!
-
-### tsconfig.json
-
-The tsconfig.json used in the top level-directory of this project is informed by these two links: [(1)](https://stackoverflow.com/a/55701637) [(2)](
-https://blog.appsignal.com/2022/01/19/how-to-set-up-a-nodejs-project-with-typescript.html). Specifically, we learn from (1) that since TypeScript's `File` type is defined in the `dom` library,  we have to add `dom` to `complierOptions` in order for TypeScript to know about the `File` type.
+- The app moves templates from FedRAMP LI-SAAS (colloquially referred to in the above as "commercial") to FedRAMP moderate. FedRAMP LI-SAAS is less strict than FedRAMP moderate.
+- The app currently only runs in dev mode. (URL proxies that the app needs to function correctly get disabled when the app runs in prod).
+- Currently, all hosts are whitelisted for outgoing HTTP requests. That is, the app requires `disableHostCheck = true`.
+- The API call that obtains the OAuth token does not check that the randomly generated state passed to the token request call is the same as the state returned by said call. Ideally the returned state would be inspected so that we can rule out the unlikely possibility that a malicious server is pretending to be the authentication server.

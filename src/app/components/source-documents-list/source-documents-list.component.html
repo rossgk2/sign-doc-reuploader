@@ -1,0 +1,36 @@
+<form [formGroup]="migrationToolForm">
+  
+  <div class="flex-container">
+    <div style="flex:1">
+      <div id="document-list-container" *ngIf="redirected()">
+        <button (click)="getDocumentList()"> Display documents from your commercial Sign account </button>
+        <ng-container formArrayName="documents" *ngFor="let group of documents.controls; let i = index">
+          <div class="document-row" [formGroup]="group">
+            <input type="checkbox" [checked]="true" formControlName="isSelected" placeholder="true">
+            <input formControlName="name" placeholder="document name" readonly>
+          </div>
+        </ng-container>
+      </div>
+    </div>
+  
+    <div id="console" style="flex:3">
+      <ng-container formArrayName="consoleMessages" *ngFor="let message of consoleMessages.controls; let i = index">
+        <p class="console-message" [innerHTML]="message.value"></p>
+        <!-- Don't do <p class="console-message"> {{message.value}} </p>. This will cause '&nbsp;' that 
+          is pushed to the FormControl associated with this <p> to be HTML-endoded; i.e. a literal
+            &nbsp; will be represented, not an actual non-breaking space. -->
+      </ng-container>
+    </div>
+
+    <div style="flex:1"> <!-- This div is just used to occupy horizontal space. --> </div>
+  </div>  
+
+  <div id="input-container" *ngIf="!redirected()">
+    <input placeholder="Commercial integration key" (input) = "_commercialIntegrationKey=getValue($event)">
+    <input placeholder="FedRamp OAuth client ID" (input) = "_oAuthClientId=getValue($event)">
+    <input placeholder="FedRamp OAuth client secret" type = "password" (input) = "_oAuthClientSecret=getValue($event)">
+    <input placeholder="FedRamp Sign account email" (input) = "_loginEmail=getValue($event)">
+    <button type="button" (click) = "login()" id="login-button">Log in</button>
+  </div>
+  <button type="submit" *ngIf="readyForDownload" (click) = "reupload()">Begin upload</button>
+</form>
