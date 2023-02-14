@@ -40,7 +40,7 @@ After the user has successfully logged in, the OAuth authentication server will 
 
 # Disclaimer
 
-Any organization who uses this tool implicitly accepts the following.
+Any organization who uses this tool implicitly acknowledges the following.
 
 - The app moves templates from FedRAMP LI-SAAS (colloquially referred to in the above as "commercial") to FedRAMP moderate. FedRAMP LI-SAAS is less strict than FedRAMP moderate.
 - The app currently only runs in dev mode. (URL proxies that the app needs to function correctly get disabled when the app runs in prod).
