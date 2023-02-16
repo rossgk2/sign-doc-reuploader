@@ -207,7 +207,7 @@ export class SourceDocumentsListComponent implements OnInit {
       else
         done = true;
 
-      this.logToConsole(`Loaded <= ${i * pageSize} documents from the commercial account.`);
+      this.logToConsole(`Loaded more than ${(i - 1) * pageSize} and at most ${i * pageSize} documents from the commercial account.`);
     }
     this.logToConsole(`Done loading. Loaded ${libraryDocuments.length} documents from the commercial account.`)
 
@@ -308,9 +308,11 @@ export class SourceDocumentsListComponent implements OnInit {
     const requestConfig = <any>{'observe': 'response', 'responseType': 'blob'};
     
     // To avoid CORS errors, use a proxied URL to make the request.
+    // (Postman gives no CORS errors).
     const prefixEndIndex = 'https://secure.na4.adobesign.com/document/cp/'.length - 1; // hardcoded
     const endIndex = combinedDocumentUrl.length - 1;
     const combinedDocumentUrlSuffix = combinedDocumentUrl.substring(prefixEndIndex + 1, endIndex + 1);
+    console.log('combinedDocumentUrlSuffix: ', combinedDocumentUrlSuffix);
     const proxiedCombinedDocumentUrl = `/doc-pdf-api/${combinedDocumentUrlSuffix}`; // See proxy.conf.ts.
     obs = this.http.get(proxiedCombinedDocumentUrl, requestConfig);
     const pdfBlob = (await obs.toPromise()).body;
