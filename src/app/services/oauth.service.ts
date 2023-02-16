@@ -4,7 +4,7 @@ import {Credentials} from '../settings/credentials';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {Observable} from 'rxjs';
 import {getRandomId} from '../util/random';
-import {getApiBaseUriFedRamp, getApiBaseUriCommercial, getOAuthBaseUri} from '../util/url-getter';
+import {getOAuthBaseUri} from '../util/url-getter';
 import {Settings} from '../settings/settings';
 
 @Injectable({providedIn: 'root'})
@@ -15,7 +15,7 @@ export class OAuthService {
   constructor(private router: Router,
               private serializer: UrlSerializer,
               private http: HttpClient)
-  { this.oAuthBaseUri = '/oauth-api/api/v1'; }
+  { }
 
   /* 
     Returns a URL which is an "authorizaton grant request". When the user visits this URL,
@@ -59,7 +59,7 @@ export class OAuthService {
     let queryParams: string = this.serializer.serialize(tree);
     queryParams = queryParams.substring(1, queryParams.length); // remove the / at the beginning
     return {
-      'url': `${this.oAuthBaseUri}/authorize` + queryParams,
+      'url': `${getOAuthBaseUri()}/api/v1/authorize` + queryParams,
       'initialState': state
     };  
   }
@@ -110,7 +110,7 @@ export class OAuthService {
 
     /* We use a proxied URL to avoid CORS errors. See proxy.conf.ts. */
     const body = null;
-    const obs: Observable<any> = this.http.post(`${this.oAuthBaseUri}/token`, body,
+    const obs: Observable<any> = this.http.post(`${getOAuthBaseUri()}/api/v1/token`, body,
       {'observe': 'response', 'headers': headers,
       'params':
         {

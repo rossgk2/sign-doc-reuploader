@@ -11,7 +11,7 @@ import {OAuthService} from '../../services/oauth.service';
 /* Utilities */
 import {getRandomId} from '../../util/random';
 import {tab} from '../../util/spacing';
-import {getApiBaseUriFedRamp, getApiBaseUriCommercial, getOAuthBaseUri} from '../../util/url-getter';
+import {getApiBaseUriFedRamp, getApiBaseUriCommercial, getOAuthBaseUri, getPdfLibraryBaseUri} from '../../util/url-getter';
 
 /* User-defined configuration */
 import {Credentials} from '../../settings/credentials';
@@ -313,7 +313,7 @@ export class SourceDocumentsListComponent implements OnInit {
     const endIndex = combinedDocumentUrl.length - 1;
     const combinedDocumentUrlSuffix = combinedDocumentUrl.substring(prefixEndIndex + 1, endIndex + 1);
     console.log('combinedDocumentUrlSuffix: ', combinedDocumentUrlSuffix);
-    const proxiedCombinedDocumentUrl = `/doc-pdf-api/${combinedDocumentUrlSuffix}`; // See proxy.conf.ts.
+    const proxiedCombinedDocumentUrl = `/${getPdfLibraryBaseUri()}/${combinedDocumentUrlSuffix}`; // See proxy.conf.ts.
     obs = this.http.get(proxiedCombinedDocumentUrl, requestConfig);
     const pdfBlob = (await obs.toPromise()).body;
     this.logToConsoleTabbed(`Downloaded the PDF of this document.`);
@@ -322,7 +322,7 @@ export class SourceDocumentsListComponent implements OnInit {
   }
 
   async upload(docName: string, formFields: {[key: string]: string}, pdfBlob: Blob, documentId: string) {
-    const baseUri = await getApiBaseUriFedRamp(Settings.inDevelopment);
+    const baseUri = getApiBaseUriFedRamp();
     const defaultRequestConfig = await this.getDefaultRequestConfig(this.bearerAuth);
 
     /* POST the same document (but without any custom form fields) as a transient document and get its ID.
@@ -354,7 +354,7 @@ export class SourceDocumentsListComponent implements OnInit {
     // we can't use defaultRequestConfig for this request.
     const headers2 = defaultRequestConfig.headers.append('Content-Type', 'application/json');
     const requestConfig2 = <any>{'observe': 'response', 'headers': headers2};
-    obs = this.http.post(`/fedramp-api/libraryDocuments`, JSON.stringify(libraryDocumentInfo), requestConfig2);
+    obs = this.http.post(`${baseUri}/libraryDocuments`, JSON.stringify(libraryDocumentInfo), requestConfig2);
     const newLibraryDocumentId = (await obs.toPromise()).body.id;
     this.logToConsoleTabbed(`Created a library document (a template) in the FedRamp account from the transient document with a libraryDocumentId of ${newLibraryDocumentId}.`);
 
