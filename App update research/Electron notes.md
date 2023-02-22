@@ -25,11 +25,53 @@ Most of the interesting content in the tutorial is in the section "Using Preload
 
 Reference [this](https://buddy.works/tutorials/building-a-desktop-app-with-electron-and-angular) and [this](https://www.electronjs.org/docs/latest/tutorial/ipc) for guidance. Cory Coolguy's answer to [this SO post](https://stackoverflow.com/questions/57061723/how-does-postman-an-electron-app-get-around-cors) was helpful also.
 
-1. Add an "awaitable" request-making function to the main process:
+If using axios, do this:
 
 ```js
+const axios = require('axios').default; // the .default allows for TypeScript
+
+// ...
+
 app.whenReady().then(() => {
-  const {net} = require('electron');
+  async function makeRequest(event, requestConfig) {
+      return await axios(requestConfig);
+  }
+  
+  ipcMain.handle('request', makeRequest);
+  createWindow();
+}
+```
+
+2. Expose Electron's HTTP API to the renderer via preload script. Use a preload script like this:
+
+```js
+const { contextBridge, ipcRenderer } = require('electron')
+contextBridge.exposeInMainWorld('api', { 
+    request: (requestConfig) => ipcRenderer.invoke('request', requestConfig)})
+```
+
+Don't forget to hook the preload script up to the app by adding this to the `createWindow()` function:
+
+```js
+webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+    },
+```
+
+3. Use the function in the renderer script (i.e. Angular code) like this:
+
+```js
+const requestConfig = {
+    method: 'get',
+  	url: 'https://some.url',
+};
+const response = await window.api.request(requestConfig)
+```
+
+## Old idea about using request library
+
+```
+app.whenReady().then(() => {
   async function makeRequest(event, url) {
       return new Promise((resolve, reject) => {
         const request = net.request(url);
@@ -52,26 +94,5 @@ app.whenReady().then(() => {
   ipcMain.handle('request', makeRequest);
   createWindow();
 }
-```
-
-2. Expose Electron's HTTP API to the renderer via preload script. Use a preload script like this:
-
-```js
-const { contextBridge, ipcRenderer } = require('electron')
-contextBridge.exposeInMainWorld('request', (url) => ipcRenderer.invoke('request', url));
-```
-
-Don't forget to hook the preload script up to the app by adding this to the `createWindow()` function:
-
-```js
-webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-    },
-```
-
-3. Use the function in the renderer script (i.e. Angular code) like this:
-
-```js
-const response = await window.electronAPI.request("https://example.com")
 ```
 
