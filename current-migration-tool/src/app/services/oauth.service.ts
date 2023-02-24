@@ -7,11 +7,13 @@ import {getRandomId} from '../util/random';
 import {getOAuthBaseUri} from '../util/url-getter';
 import {Settings} from '../settings/settings';
 
+export interface OAuthGrantRequest {
+    url: string;
+    initialState: string;
+}
+
 @Injectable({providedIn: 'root'})
 export class OAuthService {
-
-  private oAuthBaseUri: string;
-
   constructor(private router: Router,
               private serializer: UrlSerializer,
               private http: HttpClient)
@@ -28,7 +30,8 @@ export class OAuthService {
       that is the authorizaton grant request
       - env must be such that env.toLowerCase() is either 'commercial' or 'fedramp'
   */
-  getOAuthGrantRequest(clientId: string, redirectUri: string, loginEmail: string, env: string): {[key: string]: string} {
+  
+  getOAuthGrantRequest(clientId: string, redirectUri: string, loginEmail: string, env: string): OAuthGrantRequest {
     const state = getRandomId();
     let scope: string;
 
@@ -82,14 +85,18 @@ export class OAuthService {
 
     /* Handle errors. If no errors, check that the server sending the authorizaton grant is
     legitimate, and then return the authorizaton grant. */
+    console.log('authGrantResponse', authGrantResponse);
+    console.log('tree.queryParams', tree.queryParams);
+    console.log('')
+
     if (tree.queryParams.hasOwnProperty('error')) {
       const errorMessage = 'An erroneous request was made to the OAuth /authorize endpoint.\n' +
-      `Error: ${tree.queryParams.error}\nError description: ${tree.queryParams.error_description}`;
+      `Error: ${tree.queryParams['error']}\nError description: ${tree.queryParams['error_description']}`;
       throw new Error(errorMessage);
     }
     else if (tree.queryParams.hasOwnProperty('code')) {
-      const code: string = tree.queryParams.code;
-      const state: string = tree.queryParams.state;
+      const code: string = tree.queryParams['code'];
+      const state: string = tree.queryParams['state'];
 
       // After getting the ngrx store to work, delete "false &&" in order to enable this check.
       if (false && state !== initialState) {
@@ -153,7 +160,7 @@ export class OAuthService {
   }
 
   /* Helper function. */
-  handleTokenEndpointErrorsAndReturn(tokenResponse) {
+  handleTokenEndpointErrorsAndReturn(tokenResponse: any) {
     if (tokenResponse.hasOwnProperty('error')) {
       const errorMessage = 'An erroneous request was made to the OAuth /token endpoint.\n' +
       `Error: ${tokenResponse.error}\nError description: ${tokenResponse.error_description}`;

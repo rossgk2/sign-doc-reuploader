@@ -1,12 +1,12 @@
 /* Regular Angular stuff */
 import {Component, OnInit, HostListener} from '@angular/core';
-import {FormArray, FormBuilder, FormGroup, FormControl, Validators} from '@angular/forms';
+import {AbstractControl, FormArray, FormBuilder, FormGroup, FormControl, Validators} from '@angular/forms';
 import {UrlTree, Router, UrlSerializer} from '@angular/router';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {DomSanitizer} from '@angular/platform-browser';
 
 /* Services */
-import {OAuthService} from '../../services/oauth.service';
+import {OAuthService, OAuthGrantRequest} from '../../services/oauth.service';
 
 /* Utilities */
 import {getRandomId} from '../../util/random';
@@ -15,11 +15,6 @@ import {getApiBaseUriFedRamp, getApiBaseUriCommercial, getOAuthBaseUri, getPdfLi
 
 /* User-defined configuration */
 import {Credentials} from '../../settings/credentials';
-
-/* ngrx stores */
-import {select, Store} from '@ngrx/store';
-import {setVariable} from '../../store/actions';
-import {reducer} from '../../store/reducer'
 
 /* RxJS Observables and support for vanilla JS Promises */
 import {Observable} from 'rxjs';
@@ -51,24 +46,6 @@ import {saveAs} from 'file-saver';
   for commercial.
 */
 
-/* TO-DO
-
-  Overall goal: migrate documents from a commercial account to a FedRamp account.
-
-  4. Improve the UI.
-  4.1. Make it so that user is redirected once they click "Log in" (no need for using "inspect element" to go to the OAuth redirect).
-  4.2. Make it so that the "Display documents from your Sign account" button only appears if redirected() is true.
-  
-  5. Code style
-  5.1. Replace let with const where possible.
-  5.2. Replace ' with "
-  5.3. Replace objects of the in the style of the example {'a': 1, 'b': 2} with objects of the form in the style
-  of {a: 1, b: 2}. I.e., don't use quotes on object properties.
-    - Suppose we have const x = {'a': 1, 'b': 2}. Then x.a is the string literal '1' and not the number 1.
-    So it's better to define x as const x = {a: 1, b: 2}.
-
-*/
-
 @Component({
   selector: 'app-source-documents-list',
   templateUrl: './source-documents-list.component.html',
@@ -84,18 +61,18 @@ export class SourceDocumentsListComponent implements OnInit {
     consoleMessages: this.formBuilder.array([])
   });
 
-  get documents() {
+  get documents(): FormArray<FormGroup> {
     return this.migrationToolForm.controls['documents'] as FormArray;
   }
 
   readyForDownload: boolean = false;
 
-  populateDocForm(libraryDocumentList: any) {
+  populateDocForm(libraryDocuments: any[]) {
     this.readyForDownload = true;
-    libraryDocumentList.forEach(template => {
+    libraryDocuments.forEach(template => {
       const documentForm = this.formBuilder.group({
         name: [template.name],
-        isSelected: ['']
+        isSelected: [true]
       });
       this.documents.push(documentForm);
     });
@@ -115,41 +92,18 @@ export class SourceDocumentsListComponent implements OnInit {
 
   /* Internal variables. */
   private static previousUrl: string = window.location.href; // the URL that hosts this webapp before user is redirected
-  private redirectUri: string = 'https://migrationtool.com';
-  private bearerAuth: string;
-  private refreshToken: string;
+  private redirectUri = 'https://migrationtool.com';
+  private bearerAuth = '';
+  private refreshToken = '';
   private documentIds: string[] = [];
-
-  /* An "internal" field that persists across multiple instances of this component. */
-  
-  async getOAuthState() {
-    const state$ = this.store.pipe(select('oAuthState'));
-    return (await state$.pipe(first()).toPromise())['oAuthState'];
-  }
-
-  setOAuthState(oAuthState: string) {
-    
-    /*
-      setVariable() is an ActionCreator, which is a function that takes in a payload (the payload is
-      an object containing data to be persisted) that is to be attatched to the Action it creates.
-      
-      Thus the below setVariable({ 'oAuthState': oAuthState }) creates an Action with payload { 'oAuthState': oAuthState }.
-      
-      dispatch(setVariable({ 'oAuthState': oAuthState })) causes all Reducers defined anywhere to process this Action.
-      Only some Reducers are configured to respond to any given Action, though. In this app there is one
-      Action and one Reducer, and the Reducer is configured to respond to the Action.
-    */
-
-    this.store.dispatch(setVariable({ 'oAuthState': oAuthState }));
-  }
 
   /* Fields input by user. */
   private selectedDocs: boolean[] = [];
   
-  private _commercialIntegrationKey: string = '';
-  private _oAuthClientId: string = '';
-  private _oAuthClientSecret: string = '';
-  private _loginEmail: string = '';
+  _commercialIntegrationKey: string = '';
+  _oAuthClientId: string = '';
+  _oAuthClientSecret: string = '';
+  _loginEmail: string = '';
 
   get commercialIntegrationKey() {
     if (Settings.forceUseTestCredentials)
@@ -183,7 +137,6 @@ export class SourceDocumentsListComponent implements OnInit {
               private oAuthService: OAuthService,
               private router: Router,
               private serializer: UrlSerializer,
-              private store: Store<{'oAuthState': string}>,
               private http: HttpClient
               ) {}
 
@@ -193,7 +146,7 @@ export class SourceDocumentsListComponent implements OnInit {
     
     /* Get all library documents. */
     const pageSize = 100;
-    let libraryDocuments = [];
+    let libraryDocuments: any[] = [];
     let obs: Observable<any>; let response;
     let cursorQueryString = '';
     let done = false;
@@ -229,8 +182,8 @@ export class SourceDocumentsListComponent implements OnInit {
   async reupload(): Promise<any> {
     /* Get a list of all the indices cooresponding to documents that the user wants to upload. */
     const oldThis = this;
-    this.documents.controls.forEach(function(group: FormGroup) {
-      oldThis.selectedDocs.push(group.value.isSelected !== false); // in this context, '' functions as true and false as false
+    this.documents.controls.forEach(function(group) {
+      oldThis.selectedDocs.push(group.value.isSelected); // in this context, '' functions as true and false as false
     });
 
     const numSelectedDocs = this.selectedDocs.filter(function(b) { return b; }).length;
@@ -388,16 +341,11 @@ export class SourceDocumentsListComponent implements OnInit {
     if (!this.redirected()) {
       /* Get the URL, the "authorization grant request", that the user must be redirected to in order to log in.*/
       const authGrantRequest = this.oAuthService.getOAuthGrantRequest(this.oAuthClientId, this.redirectUri, this.loginEmail, 'FedRamp');
+      // TO-DO: store authGrantRequest.state with the ngrx store
       console.log(`Authorization grant request URL: ${authGrantRequest.url}`);
 
       /* Redirect the user to the URL that is the authGrantRequest. */
       window.location.href = authGrantRequest.url;
-
-      /* Experimentation with ngrx stores. Ignore this. */
-      console.log('About to store oAuthState!')
-      this.setOAuthState(authGrantRequest.initialState);
-      console.log('oAuthState has been stored.');
-      console.log(`oAuthState (before): ${authGrantRequest.initialState}`);
     }
   }
 
@@ -406,21 +354,15 @@ export class SourceDocumentsListComponent implements OnInit {
 
     if (!this.redirected()) {
       this.logToConsole('Welcome to the Adobe Sign Commercial-to-FedRamp Migration Tool.');
-      this.logToConsole('Please enter credentials below and then click "Log in".');
-
-      console.log('Testing that setOAuthState() and getOAuthState() work...')
-      const oAuthState0 = 'test12345';
-      console.log(`Calling setOAuthState('${oAuthState0}')`);
-      this.setOAuthState(oAuthState0);
-      console.log(`getOAuthState() return value: ${await this.getOAuthState()}`);
+      this.logToConsole('Please enter credentials below and then click "Log in".')
     }
 
-    await this.delay(2); // Thought maybe this would make sure we don't access store before it's injected
+    /* In the below, this.router.url will be '/' unless we wait for the page to load. Hacky but works for now. */
+    await this.delay(2);
 
     if (this.redirected()) {
-      const initialState = await this.getOAuthState();
-      console.log('Initial state (after):', initialState);
-      const authGrant = this.oAuthService.getAuthGrant(this.router.url, initialState);
+      const state = '12345'; // TO-DO: get the stored state from the ngrx store 
+      const authGrant = this.oAuthService.getAuthGrant(this.router.url, state);
       const tokenResponse = await this.oAuthService.getToken(this.oAuthClientId, this.oAuthClientSecret, authGrant, this.redirectUri);
       this.bearerAuth = tokenResponse.accessToken; this.refreshToken = tokenResponse.refreshToken;
       console.log('bearerAuth', this.bearerAuth);
@@ -434,7 +376,7 @@ export class SourceDocumentsListComponent implements OnInit {
     return (s > epsilon) && ((s % t) < epsilon);
   }
 
-  delay(seconds): Promise<any> {
+  delay(seconds: number): Promise<any> {
     return new Promise(resolve => setTimeout(resolve, seconds * 1000));
   }
 
