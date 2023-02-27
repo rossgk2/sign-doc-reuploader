@@ -352,6 +352,15 @@ export class SourceDocumentsListComponent implements OnInit {
   async ngOnInit(): Promise<any> {
     console.log("ngOnInit() called.");
 
+    /* Test call of axios via Electron. */
+    const requestConfig = {
+      method: "get",
+      url: `https://datausa.io/api/data?drilldowns=Nation&measures=Population`,
+    };
+    const testResponse = await (<any>window).api.request2(requestConfig);
+    console.log(testResponse);
+
+    /* Initalization code for when the user lands on the homepage. */
     if (!this.redirected()) {
       this.logToConsole('Welcome to the Adobe Sign Commercial-to-FedRamp Migration Tool.');
       this.logToConsole('Please enter credentials below and then click "Log in".')
@@ -360,6 +369,7 @@ export class SourceDocumentsListComponent implements OnInit {
     /* In the below, this.router.url will be '/' unless we wait for the page to load. Hacky but works for now. */
     await this.delay(2);
 
+    /* Initalization code for when the user is redirected to the migration UI. */
     if (this.redirected()) {
       const state = '12345'; // TO-DO: get the stored state from the ngrx store 
       const authGrant = this.oAuthService.getAuthGrant(this.router.url, state);

@@ -2,12 +2,13 @@
 
 1. `cd angular-app`
 2. `npm install electron --save-dev`
-3. Copy the electron folder that's in the same folder as this .md file into `angular-app`.
+3. `npm install axios`
+4. Copy the electron folder that's in the same folder as this .md file into `angular-app`.
    1. Modify the `pathname` in the call to `mainWindow.loadURL()` so that it points to the `index.html` file that will be built by the Angular build process.
-4. Modify `package.json` so that said JSON has these properties:
+5. Modify `package.json` so that said JSON has these properties:
    1. `main: "./electron/main.ts"`
    2. `scripts.start: "ng build --base-href . && electron ."`
-5. `cd angular-app` and `npm start` to confirm that Electron works.
+6. `cd angular-app` and `npm start` to confirm that Electron works.
 
 ## Using Electron's node process to call APIs in Angular app
 
