@@ -1,20 +1,19 @@
-import { Component } from '@angular/core';
+import {Component} from "@angular/core";
 
 @Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+  selector: "app-root",
+  templateUrl: "./app.component.html",
+  styleUrls: ["./app.component.scss"]
 })
-export class AppComponent {
-  title = 'electron-angular-demo';
-  chromeVersion = (<any>window).versions.chrome();
+export class AppComponent {  
   apiResponse = '';
   pokemonName = '';
   
   async onClick() {
+    console.log("onClick() called.");
     const requestConfig = {
-        method: "get",
-        url: `https://pokeapi.co/api/v2/pokemon/${this.pokemonName}`
+      method: "get",
+      url: `https://pokeapi.co/api/v2/pokemon/${this.pokemonName}`
     };
 
     /* preloader.js specifies that request2 should send requestConfig to the channel in the 

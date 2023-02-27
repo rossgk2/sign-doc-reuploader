@@ -1,6 +1,5 @@
 <h1>electron-angular demo</h1>
 <p>Here is some text.</p>
-<p>Chrome version: {{chromeVersion}}</p>
 <input id="input" placeholder="Enter a Pokemon name here." (input)="pokemonName=getValue($event)">
 <button type="button" (click) = "onClick()">Submit</button>
 <h2>API response to GET https://pokeapi.co/api/v2/pokemon/{{pokemonName}}</h2>

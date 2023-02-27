@@ -4,6 +4,7 @@ const path = require("path");
 const axios = require("axios").default;
 
 async function handleRequest(event, requestConfig) {
+  console.log("handleRequest() called.");
   return (await axios(requestConfig)).data;
 }
 
@@ -29,9 +30,7 @@ function createWindow () {
 
   mainWindow.webContents.openDevTools();
 
-  mainWindow.on('closed', function () {
-    mainWindow = null
-  });
+  mainWindow.on('closed', function () { mainWindow = null });
 }
 
 app.whenReady().then(function() {  
@@ -40,9 +39,9 @@ app.whenReady().then(function() {
 })
 
 app.on('window-all-closed', function () {
-  if (process.platform !== 'darwin') app.quit()
+  if (process.platform !== "darwin") app.quit();
 });
 
 app.on('activate', function () {
-  if (mainWindow === null) createWindow()
+  if (mainWindow === null) createWindow();
 });
