@@ -1,6 +1,7 @@
 const {app, BrowserWindow, ipcMain} = require('electron');
 const url = require("url");
 const path = require("path");
+const axios = require("axios").default;
 
 async function handleRequest(event, requestConfig) {
   return (await axios(requestConfig)).data;
