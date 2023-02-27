@@ -1,8 +1,12 @@
-const {app, BrowserWindow} = require('electron')
+const {app, BrowserWindow, ipcMain} = require('electron');
 const url = require("url");
 const path = require("path");
 
-let mainWindow
+async function handleRequest(event, requestConfig) {
+  return (await axios(requestConfig)).data;
+}
+
+let mainWindow;
 
 function createWindow () {
   mainWindow = new BrowserWindow({
@@ -11,7 +15,7 @@ function createWindow () {
     webPreferences: {
       nodeIntegration: true
     }
-  })
+  });
 
   mainWindow.loadURL(
     url.format({
@@ -21,19 +25,22 @@ function createWindow () {
     })
   );
 
-  mainWindow.webContents.openDevTools()
+  mainWindow.webContents.openDevTools();
 
   mainWindow.on('closed', function () {
     mainWindow = null
-  })
+  });
 }
 
-app.on('ready', createWindow)
+app.whenReady().then(function() {  
+  ipcMain.handle("request1", handleRequest);
+  createWindow();
+})
 
 app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') app.quit()
-})
+});
 
 app.on('activate', function () {
   if (mainWindow === null) createWindow()
-})
+});
