@@ -344,14 +344,14 @@ export class SourceDocumentsListComponent implements OnInit {
   login(): void {
     console.log("login clicked.")
 
-    if (!this.redirected()) {
+    if (!false) { // TO-DO: change false to redirectedElectron()
       /* Get the URL, the "authorization grant request", that the user must be redirected to in order to log in.*/
       const authGrantRequest = this.oAuthService.getOAuthGrantRequest(this.oAuthClientId, this.redirectUri, this.loginEmail, 'FedRamp');
       // TO-DO: store authGrantRequest.state with the ngrx store
       console.log(`Authorization grant request URL: ${authGrantRequest.url}`);
 
       /* Redirect the user to the URL that is the authGrantRequest. */
-      window.location.href = authGrantRequest.url;
+      loadUrl(authGrantRequest.url);
     }
   }
 

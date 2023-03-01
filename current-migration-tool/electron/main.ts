@@ -10,6 +10,7 @@ async function httpRequest(event, requestConfig) {
 }
 
 function loadUrl(event, url) {
+  console.log(`loadUrl(${url}) called from Electron main process`);
   const currentWindow = BrowserWindow.getFocusedWindow();
   currentWindow.webContents.loadURL(url);
 }
@@ -23,6 +24,16 @@ function getCurrentUrl(event) {
 
 let mainWindow;
 
+function loadIndexHtml(win) {
+  win.loadURL(
+    url.format({
+      pathname: path.join(__dirname, `../dist/migration-tool/index.html`),
+      protocol: "file:",
+      slashes: true
+    })
+  );
+}
+
 function createWindow () {
   mainWindow = new BrowserWindow({
     width: 800,
@@ -33,13 +44,7 @@ function createWindow () {
     }
   });
 
-  mainWindow.loadURL(
-    url.format({
-      pathname: path.join(__dirname, `../dist/migration-tool/index.html`),
-      protocol: "file:",
-      slashes: true
-    })
-  );
+  loadIndexHtml(mainWindow);
 
   mainWindow.webContents.openDevTools();
 
@@ -48,7 +53,7 @@ function createWindow () {
   /* Loads the renderer process (i.e. the Angular scripts) only after "did-finish-load" emits.
   This prevents us from getting "is not a function" errors when using functions exposed from Electron
   in Angular scripts.
-  
+
   AppModule is the main module of the Angular app. */
   mainWindow.webContents.on("did-finish-load", function() {
     const jsCode = `document.addEventListener('DOMContentLoaded', function() { 

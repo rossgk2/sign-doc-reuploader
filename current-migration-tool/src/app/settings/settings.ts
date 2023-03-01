@@ -1,5 +1,5 @@
 export const Settings = {
 	inDevelopment: true,
-	useProxy: true,
+	useProxy: false,
 	forceUseTestCredentials: true
 };

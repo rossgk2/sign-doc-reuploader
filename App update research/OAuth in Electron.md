@@ -1,5 +1,27 @@
-1. Generate auth grant request URL in Angular. Call it `url`. Have user click on link and set `loadUrl(url)` as the response to the click event.
-2. 
-3. 
-4. Send this URL to the Electron main process.
-5. Receive URL in Electron main process and call mainWindow.loadURL() on it.
+1. Generate `authGrantRequest` in Angular. Have user click on link and set `loadUrl(authGrantRequest.url)` as the response to the click event. User logs in and then is redirected to https://migrationtooldev.com, which, due to the `hosts` file, is interpreted as https://localhost.com
+2. Maintain a `boolean` field called `redirected` in the Angular component file
+3. In the Electron main process define the function 
+
+```js
+function loadIndexHtml(win) {
+  win.loadURL(
+    url.format({
+      pathname: path.join(__dirname, `../dist/migration-tool/index.html`),
+      protocol: "file:",
+      slashes: true
+    })
+  );
+}
+```
+
+Also add this code to the Electron main process:
+
+```js
+mainWindow.webContents.on('will-navigate', function (event, newUrl) {
+    if (newUrl.includes(/* something */)) {
+    	loadIndexHtml();
+        // send a message to the renderer process that modifies the variable redirected to true
+    }
+});
+```
+

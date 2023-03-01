@@ -4,6 +4,7 @@ import {Credentials} from '../settings/credentials';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {Observable} from 'rxjs';
 import {getRandomId} from '../util/random';
+import {httpRequest} from '../util/electron-functions';
 import {getOAuthBaseUri} from '../util/url-getter';
 import {Settings} from '../settings/settings';
 
