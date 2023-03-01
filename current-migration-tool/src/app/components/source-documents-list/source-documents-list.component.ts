@@ -10,7 +10,7 @@ import {OAuthService, OAuthGrantRequest} from '../../services/oauth.service';
 
 /* Utilities */
 import {getRandomId} from '../../util/random';
-import {httpRequest, redirect, getCurrentUrl} from '../../util/electron-functions';
+import {httpRequest, loadUrl, getCurrentUrl} from '../../util/electron-functions';
 import {tab} from '../../util/spacing';
 import {getApiBaseUriFedRamp, getApiBaseUriCommercial, getOAuthBaseUri, getPdfLibraryBaseUri} from '../../util/url-getter';
 
@@ -329,18 +329,22 @@ export class SourceDocumentsListComponent implements OnInit {
    */
 
   /* There's probably a better implementation of this function. */
-  async redirected(): Promise<boolean> {
-    const currentUrl: string = await getCurrentUrl(); // window.location.href;
-    console.log('currentUrl from Electron', currentUrl);
+  redirected(): boolean {
+    const currentUrl: string = window.location.href;
     const currentUrlProcessed: string = currentUrl.substring('https:/'.length, currentUrl.length);
     const tree: UrlTree = this.serializer.parse(currentUrlProcessed); // urls passed to serializer.parse() must begin with '/'
     return tree.queryParams.hasOwnProperty('code') || tree.queryParams.hasOwnProperty('error');
   }
+
+  async redirectedElectron() {
+    const currentUrl = await getCurrentUrl();
+    console.log('currentUrl from Electron', currentUrl);
+  }
  
-  async login(): Promise<any> {
+  login(): void {
     console.log("login clicked.")
 
-    if (!(await this.redirected())) {
+    if (!this.redirected()) {
       /* Get the URL, the "authorization grant request", that the user must be redirected to in order to log in.*/
       const authGrantRequest = this.oAuthService.getOAuthGrantRequest(this.oAuthClientId, this.redirectUri, this.loginEmail, 'FedRamp');
       // TO-DO: store authGrantRequest.state with the ngrx store
@@ -365,7 +369,7 @@ export class SourceDocumentsListComponent implements OnInit {
     console.log('getCurrentUrl()', await getCurrentUrl());
 
     /* Initalization code for when the user lands on the homepage. */
-    if (!(await this.redirected())) {
+    if (!this.redirected()) {
       this.logToConsole('Welcome to the Adobe Sign Commercial-to-FedRamp Migration Tool.');
       this.logToConsole('Please enter credentials below and then click "Log in".')
     }
@@ -374,7 +378,7 @@ export class SourceDocumentsListComponent implements OnInit {
     await this.delay(2);
 
     /* Initalization code for when the user is redirected to the migration UI. */
-    if (await this.redirected()) {
+    if (this.redirected()) {
       const state = '12345'; // TO-DO: get the stored state from the ngrx store 
       const authGrant = this.oAuthService.getAuthGrant(this.router.url, state);
       const tokenResponse = await this.oAuthService.getToken(this.oAuthClientId, this.oAuthClientSecret, authGrant, this.redirectUri);

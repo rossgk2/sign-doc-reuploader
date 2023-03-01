@@ -9,7 +9,7 @@ async function httpRequest(event, requestConfig) {
   return (await axios(requestConfig)).data;
 }
 
-function redirect(event, url) {
+function loadUrl(event, url) {
   const currentWindow = BrowserWindow.getFocusedWindow();
   currentWindow.webContents.loadURL(url);
 }
@@ -45,6 +45,11 @@ function createWindow () {
 
   mainWindow.on('closed', function () { mainWindow = null });
 
+  /* Loads the renderer process (i.e. the Angular scripts) only after "did-finish-load" emits.
+  This prevents us from getting "is not a function" errors when using functions exposed from Electron
+  in Angular scripts.
+  
+  AppModule is the main module of the Angular app. */
   mainWindow.webContents.on("did-finish-load", function() {
     const jsCode = `document.addEventListener('DOMContentLoaded', function() { 
       platformBrowserDynamic().bootstrapModule(AppModule).catch(err => console.error(err)); });`
@@ -54,7 +59,7 @@ function createWindow () {
 
 app.whenReady().then(function() {  
   ipcMain.handle("httpRequest1", httpRequest);
-  ipcMain.handle("redirect1", redirect);
+  ipcMain.handle("loadUrl1", loadUrl);
   ipcMain.handle("getCurrentUrl1", getCurrentUrl);
   createWindow();
 })
