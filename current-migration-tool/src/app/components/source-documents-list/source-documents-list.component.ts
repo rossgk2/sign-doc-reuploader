@@ -10,6 +10,7 @@ import {OAuthService, OAuthGrantRequest} from '../../services/oauth.service';
 
 /* Utilities */
 import {getRandomId} from '../../util/random';
+import {httpRequest, redirect, getCurrentUrl} from '../../util/electron-functions';
 import {tab} from '../../util/spacing';
 import {getApiBaseUriFedRamp, getApiBaseUriCommercial, getOAuthBaseUri, getPdfLibraryBaseUri} from '../../util/url-getter';
 
@@ -329,8 +330,8 @@ export class SourceDocumentsListComponent implements OnInit {
 
   /* There's probably a better implementation of this function. */
   redirected(): boolean {
-    const currentUrl = window.location.href;
-    const currentUrlProcessed = currentUrl.substring('https:/'.length, currentUrl.length);
+    const currentUrl: string = window.location.href;
+    const currentUrlProcessed: string = currentUrl.substring('https:/'.length, currentUrl.length);
     const tree: UrlTree = this.serializer.parse(currentUrlProcessed); // urls passed to serializer.parse() must begin with '/'
     return tree.queryParams.hasOwnProperty('code') || tree.queryParams.hasOwnProperty('error');
   }
@@ -352,13 +353,15 @@ export class SourceDocumentsListComponent implements OnInit {
   async ngOnInit(): Promise<any> {
     console.log("ngOnInit() called.");
 
-    /* Test call of axios via Electron. */
+    /* Tests of functions from electron-functions.ts. */
     const requestConfig = {
       method: "get",
-      url: `https://datausa.io/api/data?drilldowns=Nation&measures=Population`,
+      url: `https://pokeapi.co/api/v2/pokemon/treecko`,
     };
-    const testResponse = await (<any>window).api.request2(requestConfig);
+    const testResponse = await httpRequest(requestConfig);
     console.log(testResponse);
+
+    console.log('getCurrentUrl()', await getCurrentUrl());
 
     /* Initalization code for when the user lands on the homepage. */
     if (!this.redirected()) {

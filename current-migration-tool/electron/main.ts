@@ -3,10 +3,24 @@ const url = require("url");
 const path = require("path");
 const axios = require("axios").default;
 
-async function handleRequest(event, requestConfig) {
+/* Functions to be exposed to renderer via preload.ts. */
+
+async function httpRequest(event, requestConfig) {
   console.log("handleRequest() called");
   return (await axios(requestConfig)).data;
 }
+
+function redirect(event, url) {
+  const currentWindow = BrowserWindow.getFocusedWindow();
+  currentWindow.webContents.loadURL(url);
+}
+
+function getCurrentUrl(event) {
+  const currentWindow = BrowserWindow.getFocusedWindow();
+  return currentWindow.webContents.getURL();
+}
+
+/* Window setup. */
 
 let mainWindow;
 
@@ -34,7 +48,9 @@ function createWindow () {
 }
 
 app.whenReady().then(function() {  
-  ipcMain.handle("request1", handleRequest);
+  ipcMain.handle("httpRequest1", httpRequest);
+  ipcMain.handle("redirect1", redirect);
+  ipcMain.handle("getCurrentUrl1", getCurrentUrl);
   createWindow();
 })
 
