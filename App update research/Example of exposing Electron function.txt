@@ -1,0 +1,32 @@
+// electron-angular-project/main.ts (Electron)
+function f(arg) {
+    const result = /* implementation goes here */;
+    return result;
+}
+
+app.whenReady().then(function() {  
+  ipcMain.handle("f1", f)
+  createWindow(); // implementation of createWindow() is elsewhere in main.ts
+})
+
+// electron-angular-project/preload.ts (Electron)
+const { contextBridge, ipcRenderer } = require("electron")
+
+contextBridge.exposeInMainWorld("api", { 
+  f2: (arg) => ipcRenderer.invoke("f1", arg)
+});
+
+// electron-angular-project/src/app/electron-functions.ts (Angular)
+export function f3(arg: any) {
+  return f3(arg);
+}
+
+// electron-angular-project/src/app/app.component.ts (Angular)
+@Component({ /* ... */})
+export class AppComponent implements OnInit {
+
+    ngOnInit() {
+        console.log((<any> window).api.f3('hi'));
+    }
+}
+

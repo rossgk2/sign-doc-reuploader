@@ -329,17 +329,18 @@ export class SourceDocumentsListComponent implements OnInit {
    */
 
   /* There's probably a better implementation of this function. */
-  redirected(): boolean {
-    const currentUrl: string = window.location.href;
+  async redirected(): Promise<boolean> {
+    const currentUrl: string = await getCurrentUrl(); // window.location.href;
+    console.log('currentUrl from Electron', currentUrl);
     const currentUrlProcessed: string = currentUrl.substring('https:/'.length, currentUrl.length);
     const tree: UrlTree = this.serializer.parse(currentUrlProcessed); // urls passed to serializer.parse() must begin with '/'
     return tree.queryParams.hasOwnProperty('code') || tree.queryParams.hasOwnProperty('error');
   }
  
-  login(): void {
+  async login(): Promise<any> {
     console.log("login clicked.")
 
-    if (!this.redirected()) {
+    if (!(await this.redirected())) {
       /* Get the URL, the "authorization grant request", that the user must be redirected to in order to log in.*/
       const authGrantRequest = this.oAuthService.getOAuthGrantRequest(this.oAuthClientId, this.redirectUri, this.loginEmail, 'FedRamp');
       // TO-DO: store authGrantRequest.state with the ngrx store
@@ -364,7 +365,7 @@ export class SourceDocumentsListComponent implements OnInit {
     console.log('getCurrentUrl()', await getCurrentUrl());
 
     /* Initalization code for when the user lands on the homepage. */
-    if (!this.redirected()) {
+    if (!(await this.redirected())) {
       this.logToConsole('Welcome to the Adobe Sign Commercial-to-FedRamp Migration Tool.');
       this.logToConsole('Please enter credentials below and then click "Log in".')
     }
@@ -373,7 +374,7 @@ export class SourceDocumentsListComponent implements OnInit {
     await this.delay(2);
 
     /* Initalization code for when the user is redirected to the migration UI. */
-    if (this.redirected()) {
+    if (await this.redirected()) {
       const state = '12345'; // TO-DO: get the stored state from the ngrx store 
       const authGrant = this.oAuthService.getAuthGrant(this.router.url, state);
       const tokenResponse = await this.oAuthService.getToken(this.oAuthClientId, this.oAuthClientSecret, authGrant, this.redirectUri);

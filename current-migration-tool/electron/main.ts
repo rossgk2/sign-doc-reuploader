@@ -6,7 +6,6 @@ const axios = require("axios").default;
 /* Functions to be exposed to renderer via preload.ts. */
 
 async function httpRequest(event, requestConfig) {
-  console.log("handleRequest() called");
   return (await axios(requestConfig)).data;
 }
 
@@ -45,6 +44,12 @@ function createWindow () {
   mainWindow.webContents.openDevTools();
 
   mainWindow.on('closed', function () { mainWindow = null });
+
+  mainWindow.webContents.on("did-finish-load", function() {
+    const jsCode = `document.addEventListener('DOMContentLoaded', function() { 
+      platformBrowserDynamic().bootstrapModule(AppModule).catch(err => console.error(err)); });`
+    mainWindow.webContents.executeJavaScript(jsCode);
+  });
 }
 
 app.whenReady().then(function() {  
