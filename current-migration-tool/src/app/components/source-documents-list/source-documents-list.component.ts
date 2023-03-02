@@ -109,7 +109,7 @@ export class SourceDocumentsListComponent implements OnInit {
   }
 
   async ngOnInit(): Promise<any> {
-    console.log("ngOnInit() called.");
+    console.log("ngOnInit() called from login component.");
 
     /* Tests of functions from electron-functions.ts. */
     const requestConfig = {
