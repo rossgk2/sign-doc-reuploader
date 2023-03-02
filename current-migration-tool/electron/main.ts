@@ -1,4 +1,4 @@
-const {app, BrowserWindow, ipcMain} = require('electron');
+const {app, BrowserWindow, ipcMain, session} = require('electron');
 const url = require("url");
 const path = require("path");
 const axios = require("axios").default;
@@ -24,6 +24,7 @@ function getCurrentUrl(event) {
 
 let mainWindow;
 
+/* Loads the index.html file into the window win. */
 function loadIndexHtml(win) {
   win.loadURL(
     url.format({
@@ -32,6 +33,17 @@ function loadIndexHtml(win) {
       slashes: true
     })
   );
+}
+
+/* Configures the window win so that the renderer process (i.e. the Angular scripts) is loaded
+ only after "DOMContentLoaded" occurs. This prevents us from getting "is not a function" errors
+ when using functions exposed from Electron in Angular scripts. */
+function configLoadRendererAfterDOMContentLoaded(win) {
+  win.webContents.on("did-finish-load", function() {
+    const jsCode = `document.addEventListener('DOMContentLoaded', function() { 
+      platformBrowserDynamic().bootstrapModule(AppModule).catch(err => console.error(err)); });`
+    win.webContents.executeJavaScript(jsCode);
+  });
 }
 
 function createWindow () {
@@ -44,28 +56,29 @@ function createWindow () {
     }
   });
 
+  mainWindow.on("closed", function () { mainWindow = null });
+  configLoadRendererAfterDOMContentLoaded(mainWindow);
   loadIndexHtml(mainWindow);
-
   mainWindow.webContents.openDevTools();
-
-  mainWindow.on('closed', function () { mainWindow = null });
-
-  /* Loads the renderer process (i.e. the Angular scripts) only after "did-finish-load" emits.
-  This prevents us from getting "is not a function" errors when using functions exposed from Electron
-  in Angular scripts.
-
-  AppModule is the main module of the Angular app. */
-  mainWindow.webContents.on("did-finish-load", function() {
-    const jsCode = `document.addEventListener('DOMContentLoaded', function() { 
-      platformBrowserDynamic().bootstrapModule(AppModule).catch(err => console.error(err)); });`
-    mainWindow.webContents.executeJavaScript(jsCode);
-  });
 }
 
 app.whenReady().then(function() {  
   ipcMain.handle("httpRequest1", httpRequest);
   ipcMain.handle("loadUrl1", loadUrl);
   ipcMain.handle("getCurrentUrl1", getCurrentUrl);
+
+  /* Configure handling of redirect from OAuth to https://migrationtool.com by canceling
+  the redirect and manually loading index.html. */
+  const filter = { urls: ['https://migrationtool.com/*'] };
+  session.defaultSession.webRequest.onBeforeRequest(filter, (details, callback) => {
+    // set redirected = true in renderer process
+    // extract state and code from details.url and send to renderer process
+    callback({ cancel: true });
+    const currentWindow = BrowserWindow.getFocusedWindow();
+    configLoadRendererAfterDOMContentLoaded(currentWindow);
+    loadIndexHtml(currentWindow);
+  });
+
   createWindow();
 })
 
