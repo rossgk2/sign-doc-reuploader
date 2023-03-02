@@ -39,7 +39,7 @@ function loadIndexHtml(win) {
  only after "DOMContentLoaded" occurs. This prevents us from getting "is not a function" errors
  when using functions exposed from Electron in Angular scripts. */
 function configLoadRendererAfterDOMContentLoaded(win) {
-  win.webContents.on("did-finish-load", function() {
+  win.webContents.on("dom-ready", function() {
     const jsCode = `document.addEventListener('DOMContentLoaded', function() { 
       platformBrowserDynamic().bootstrapModule(AppModule).catch(err => console.error(err)); });`
     win.webContents.executeJavaScript(jsCode);
