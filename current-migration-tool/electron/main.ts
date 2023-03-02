@@ -72,7 +72,8 @@ app.whenReady().then(function() {
   const filter = { urls: ['https://migrationtool.com/*'] };
   session.defaultSession.webRequest.onBeforeRequest(filter, (details, callback) => {
     // set redirected = true in renderer process
-    // extract state and code from details.url and send to renderer process
+    // send details.url to renderer process; extract state and code from it there
+    console.log(details.url);
     callback({ cancel: true });
     const currentWindow = BrowserWindow.getFocusedWindow();
     configLoadRendererAfterDOMContentLoaded(currentWindow);

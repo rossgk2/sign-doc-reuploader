@@ -8,7 +8,7 @@ import {httpRequest} from '../util/electron-functions';
 import {getOAuthBaseUri} from '../util/url-getter';
 import {Settings} from '../settings/settings';
 
-export interface OAuthGrantRequest {
+export interface I_OAuthGrantRequest {
     url: string;
     initialState: string;
 }
@@ -32,7 +32,7 @@ export class OAuthService {
       - env must be such that env.toLowerCase() is either 'commercial' or 'fedramp'
   */
   
-  getOAuthGrantRequest(clientId: string, redirectUri: string, loginEmail: string, env: string): OAuthGrantRequest {
+  getOAuthGrantRequest(clientId: string, redirectUri: string, loginEmail: string, env: string): I_OAuthGrantRequest {
     const state = getRandomId();
     let scope: string;
 
