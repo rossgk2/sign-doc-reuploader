@@ -77,6 +77,7 @@ app.whenReady().then(function() {
     callback({ cancel: true });
     const currentWindow = BrowserWindow.getFocusedWindow();
     configLoadRendererAfterDOMContentLoaded(currentWindow);
+    currentWindow.webContents.send("navigate", "/migration-console"); // use the "migration-console" route when loading index.html
     loadIndexHtml(currentWindow);
   });
 
