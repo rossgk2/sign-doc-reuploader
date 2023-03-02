@@ -39,11 +39,11 @@ import {saveAs} from 'file-saver';
 */
 
 @Component({
-  selector: 'app-source-documents-list',
-  templateUrl: './source-documents-list.component.html',
-  styleUrls: ['./source-documents-list.component.scss']
+  selector: 'app-login',
+  templateUrl: './login.component.html',
+  styleUrls: ['./login.component.scss']
 })
-export class SourceDocumentsListComponent implements OnInit {
+export class LoginComponent implements OnInit {
   
   /* Internal variables. */
   private static previousUrl: string = window.location.href; // the URL that hosts this webapp before user is redirected
