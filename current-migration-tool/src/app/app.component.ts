@@ -1,5 +1,5 @@
 import {Component, OnInit} from '@angular/core';
-import { Router } from '@angular/router';
+import {Router} from '@angular/router';
 
 @Component({
   selector: 'app-root',
@@ -10,8 +10,8 @@ export class AppComponent implements OnInit {
   constructor(private router: Router) { }
 
   ngOnInit() {
-    console.log(`ngOnInit() from app.module.ts called at time ${Date.now()}.`);
-    /* onNavigate() is exposed in preload.ts. */
-    (<any> window).api.onNavigate((event: any, url: string) => { console.log('yayayayaya'); this.router.navigateByUrl(url); });
+    /* See preload.ts for the definitions of these functions. */
+    (<any> window).api.notifyIsRendererInitDone();
+    (<any> window).api.onNavigate((event: any, url: string) => { this.router.navigateByUrl(url); });
   }
 }

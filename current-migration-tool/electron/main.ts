@@ -21,7 +21,8 @@ function getCurrentUrl(event) {
 
 /* Window setup. */
 
-let mainWindow;
+let mainWindow; // BrowserWindow
+let redirected = false; // boolean
 
 /* Loads the index.html file into the window win. */
 function loadIndexHtml(win) {
@@ -66,20 +67,25 @@ app.whenReady().then(function() {
   ipcMain.handle("loadUrl1", loadUrl);
   ipcMain.handle("getCurrentUrl1", getCurrentUrl);
 
+  /* Configure handling of "render-init-done" channel: when the renderer process says that it
+  is done initializing and is therefore ready to recieve messages, send it a message
+  that instructs it to change the activated route to "/migration-console". */
+  ipcMain.on("renderer-init-done", function(event) {
+    if (redirected) {
+        const currentWindow = BrowserWindow.getFocusedWindow();
+        currentWindow.webContents.send("navigate", "/migration-console");
+    }
+  });
+
   /* Configure handling of redirect from OAuth to https://migrationtool.com by canceling
   the redirect and manually loading index.html. */
   const filter = { urls: ['https://migrationtool.com/*'] };
   session.defaultSession.webRequest.onBeforeRequest(filter, (details, callback) => {
     // send details.url to renderer process; extract state and code from it there
-    console.log(`redirect to migrationtool.com intercepted at time ${Date.now()}.`);
-    console.log(details.url);
+    redirected = true;
     callback({ cancel: true });
-    console.log(`callback({cancel: true}) finished executing at time ${Date.now()}`);
     const currentWindow = BrowserWindow.getFocusedWindow();
     configLoadRendererAfterDOMContentLoaded(currentWindow);
-    currentWindow.webContents.send("navigate", "/migration-console"); // use the "migration-console" route when loading index.html
-    console.log(`sent message to "navigate at time ${Date.now()}`);
-
     loadIndexHtml(currentWindow);
   });
 

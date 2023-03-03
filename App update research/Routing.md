@@ -25,33 +25,42 @@ export class AppComponent implements OnInit {
 
 - Electron app starts
 
-- `ngOnInit()` invoked, event handler for "navigate" channel registered, "login" component loaded
+- `ngOnInit()` invoked
+  - the event handler for "navigate" channel is registered
+  - "login" component loaded
 
 - User logs in and is redirected to https://migrationtool.com; "login" component destroyed
 
 - Electron main process intercepts redirect, cancels it, and sends message to "navigate" channel of renderer process
 
-- `ngOnInit()` invoked, event handler for "navigate" channel registered- message not received because it's too late!
+- `ngOnInit()` invoked
+  - the event handler for "navigate" channel is registered
+  - *message not received because it's too late!*
 
 ## Behavior to implement
 
 - Electron app starts
 
-- `ngOnInit()` invoked, the message `true` is sent to "renderer-init-done" channel of Electron main process
-- **Add `ngOnDestroy()` to login.component.ts, and within it, send the message `false` to "renderer-init-done"**
+- `ngOnInit()` invoked
+  - the event handler for the "navigate" channel is registered
+  - **the event handler of the "renderer-init-done" channel is triggered**
 
-- User logs in and is redirected to https://migrationtool.com; "login" component destroyed, **and as a result, `false` is sent to "renderer-init-done" channel of Electron main process** 
+- User logs in and is redirected to https://migrationtool.com; "login" component destroyed 
 - **Maintain a boolean field `redirected = true` in Electron main process that's initialized to `false`**
 
 - Electron main process intercepts redirect, **sets `redirected = true`**, cancels the redirect, and reloads Angular app
 
-- `ngOnInit()` invoked, the message `true` is sent to "renderer-init-done" channel of Electron main process
-- When the "renderer-init-done" channel of the Electron main process fires, add the following code:
+- `ngOnInit()` invoked
+  - the event handler for "navigate" channel is registered
+  - **the event handler of the "renderer-init-done" channel is triggered**
+- **Add the following code to the Electron main process:**
 
 ```js
-if (redirected) {
-	const currentWindow = BrowserWindow.getFocusedWindow();
-	currentWindow.webContents.send("navigate", "/migration-console");
-}
+ipcMain.on("renderer-init-done", function(event) {
+    if (redirected) {
+        const currentWindow = BrowserWindow.getFocusedWindow();
+        currentWindow.webContents.send("navigate", "/migration-console");
+    }
+});
 ```
 
