@@ -10,7 +10,8 @@ export class AppComponent implements OnInit {
   constructor(private router: Router) { }
 
   ngOnInit() {
+    console.log(`ngOnInit() from app.module.ts called at time ${Date.now()}.`);
     /* onNavigate() is exposed in preload.ts. */
-    (<any> window).api.onNavigate((event: any, url: string) => { this.router.navigateByUrl(url); });
+    (<any> window).api.onNavigate((event: any, url: string) => { console.log('yayayayaya'); this.router.navigateByUrl(url); });
   }
 }

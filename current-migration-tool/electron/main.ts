@@ -10,7 +10,6 @@ async function httpRequest(event, requestConfig) {
 }
 
 function loadUrl(event, url) {
-  console.log(`loadUrl(${url}) called from Electron main process`);
   const currentWindow = BrowserWindow.getFocusedWindow();
   currentWindow.webContents.loadURL(url);
 }
@@ -71,13 +70,16 @@ app.whenReady().then(function() {
   the redirect and manually loading index.html. */
   const filter = { urls: ['https://migrationtool.com/*'] };
   session.defaultSession.webRequest.onBeforeRequest(filter, (details, callback) => {
-    // set redirected = true in renderer process
     // send details.url to renderer process; extract state and code from it there
+    console.log(`redirect to migrationtool.com intercepted at time ${Date.now()}.`);
     console.log(details.url);
     callback({ cancel: true });
+    console.log(`callback({cancel: true}) finished executing at time ${Date.now()}`);
     const currentWindow = BrowserWindow.getFocusedWindow();
     configLoadRendererAfterDOMContentLoaded(currentWindow);
     currentWindow.webContents.send("navigate", "/migration-console"); // use the "migration-console" route when loading index.html
+    console.log(`sent message to "navigate at time ${Date.now()}`);
+
     loadIndexHtml(currentWindow);
   });
 

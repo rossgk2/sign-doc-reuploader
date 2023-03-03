@@ -4,8 +4,9 @@ import {MigrationConsoleComponent} from './components/migration-console/migratio
 import {LoginComponent} from './components/login/login.component';
 
 const routes: Routes = [
-  { path: 'login', component: LoginComponent },
-  { path: 'migration-console', component: MigrationConsoleComponent },
+  {path: 'migration-console', component: MigrationConsoleComponent },
+  {path: 'login', component: LoginComponent},
+  {path: '', component: LoginComponent} // default route
 ];
 
 @NgModule({
