@@ -18,16 +18,14 @@ function emptyCredentials(): I_Credentials {
 
 @Injectable({providedIn: 'root'})
 export class CredentialsSharerService {
-  private credentials: I_Credentials = emptyCredentials();
-
+  /* TO-DO: inject window instead of using (<any> window) */
   constructor() {}
   
-  /* TO-DO: if this works change to get and set methods*/
-  setCredentials(credentials: I_Credentials) {
+  set credentials(credentials: I_Credentials) {
     (<any> window).sessionStorage.setItem('credentials', JSON.stringify(credentials));
   }
 
-  getCredentials(): I_Credentials {
+  get credentials(): I_Credentials {
     const result = (<any> window).sessionStorage.getItem('credentials');
     return result == null ? emptyCredentials() : JSON.parse(result); // (== null) <=> (=== null or === undefined)
   }

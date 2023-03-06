@@ -273,7 +273,7 @@ export class MigrationConsoleComponent {
     console.log("ngOnInit() called from console component.");
 
     /* Get credentials from earlier. */
-    const credentials: I_Credentials = this.credentialsSharerService.getCredentials();
+    const credentials: I_Credentials = this.credentialsSharerService.credentials;
     this.commercialIntegrationKey = credentials.commercialIntegrationKey;
     this.oAuthClientId = credentials.oAuthClientId;
     this.oAuthClientSecret = credentials.oAuthClientSecret;

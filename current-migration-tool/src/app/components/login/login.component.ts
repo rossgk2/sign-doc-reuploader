@@ -96,15 +96,15 @@ export class LoginComponent implements OnInit {
       console.log(`Authorization grant request URL: ${authGrantRequest.url}`);
 
       /* Store the credentials obtained. */
-      this.credentialsSharerService.setCredentials({
+      this.credentialsSharerService.credentials = {
         commercialIntegrationKey: this.commercialIntegrationKey,
         oAuthClientId: this.oAuthClientId,
         oAuthClientSecret: this.oAuthClientSecret,
         loginEmail: this.loginEmail
-      });
+      };
 
       console.log("Credentials set in login component.");
-      console.log(this.credentialsSharerService.getCredentials());
+      console.log(this.credentialsSharerService.credentials);
 
       /* Redirect the user to the URL that is the authGrantRequest. */
       loadUrl(authGrantRequest.url);
