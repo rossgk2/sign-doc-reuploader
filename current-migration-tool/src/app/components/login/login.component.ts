@@ -103,6 +103,9 @@ export class LoginComponent implements OnInit {
         loginEmail: this.loginEmail
       });
 
+      console.log("Credentials set in login component.");
+      console.log(this.credentialsSharerService.getCredentials());
+
       /* Redirect the user to the URL that is the authGrantRequest. */
       loadUrl(authGrantRequest.url);
     }

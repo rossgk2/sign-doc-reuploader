@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import {Injectable, Inject} from '@angular/core';
 
 export interface I_Credentials {
   commercialIntegrationKey: string,
@@ -7,21 +7,28 @@ export interface I_Credentials {
   loginEmail: string
 }
 
-@Injectable({providedIn: 'root'})
-export class CredentialsSharerService {
-  private credentials: I_Credentials = {
+function emptyCredentials(): I_Credentials {
+  return {
     commercialIntegrationKey: '',
     oAuthClientId: '',
     oAuthClientSecret: '',
     loginEmail: ''
   };
+}
+
+@Injectable({providedIn: 'root'})
+export class CredentialsSharerService {
+  private credentials: I_Credentials = emptyCredentials();
+
+  constructor() {}
   
   /* TO-DO: if this works change to get and set methods*/
   setCredentials(credentials: I_Credentials) {
-    this.credentials = credentials;
+    (<any> window).sessionStorage.setItem('credentials', JSON.stringify(credentials));
   }
 
   getCredentials(): I_Credentials {
-    return this.credentials;
+    const result = (<any> window).sessionStorage.getItem('credentials');
+    return result == null ? emptyCredentials() : JSON.parse(result); // (== null) <=> (=== null or === undefined)
   }
 }
