@@ -10,6 +10,7 @@ import {SharerService} from '../../services/sharer.service';
 import {getApiBaseUriFedRamp, getApiBaseUriCommercial, getOAuthBaseUri, getPdfLibraryBaseUri} from '../../util/url-getter';
 import {tab} from '../../util/spacing';
 import {getRandomId} from '../../util/random';
+import {httpRequest} from '../../util/electron-functions';
 
 /* RxJS Observables and support for vanilla JS Promises */
 import {Observable} from 'rxjs';
@@ -62,8 +63,7 @@ export class MigrationConsoleComponent {
   }
 
   async getDocumentList(): Promise<any> {
-    const baseUrl = await getApiBaseUriCommercial(this.http, this.commercialIntegrationKey);
-    const requestConfig = this.getDefaultRequestConfig(this.commercialIntegrationKey);
+    const baseUrl = await getApiBaseUriCommercial(this.commercialIntegrationKey);
     
     /* Get all library documents. */
     const pageSize = 100;
@@ -72,8 +72,13 @@ export class MigrationConsoleComponent {
     let cursorQueryString = '';
     let done = false;
     for (let i = 1; !done; i ++) {
-      obs = this.http.get(`${baseUrl}/libraryDocuments?pageSize=${pageSize}` + cursorQueryString, requestConfig);
-      response = (await obs.toPromise()).body;
+      const requestConfig = {
+        'method': 'get',
+        'url': `${baseUrl}/libraryDocuments?pageSize=${pageSize}` + cursorQueryString,
+        'headers': {'Authorization': `Bearer ${this.commercialIntegrationKey}`}
+      };
+      response = (await httpRequest(requestConfig));
+
       libraryDocuments = libraryDocuments.concat(response.libraryDocumentList);
       const cursor = response.page.nextCursor;
       if (cursor !== undefined)
@@ -180,55 +185,65 @@ export class MigrationConsoleComponent {
   }
 
   async download(documentId: string, bearerAuth: string): Promise<any> {
-    const baseUri = await getApiBaseUriCommercial(this.http, bearerAuth);    
-    const defaultRequestConfig = this.getDefaultRequestConfig(bearerAuth);
+    const baseUri = await getApiBaseUriCommercial(bearerAuth);    
+    const defaultHeaders = {'Authorization': `Bearer ${bearerAuth}`};
 
     /* GET the name of the document. */
-    let obs: Observable<any> = this.http.get(`${baseUri}/libraryDocuments/${documentId}`, defaultRequestConfig);
-    const docName: string = (await obs.toPromise()).body.name;
+    let requestConfig: any = {
+      'method': 'get',
+      'url': `${baseUri}/libraryDocuments/${documentId}`,
+      'headers': defaultHeaders
+    }
+    const docName: string = (await httpRequest(requestConfig)).name;
     this.logToConsoleTabbed(`The name of this document in the commercial account is "${docName}"`);
 
     /* GET the values the user has entered into the document's fields. */
-    obs = this.http.get(`${baseUri}/libraryDocuments/${documentId}/formFields`, defaultRequestConfig);
-    const formFields: {[key: string]: string}[] = (await obs.toPromise()).body;
+    requestConfig.url = `${baseUri}/libraryDocuments/${documentId}/formFields`;
+    const formFields: {[key: string]: string}[] = (await httpRequest(requestConfig));
     this.logToConsoleTabbed(`Obtained the values the user entered into this document's fields.`);
 
     /* GET the PDF on which the custom form fields that the user field out were placed.*/
-    obs = this.http.get(`${baseUri}/libraryDocuments/${documentId}/combinedDocument/url`, defaultRequestConfig);
-    const combinedDocumentUrl = (await obs.toPromise()).body.url;
+    requestConfig.url = `${baseUri}/libraryDocuments/${documentId}/combinedDocument/url`;
+    const combinedDocumentUrl = (await httpRequest(requestConfig)).url;
     this.logToConsoleTabbed(`The PDF representation of this document is located at ${combinedDocumentUrl}.`);
 
     /* Save the PDF. */
-    const requestConfig = <any>{'observe': 'response', 'responseType': 'blob'};
     
-    // To avoid CORS errors, use a proxied URL to make the request.
-    // (Postman gives no CORS errors).
+    // Form the request URL in a way that allows us to enable or disable proxying as we choose
+    // (The output of getPdfLibraryBaseUri() depends on Settings.useProxy)
     const prefixEndIndex = 'https://secure.na4.adobesign.com/document/cp/'.length - 1; // hardcoded
     const endIndex = combinedDocumentUrl.length - 1;
     const combinedDocumentUrlSuffix = combinedDocumentUrl.substring(prefixEndIndex + 1, endIndex + 1);
     console.log('combinedDocumentUrlSuffix: ', combinedDocumentUrlSuffix);
-    const proxiedCombinedDocumentUrl = `/${getPdfLibraryBaseUri()}/${combinedDocumentUrlSuffix}`; // See proxy.conf.ts.
-    obs = this.http.get(proxiedCombinedDocumentUrl, requestConfig);
-    const pdfBlob = (await obs.toPromise()).body;
+    const proxiedCombinedDocumentUrl = `${getPdfLibraryBaseUri()}/${combinedDocumentUrlSuffix}`; // See proxy.conf.ts.
+    
+    // Make the GET request
+    requestConfig.url = proxiedCombinedDocumentUrl;
+    requestConfig.responseType = 'blob'; // 'blob' is browser only, but Electron runs on top of a browser
+    const pdfBlob = (await httpRequest(requestConfig));
     this.logToConsoleTabbed(`Downloaded the PDF of this document.`);
 
     return {'docName': docName, 'formFields': formFields, 'pdfBlob' : pdfBlob};
   }
 
   async upload(docName: string, formFields: {[key: string]: string}, pdfBlob: Blob, documentId: string) {
+    console.log('began upload');
     const baseUri = getApiBaseUriFedRamp();
-    const defaultRequestConfig = await this.getDefaultRequestConfig(this.bearerAuth);
+    const defaultHeaders = {'Authorization': `Bearer ${this.bearerAuth}`};
 
     /* POST the same document (but without any custom form fields) as a transient document and get its ID.
     (Informed by https://stackoverflow.com/questions/53038900/nodejs-axios-post-file-from-local-server-to-another-server). */
     const formData = new FormData();
     formData.append('File-Name', docName);
-    formData.append('File', pdfBlob);
-    const headers = defaultRequestConfig.headers.append('boundary', getRandomId());
-    const requestConfig = <any>{'observe': 'response', 'headers': headers};
-
-    let obs: Observable<any> = this.http.post(`/fedramp-api/transientDocuments`, formData, requestConfig); // See proxy.conf.ts.
-    const response = (await obs.toPromise()).body;
+    //formData.append('File', pdfBlob);
+    
+    let requestConfig: any = {
+      'method': 'post',
+      'url': `/fedramp-api/transientDocuments`,
+      'headers': {...defaultHeaders, 'boundary': getRandomId()},
+      'data': formData
+    };
+    const response = (await httpRequest(requestConfig));
     const transientDocumentId = response.transientDocumentId;
 
     this.logToConsoleTabbed(`Uploaded the downloaded PDF to the FedRamp account as a transient document with a transientDocumentId of ${transientDocumentId}.`);
@@ -246,21 +261,26 @@ export class MigrationConsoleComponent {
     // http.post() is supposed to use 'Content-Type': 'application/json' by default,
     // but that doesn't happen with this request for some reason. So
     // we can't use defaultRequestConfig for this request.
-    const headers2 = defaultRequestConfig.headers.append('Content-Type', 'application/json');
-    const requestConfig2 = <any>{'observe': 'response', 'headers': headers2};
-    obs = this.http.post(`${baseUri}/libraryDocuments`, JSON.stringify(libraryDocumentInfo), requestConfig2);
-    const newLibraryDocumentId = (await obs.toPromise()).body.id;
+    
+    requestConfig = {
+      'method': 'post',
+      'url': `${baseUri}/libraryDocuments`,
+      'headers': defaultHeaders, // hopefully application/json is used for 'Content-Type'
+      'data': JSON.stringify(libraryDocumentInfo)
+    };
+    const newLibraryDocumentId = (await httpRequest(requestConfig)).id;
     this.logToConsoleTabbed(`Created a library document (a template) in the FedRamp account from the transient document with a libraryDocumentId of ${newLibraryDocumentId}.`);
 
     /* Use a PUT request to add the custom form fields and the values entered earlier to the document. */
-    obs = this.http.put(`${baseUri}/libraryDocuments/${newLibraryDocumentId}/formFields`, JSON.stringify(formFields), requestConfig2);
-    console.log('PUT response:', (await obs.toPromise()).body);
-    this.logToConsoleTabbed("Wrote the values the user entered into this document's fields to the library document in the FedRamp account.");
-  }
+    requestConfig = {
+      'method': 'put',
+      'url': `${baseUri}/libraryDocuments/${newLibraryDocumentId}/formFields`,
+      'headers': defaultHeaders,
+      'data': JSON.stringify(formFields)
+    }
 
-  getDefaultRequestConfig(bearerAuth: string): any {
-    const defaultHeaders = new HttpHeaders().set('Authorization', `Bearer ${bearerAuth}`);
-    return {'observe': 'response', 'headers': defaultHeaders};
+    console.log('PUT response:', (await httpRequest(requestConfig)));
+    this.logToConsoleTabbed("Wrote the values the user entered into this document's fields to the library document in the FedRamp account.");
   }
 
   /* ========================================== */

@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {HttpClient} from '@angular/common/http';
+import {httpRequest} from '../util/electron-functions';
 import {Observable} from 'rxjs';
 import {Settings} from '../settings/settings';
 
@@ -14,12 +14,15 @@ export function getApiBaseUriFedRamp(inDevelopment = Settings.inDevelopment, use
     return '/fedramp-api';
 }
 
-export async function getApiBaseUriCommercial(http: HttpClient, bearerAuth: string, // using these two args is kind of hacky
+export async function getApiBaseUriCommercial(bearerAuth: string, // using this arg is kind of hacky
                       inDevelopment = Settings.inDevelopment, useProxy = Settings.useProxy): Promise<any> {
   if (!useProxy) {
-    const defaultRequestConfig = <any>{'observe': 'response', 'headers': {Authorization: `Bearer ${bearerAuth}`}};
-    const obs: Observable<any> = http.get('https://api.na1.adobesign.com/api/rest/v6/baseUris', defaultRequestConfig);
-    const response = (await obs.toPromise()).body;
+    const requestConfig = {
+      'method': 'get',
+      'url': 'https://api.na1.adobesign.com/api/rest/v6/baseUris',
+      'headers': {Authorization: `Bearer ${bearerAuth}`}
+    };
+    const response = (await httpRequest(requestConfig));
     let baseUri = response['apiAccessPoint'];
     baseUri = baseUri.substring(0, baseUri.length - 1) + "/api/rest/v6";
     return baseUri;
@@ -43,5 +46,5 @@ export function getPdfLibraryBaseUri(inDevelopment = Settings.inDevelopment, use
   if (!useProxy)
     return 'https://secure.na4.adobesign.com/document/cp';
   else
-    return 'pdf-api';
+    return '/pdf-api';
 }
