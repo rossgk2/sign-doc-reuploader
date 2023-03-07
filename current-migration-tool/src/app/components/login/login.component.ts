@@ -92,11 +92,10 @@ export class LoginComponent implements OnInit {
     if (!false) { // TO-DO: change false to redirectedElectron()
       /* Get the URL, the "authorization grant request", that the user must be redirected to in order to log in.*/
       const authGrantRequest = this.oAuthService.getOAuthGrantRequest(this.oAuthClientId, Settings.redirectUri, this.loginEmail, 'FedRamp');
-      // TO-DO: store authGrantRequest.state with the ngrx store
-      console.log(`Authorization grant request URL: ${authGrantRequest.url}`);
 
-      /* Store the credentials obtained. */
+      /* Store the OAuth state and the credentials. */
       const temp: any = {};
+      temp.initialOAuthState = authGrantRequest.initialOAuthState;
       temp.credentials = {
         commercialIntegrationKey: this.commercialIntegrationKey,
         oAuthClientId: this.oAuthClientId,
@@ -105,7 +104,6 @@ export class LoginComponent implements OnInit {
       };
       this.sharerService.shared = temp;
 
-      console.log("Credentials set in login component.");
       console.log(this.sharerService.shared);
 
       /* Redirect the user to the URL that is the authGrantRequest. */

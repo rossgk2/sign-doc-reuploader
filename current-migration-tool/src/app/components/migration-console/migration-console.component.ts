@@ -282,8 +282,6 @@ export class MigrationConsoleComponent {
     passed to the callback. */
     const oldThis = this;
     (<any> window).api.onConsoleInitFinish(async function (event: any, url: string) {
-      console.log("ngOnInit() called from console component.");
-
       /* Get credentials from earlier. */
       const credentials: any = oldThis.sharerService.shared.credentials;
       oldThis.commercialIntegrationKey = credentials.commercialIntegrationKey;
@@ -291,13 +289,9 @@ export class MigrationConsoleComponent {
       oldThis.oAuthClientSecret = credentials.oAuthClientSecret;
       oldThis.loginEmail = credentials.loginEmail;
 
-      console.log(credentials);
-
-      /* */
-      console.log("huh?", url);
-      const temp = "baldkfjasd;lfkasf"; // TO-DO: get auth grant URL from main process
-      const state = "12345"; // TO-DO: get state that was generated when auth grant request was generated
-      const authGrant = oldThis.oAuthService.getAuthGrant(temp, state);
+      /* Use the credentials to get a "Bearer" token from OAuth. */
+      const initialOAuthState = oldThis.sharerService.shared.initialOAuthState;
+      const authGrant = oldThis.oAuthService.getAuthGrant(url, initialOAuthState);
       const tokenResponse = await oldThis.oAuthService.getToken(oldThis.oAuthClientId, oldThis.oAuthClientSecret, authGrant, Settings.redirectUri);
       oldThis.bearerAuth = tokenResponse.accessToken; oldThis.refreshToken = tokenResponse.refreshToken;
       console.log('bearerAuth', oldThis.bearerAuth);

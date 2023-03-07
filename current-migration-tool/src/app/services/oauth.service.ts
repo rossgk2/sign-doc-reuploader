@@ -10,7 +10,7 @@ import {Settings} from '../settings/settings';
 
 export interface I_OAuthGrantRequest {
     url: string;
-    initialState: string;
+    initialOAuthState: string;
 }
 
 @Injectable({providedIn: 'root'})
@@ -64,21 +64,21 @@ export class OAuthService {
     queryParams = queryParams.substring(1, queryParams.length); // remove the / at the beginning
     return {
       'url': `${getOAuthBaseUri()}/api/v1/authorize` + queryParams,
-      'initialState': state
+      'initialOAuthState': state
     };  
   }
 
   /*
     Inputs:
       - authGrantResponse is a URL whose query params encode the response to the request for an authorization grant.
-      - initialState is the state that is sent as a part of the authorization grant request. This function needs to know
-      initialState so that it can compare it to authGrantResponse's initialState and thus verify that
+      - initialOAuthState is the state that is sent as a part of the authorization grant request. This function needs to know
+      initialOAuthState so that it can compare it to authGrantResponse's initialOAuthState and thus verify that
       the server sending authGrantResponse is not a malicous actor pretending to be the authorizaton server.  
 
     Returns a unique string that is the "authorization grant". This authorizaton grant is used to
     request more tokens (access tokens, ID tokens, or refresh tokens).
   */
-  getAuthGrant(authGrantResponse: string, initialState: string): string {
+  getAuthGrant(authGrantResponse: string, initialOAuthState: string): string {
     const tree: UrlTree = this.serializer.parse(authGrantResponse);
     
     /* Whether or not the request that generated authGrantResponse depends on which of 
@@ -100,7 +100,7 @@ export class OAuthService {
       const state: string = tree.queryParams['state'];
 
       // After getting the ngrx store to work, delete "false &&" in order to enable this check.
-      if (false && state !== initialState) {
+      if (false && state !== initialOAuthState) {
         throw new Error('The state recieved from the server claiming to be authorization server does not match initial state passed to the authorization server.');
       }
 
