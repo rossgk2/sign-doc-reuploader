@@ -6,6 +6,8 @@ const axios = require("axios").default;
 /* Functions to be exposed to renderer via preload.ts. */
 
 async function httpRequest(event, requestConfig) {
+  /* We don't just "return (await axios(requestConfig))" because the result is not clonable
+  and thus can't be passed to the renderer process without some extra work. */
   return (await axios(requestConfig)).data;
 }
 

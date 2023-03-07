@@ -125,7 +125,7 @@ export class OAuthService {
        }
     };
 
-    const response = (await httpRequest(requestConfig)).data;
+    const response = (await httpRequest(requestConfig));
     console.log('/token response:', response);
     return this.handleTokenEndpointErrorsAndReturn(response);
   }
@@ -144,7 +144,7 @@ export class OAuthService {
       }
     };
 
-    const response = (await httpRequest(requestConfig)).data;
+    const response = (await httpRequest(requestConfig));
     console.log('refreshToken() response:', response);
 
     return this.handleTokenEndpointErrorsAndReturn(response);
