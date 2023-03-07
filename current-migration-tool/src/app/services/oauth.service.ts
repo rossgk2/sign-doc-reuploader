@@ -79,16 +79,14 @@ export class OAuthService {
     request more tokens (access tokens, ID tokens, or refresh tokens).
   */
   getAuthGrant(authGrantResponse: string, initialOAuthState: string): string {
-    const tree: UrlTree = this.serializer.parse(authGrantResponse);
-    
-    /* Whether or not the request that generated authGrantResponse depends on which of 
-    "error" and "code" is a query param. */
+    /* Consider the query param string instead of the entire URL so that we can avoid
+    parsing errors when the URL has the ? after a /, and is something like 
+    https://migrationtool.com/?a1=a2&b1=b2. */
+    const queryParamString = authGrantResponse.substring(authGrantResponse.indexOf("?"));
+    const tree: UrlTree = this.serializer.parse(queryParamString);
 
     /* Handle errors. If no errors, check that the server sending the authorizaton grant is
     legitimate, and then return the authorizaton grant. */
-    console.log('authGrantResponse', authGrantResponse);
-    console.log('tree.queryParams', tree.queryParams);
-    console.log('')
 
     if (tree.queryParams.hasOwnProperty('error')) {
       const errorMessage = 'An erroneous request was made to the OAuth /authorize endpoint.\n' +
@@ -99,8 +97,7 @@ export class OAuthService {
       const code: string = tree.queryParams['code'];
       const state: string = tree.queryParams['state'];
 
-      // After getting the ngrx store to work, delete "false &&" in order to enable this check.
-      if (false && state !== initialOAuthState) {
+      if (state !== initialOAuthState) {
         throw new Error('The state recieved from the server claiming to be authorization server does not match initial state passed to the authorization server.');
       }
 
@@ -111,50 +108,43 @@ export class OAuthService {
   }
 
   async getToken(clientId: string, clientSecret: string, authGrant: string, redirectUri: string): Promise<any> {
-    const headers = new HttpHeaders().set('Content-Type', 'application/x-www-form-urlencoded');
+    console.log('getToken() called');
+    console.log('authGrant:', authGrant);
     
-    console.log('Just set headers for the associated HTTP request. Now calling getToken().')
-    console.log('authGrant:', authGrant)
-
-    /* We use a proxied URL to avoid CORS errors. See proxy.conf.ts. */
-    const body = null;
-    const obs: Observable<any> = this.http.post(`${getOAuthBaseUri()}/api/v1/token`, body,
-      {'observe': 'response', 'headers': headers,
+    const requestConfig = {
+      'method': 'post',
+      'url': `${getOAuthBaseUri()}/api/v1/token`,
+      'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
       'params':
-        {
+       {
           'client_id' : clientId,
           'client_secret' : clientSecret,
           'grant_type' : 'authorization_code',
           'code' : authGrant,
           'redirect_uri' : redirectUri
-        }
-      }
-    );
+       }
+    };
 
-    const response = (await obs.toPromise()).body;
+    const response = (await httpRequest(requestConfig)).data;
     console.log('/token response:', response);
-    
     return this.handleTokenEndpointErrorsAndReturn(response);
   }
 
   async refreshToken(clientId: string, clientSecret: string, refreshToken: string): Promise<any> {
-    const headers = new HttpHeaders().set('Content-Type', 'application/x-www-form-urlencoded');
-
-    /* We use a proxied URL to avoid CORS errors. See proxy.conf.ts. */
-    const body = null;
-    const obs: Observable<any> = this.http.post(`/oauth-api/api/v1/token`, body,
-      {'observe': 'response', 'headers': headers,
+    const requestConfig = {
+      'method': 'post',
+      'url': `${getOAuthBaseUri()}/api/v1/token`,
+      'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
       'params':
-        {
-          'client_id' : clientId,
-          'client_secret' : clientSecret,
-          'grant_type' : 'refresh_token',
-          'refresh_token': refreshToken
-        }
+      {
+        'client_id' : clientId,
+        'client_secret' : clientSecret,
+        'grant_type' : 'refresh_token',
+        'refresh_token': refreshToken
       }
-    );
+    };
 
-    const response = (await obs.toPromise()).body;
+    const response = (await httpRequest(requestConfig)).data;
     console.log('refreshToken() response:', response);
 
     return this.handleTokenEndpointErrorsAndReturn(response);
