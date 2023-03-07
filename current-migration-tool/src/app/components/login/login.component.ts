@@ -7,7 +7,7 @@ import {OAuthService, I_OAuthGrantRequest} from '../../services/oauth.service';
 import {SharerService} from '../../services/sharer.service';
 
 /* Utilities */
-import {httpRequest, loadUrl, getCurrentUrl} from '../../util/electron-functions';
+import {httpRequest, loadUrl} from '../../util/electron-functions';
 
 /* User-defined configuration */
 import {Credentials} from '../../settings/credentials';
@@ -87,42 +87,28 @@ export class LoginComponent implements OnInit {
               private serializer: UrlSerializer) { }
  
   login(): void {
-    console.log("login clicked.")
+    /* Get the URL, the "authorization grant request", that the user must be redirected to in order to log in.*/
+    const authGrantRequest = this.oAuthService.getOAuthGrantRequest(this.oAuthClientId, Settings.redirectUri, this.loginEmail, 'FedRamp');
 
-    if (!false) { // TO-DO: change false to redirectedElectron()
-      /* Get the URL, the "authorization grant request", that the user must be redirected to in order to log in.*/
-      const authGrantRequest = this.oAuthService.getOAuthGrantRequest(this.oAuthClientId, Settings.redirectUri, this.loginEmail, 'FedRamp');
+    /* Store the OAuth state and the credentials. */
+    const temp: any = {};
+    temp.initialOAuthState = authGrantRequest.initialOAuthState;
+    temp.credentials = {
+      commercialIntegrationKey: this.commercialIntegrationKey,
+      oAuthClientId: this.oAuthClientId,
+      oAuthClientSecret: this.oAuthClientSecret,
+      loginEmail: this.loginEmail
+    };
+    this.sharerService.shared = temp;
 
-      /* Store the OAuth state and the credentials. */
-      const temp: any = {};
-      temp.initialOAuthState = authGrantRequest.initialOAuthState;
-      temp.credentials = {
-        commercialIntegrationKey: this.commercialIntegrationKey,
-        oAuthClientId: this.oAuthClientId,
-        oAuthClientSecret: this.oAuthClientSecret,
-        loginEmail: this.loginEmail
-      };
-      this.sharerService.shared = temp;
+    console.log(this.sharerService.shared);
 
-      console.log(this.sharerService.shared);
-
-      /* Redirect the user to the URL that is the authGrantRequest. */
-      loadUrl(authGrantRequest.url);
-    }
+    /* Redirect the user to the URL that is the authGrantRequest. */
+    loadUrl(authGrantRequest.url);
   }
 
   async ngOnInit(): Promise<any> {
     console.log("ngOnInit() called from login component.");
-
-    /* Tests of functions from electron-functions.ts. */
-    const requestConfig = {
-      method: "get",
-      url: `https://pokeapi.co/api/v2/pokemon/treecko`,
-    };
-    const testResponse = await httpRequest(requestConfig);
-    console.log(testResponse);
-
-    console.log('getCurrentUrl()', await getCurrentUrl());
   }
 
   /* Helper functions for use in .html file. */
