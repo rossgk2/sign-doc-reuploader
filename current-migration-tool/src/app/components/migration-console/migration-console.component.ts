@@ -4,7 +4,7 @@ import {HttpClient, HttpHeaders} from '@angular/common/http';
 
 /* Services */
 import {OAuthService, I_OAuthGrantRequest} from '../../services/oauth.service';
-import {CredentialsSharerService, I_Credentials} from '../../services/credentials-sharer.service';
+import {SharerService} from '../../services/sharer.service';
 
 /* Utilities */
 import {getApiBaseUriFedRamp, getApiBaseUriCommercial, getOAuthBaseUri, getPdfLibraryBaseUri} from '../../util/url-getter';
@@ -110,7 +110,7 @@ export class MigrationConsoleComponent {
   loginEmail: string = '';
 
   constructor(private oAuthService: OAuthService,
-              private credentialsSharerService: CredentialsSharerService,
+              private sharerService: SharerService,
               private formBuilder: FormBuilder,
               private http: HttpClient) { }
 
@@ -270,24 +270,38 @@ export class MigrationConsoleComponent {
   /* ========================================== */
 
   async ngOnInit() {
-    console.log("ngOnInit() called from console component.");
+    /* See preload.ts for the definitions of the functions from api. */
 
-    /* Get credentials from earlier. */
-    const credentials: I_Credentials = this.credentialsSharerService.credentials;
-    this.commercialIntegrationKey = credentials.commercialIntegrationKey;
-    this.oAuthClientId = credentials.oAuthClientId;
-    this.oAuthClientSecret = credentials.oAuthClientSecret;
-    this.loginEmail = credentials.loginEmail;
+    /* Send a message to the Electron main process indicating that this ngOnInit() method
+    has begun executing. */
+    (<any> window).api.notifyIsConsoleInitStarted();
+    
+    /* When the Electron main process recieves the notification sent in the above,
+    it sends a message back that, when recieved, results in the invocation of the
+    below defined callback function. The message includes a url argument that is
+    passed to the callback. */
+    const oldThis = this;
+    (<any> window).api.onConsoleInitFinish(async function (event: any, url: string) {
+      console.log("ngOnInit() called from console component.");
 
-    console.log(credentials);
+      /* Get credentials from earlier. */
+      const credentials: any = oldThis.sharerService.shared.credentials;
+      oldThis.commercialIntegrationKey = credentials.commercialIntegrationKey;
+      oldThis.oAuthClientId = credentials.oAuthClientId;
+      oldThis.oAuthClientSecret = credentials.oAuthClientSecret;
+      oldThis.loginEmail = credentials.loginEmail;
 
-    /* */
-    const temp = "baldkfjasd;lfkasf"; // TO-DO: get auth grant URL from main process
-    const state = "12345"; // TO-DO: get state that was generated when auth grant request was generated
-    const authGrant = this.oAuthService.getAuthGrant(temp, state);
-    const tokenResponse = await this.oAuthService.getToken(this.oAuthClientId, this.oAuthClientSecret, authGrant, Settings.redirectUri);
-    this.bearerAuth = tokenResponse.accessToken; this.refreshToken = tokenResponse.refreshToken;
-    console.log('bearerAuth', this.bearerAuth);
+      console.log(credentials);
+
+      /* */
+      console.log("huh?", url);
+      const temp = "baldkfjasd;lfkasf"; // TO-DO: get auth grant URL from main process
+      const state = "12345"; // TO-DO: get state that was generated when auth grant request was generated
+      const authGrant = oldThis.oAuthService.getAuthGrant(temp, state);
+      const tokenResponse = await oldThis.oAuthService.getToken(oldThis.oAuthClientId, oldThis.oAuthClientSecret, authGrant, Settings.redirectUri);
+      oldThis.bearerAuth = tokenResponse.accessToken; oldThis.refreshToken = tokenResponse.refreshToken;
+      console.log('bearerAuth', oldThis.bearerAuth);
+    });
   }
 
   /* Helper functions. */

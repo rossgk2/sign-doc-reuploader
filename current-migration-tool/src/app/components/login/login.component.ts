@@ -4,7 +4,7 @@ import {UrlTree, UrlSerializer} from '@angular/router';
 
 /* Services */
 import {OAuthService, I_OAuthGrantRequest} from '../../services/oauth.service';
-import {CredentialsSharerService, I_Credentials} from '../../services/credentials-sharer.service';
+import {SharerService} from '../../services/sharer.service';
 
 /* Utilities */
 import {httpRequest, loadUrl, getCurrentUrl} from '../../util/electron-functions';
@@ -83,7 +83,7 @@ export class LoginComponent implements OnInit {
   } 
 
   constructor(private oAuthService: OAuthService,
-              private credentialsSharerService: CredentialsSharerService,
+              private sharerService: SharerService,
               private serializer: UrlSerializer) { }
  
   login(): void {
@@ -96,15 +96,17 @@ export class LoginComponent implements OnInit {
       console.log(`Authorization grant request URL: ${authGrantRequest.url}`);
 
       /* Store the credentials obtained. */
-      this.credentialsSharerService.credentials = {
+      const temp: any = {};
+      temp.credentials = {
         commercialIntegrationKey: this.commercialIntegrationKey,
         oAuthClientId: this.oAuthClientId,
         oAuthClientSecret: this.oAuthClientSecret,
         loginEmail: this.loginEmail
       };
+      this.sharerService.shared = temp;
 
       console.log("Credentials set in login component.");
-      console.log(this.credentialsSharerService.credentials);
+      console.log(this.sharerService.shared);
 
       /* Redirect the user to the URL that is the authGrantRequest. */
       loadUrl(authGrantRequest.url);
