@@ -19,8 +19,9 @@ import {first} from 'rxjs/operators';
 /* Settings */
 import {Settings} from '../../settings/settings';
 
-/* For debug purposes */
-import {saveAs} from 'file-saver';
+/* Should be unnecessary but for now is necessary. See definition of httpRequestTemp() 
+at the end of this file for an explanation. */
+import axios from 'axios';
 
 @Component({
   selector: 'app-migration-console',
@@ -71,10 +72,10 @@ export class MigrationConsoleComponent {
     /* Get all library documents. */
     const pageSize = 100;
     let libraryDocuments: any[] = [];
-    let obs: Observable<any>; let response;
+    let response;
     let cursorQueryString = '';
     let done = false;
-    for (let i = 1; i <= 1 && !done; i ++) { // after done testing, remove "i <= 1"
+    for (let i = 1; !done; i ++) {
       const requestConfig = {
         'method': 'get',
         'url': `${baseUrl}/libraryDocuments?pageSize=${pageSize}` + cursorQueryString,
@@ -84,8 +85,10 @@ export class MigrationConsoleComponent {
 
       libraryDocuments = libraryDocuments.concat(response.libraryDocumentList);
       const cursor = response.page.nextCursor;
-      if (cursor !== undefined)
+      if (cursor !== undefined) {
         cursorQueryString = `&cursor=${cursor}`;
+        done = Settings.devPageLimit >= 0 && i >= Settings.devPageLimit;
+      }
       else
         done = true;
 
@@ -196,7 +199,7 @@ export class MigrationConsoleComponent {
       'method': 'get',
       'url': `${baseUri}/libraryDocuments/${documentId}`,
       'headers': defaultHeaders
-    }
+    };
     const docName: string = (await httpRequest(requestConfig)).name;
     this.logToConsoleTabbed(`The name of this document in the commercial account is "${docName}"`);
 
@@ -205,41 +208,30 @@ export class MigrationConsoleComponent {
     const formFields: {[key: string]: string}[] = (await httpRequest(requestConfig));
     this.logToConsoleTabbed(`Obtained the values the user entered into this document's fields.`);
 
-    /* GET the PDF on which the custom form fields that the user field out were placed.*/
+    /* GET the URL of the PDF on which the custom form fields that the user field out were placed. */
     requestConfig.url = `${baseUri}/libraryDocuments/${documentId}/combinedDocument/url`;
     const combinedDocumentUrl = (await httpRequest(requestConfig)).url;
     this.logToConsoleTabbed(`The PDF representation of this document is located at ${combinedDocumentUrl}.`);
 
-    /* Save the PDF. */
+    /* Get the PDF itself. */
     
-    // Form the request URL in a way that allows us to enable or disable proxying as we choose
-    // (The output of getPdfLibraryBaseUri() depends on Settings.useProxy)
+    // Form the request URL in a way that allows us to enable or disable proxying as we choose.
+    // (The output of getPdfLibraryBaseUri() depends on Settings.useProxy.)
     const prefixEndIndex = 'https://secure.na4.adobesign.com/document/cp/'.length - 1; // hardcoded
     const endIndex = combinedDocumentUrl.length - 1;
     const combinedDocumentUrlSuffix = combinedDocumentUrl.substring(prefixEndIndex + 1, endIndex + 1);
     const proxiedCombinedDocumentUrl = `${getPdfLibraryBaseUri()}/${combinedDocumentUrlSuffix}`; // See proxy.conf.ts.
-    console.log('combinedDocumentUrlSuffix: ', combinedDocumentUrlSuffix);
-    console.log('proxiedCombinedDocumentUrl: ', proxiedCombinedDocumentUrl);
 
-    // Make the GET request
-    const requestConfig2 = {
-      'method': 'get',
-      'url': proxiedCombinedDocumentUrl,
-      'responseType': 'arraybuffer'
-    };
-
-    // requestConfig.url = proxiedCombinedDocumentUrl;
-    // requestConfig.responseType = 'arraybuffer';
-    const pdfArrayBuffer: ArrayBuffer = (await httpRequest(requestConfig2));
-    this.logToConsoleTabbed(`arrayBuffer size: ${pdfArrayBuffer.byteLength}`);
-
+    // GET the PDF.
+    requestConfig.url = proxiedCombinedDocumentUrl;
+    requestConfig.responseType = 'arraybuffer';
+    const pdfArrayBuffer: ArrayBuffer = (await httpRequest(requestConfig));
     const pdfBlob = new Blob([pdfArrayBuffer], {type: 'application/pdf'});
-    this.logToConsoleTabbed(`pdfBlob size: ${pdfBlob.size}`);
 
-    this.logToConsoleTabbed(`Preparing to download the PDF of this document from ${proxiedCombinedDocumentUrl}.`);
-    const blobUrl = URL.createObjectURL(pdfBlob);
-    this.logToConsoleTabbed(`blobUrl: ${blobUrl}`);
-    (<any> window).open(blobUrl);
+    if (Settings.debugViewDownloadedPdf) {
+      const blobUrl = URL.createObjectURL(pdfBlob);
+      (<any> window).open(blobUrl);
+    }
 
     return {'docName': docName, 'formFields': formFields, 'pdfBlob': pdfBlob};
   }
@@ -248,7 +240,8 @@ export class MigrationConsoleComponent {
     const baseUri = getApiBaseUriFedRamp();
     const defaultHeaders = {'Authorization': `Bearer ${this.bearerAuth}`};
 
-    this.logToConsoleTabbed('About to upload the downloaded PDF to the FedRamp account.')
+    this.logToConsoleTabbed(`About to upload the downloaded PDF to the FedRamp 
+      account by POSTing to ${baseUri}/transientDocuments`);
 
     /* POST the same document (but without any custom form fields) as a transient document and get its ID.
     (Informed by https://stackoverflow.com/questions/53038900/nodejs-axios-post-file-from-local-server-to-another-server). */
@@ -262,30 +255,25 @@ export class MigrationConsoleComponent {
       'headers': defaultHeaders,
       'data': formData
     };
-    const response = (await httpRequest(requestConfig));
+    const response: any = (await this.httpRequestTemp(requestConfig)); // this API endpoint is tricky; have to access data field of response to get response
     const transientDocumentId = response.transientDocumentId;
-
     this.logToConsoleTabbed(`Uploaded the downloaded PDF to the FedRamp account as a transient document with a transientDocumentId of ${transientDocumentId}.`);
 
     /* Create a library document from the just-created transient document. */
     const libraryDocumentInfo = 
     {
       'fileInfos' : [{'transientDocumentId' : transientDocumentId}],
-      'name': '(From Angular reuploader program) ' + docName,
+      'name': Settings.docNamePrefixForDebug + docName,
       'sharingMode': 'ACCOUNT', // can be 'USER' or 'GROUP' or 'ACCOUNT' or 'GLOBAL'
       'state': 'AUTHORING', // can be 'AUTHORING' or 'ACTIVE'
       'templateTypes': ['DOCUMENT'] // each array elt can be 'DOCUMENT' or 'FORM_FIELD_LAYER'
     };
-  
-    // http.post() is supposed to use 'Content-Type': 'application/json' by default,
-    // but that doesn't happen with this request for some reason. So
-    // we can't use defaultRequestConfig for this request.
     
     requestConfig = {
       'method': 'post',
       'url': `${baseUri}/libraryDocuments`,
-      'headers': defaultHeaders, // hopefully application/json is used for 'Content-Type'
-      'data': JSON.stringify(libraryDocumentInfo)
+      'headers': defaultHeaders,
+      'data': libraryDocumentInfo
     };
     const newLibraryDocumentId = (await httpRequest(requestConfig)).id;
     this.logToConsoleTabbed(`Created a library document (a template) in the FedRamp account from the transient document with a libraryDocumentId of ${newLibraryDocumentId}.`);
@@ -295,10 +283,9 @@ export class MigrationConsoleComponent {
       'method': 'put',
       'url': `${baseUri}/libraryDocuments/${newLibraryDocumentId}/formFields`,
       'headers': defaultHeaders,
-      'data': JSON.stringify(formFields)
+      'data': formFields
     }
 
-    console.log('PUT response:', (await httpRequest(requestConfig)));
     this.logToConsoleTabbed("Wrote the values the user entered into this document's fields to the library document in the FedRamp account.");
   }
 
@@ -333,7 +320,6 @@ export class MigrationConsoleComponent {
       const authGrant = oldThis.oAuthService.getAuthGrant(url, initialOAuthState);
       const tokenResponse = await oldThis.oAuthService.getToken(oldThis.oAuthClientId, oldThis.oAuthClientSecret, authGrant, Settings.redirectUri);
       oldThis.bearerAuth = tokenResponse.accessToken; oldThis.refreshToken = tokenResponse.refreshToken;
-      console.log('bearerAuth', oldThis.bearerAuth);
     });
   }
 
@@ -346,5 +332,12 @@ export class MigrationConsoleComponent {
 
   async delay(seconds: number): Promise<any> {
     return new Promise(resolve => setTimeout(resolve, seconds * 1000));
+  }
+
+  /* We should be able to use httpRequest from util/electron-functions.ts instead of this,
+  but it seems that requestConfig.data isn't copied correctly (maybe not even copied at all)
+  when requestConfig is passed from httpRequest() to the axios() call in electron/main.ts. */
+  async httpRequestTemp(requestConfig: any): Promise<any> {
+    return (await axios(requestConfig)).data;
   }
 }

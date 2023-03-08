@@ -10,7 +10,5 @@ contextBridge.exposeInMainWorld("api", {
   onNavigate: (callback) => ipcRenderer.on("navigate", callback),
 
   notifyIsConsoleInitStarted: () => ipcRenderer.send("console-init-started"),
-  onConsoleInitFinish: (callback) => ipcRenderer.on("console-init-finish", callback),
-
-  writeFileSync: (pdfBlob) => fs.writeFileSync(`test.pdf`, pdfBlob)
+  onConsoleInitFinish: (callback) => ipcRenderer.on("console-init-finish", callback)
 });

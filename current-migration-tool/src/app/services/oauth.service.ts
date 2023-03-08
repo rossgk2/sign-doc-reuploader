@@ -47,17 +47,17 @@ export class OAuthService {
 
     /* Build the URL that is the authorizaton grant request. */
     const tree: UrlTree = this.router.createUrlTree([''],
+    {
+      'queryParams':
       {
-        'queryParams':
-        {
-              'client_id' : clientId,
-              'response_type' : 'code',
-              'redirect_uri' : redirectUri,
-              'scope' : scope,
-              'state' : state,
-              'login_hint' : loginEmail
-        }
-      });
+        'client_id' : clientId,
+        'response_type' : 'code',
+        'redirect_uri' : redirectUri,
+        'scope' : scope,
+        'state' : state,
+        'login_hint' : loginEmail
+      }
+    });
 
     /* Return the authorizaton grant request and the randomly generated state associated with it. */
     let queryParams: string = this.serializer.serialize(tree);
@@ -108,9 +108,6 @@ export class OAuthService {
   }
 
   async getToken(clientId: string, clientSecret: string, authGrant: string, redirectUri: string): Promise<any> {
-    console.log('getToken() called');
-    console.log('authGrant:', authGrant);
-    
     const requestConfig = {
       'method': 'post',
       'url': `${getOAuthBaseUri()}/api/v1/token`,
@@ -126,7 +123,6 @@ export class OAuthService {
     };
 
     const response = (await httpRequest(requestConfig));
-    console.log('/token response:', response);
     return this.handleTokenEndpointErrorsAndReturn(response);
   }
 
@@ -145,8 +141,6 @@ export class OAuthService {
     };
 
     const response = (await httpRequest(requestConfig));
-    console.log('refreshToken() response:', response);
-
     return this.handleTokenEndpointErrorsAndReturn(response);
   }
 

@@ -101,15 +101,11 @@ export class LoginComponent implements OnInit {
     };
     this.sharerService.shared = temp;
 
-    console.log(this.sharerService.shared);
-
     /* Redirect the user to the URL that is the authGrantRequest. */
     loadUrl(authGrantRequest.url);
   }
 
-  async ngOnInit(): Promise<any> {
-    console.log("ngOnInit() called from login component.");
-  }
+  async ngOnInit(): Promise<any> { }
 
   /* Helper functions for use in .html file. */
 

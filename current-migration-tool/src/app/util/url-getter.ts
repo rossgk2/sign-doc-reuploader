@@ -3,19 +3,24 @@ import {httpRequest} from '../util/electron-functions';
 import {Observable} from 'rxjs';
 import {Settings} from '../settings/settings';
 
-export function getApiBaseUriFedRamp(inDevelopment = Settings.inDevelopment, useProxy = Settings.useProxy): string {
+/* Some of these functions don't actually make use of the argument apiEnv; they may in the future,
+so we will leave it as is. */
+
+export function getApiBaseUriFedRamp(apiEnv = Settings.apiEnv, useProxy = Settings.useProxy): string {
   if (!useProxy) {
-    if (inDevelopment)
+    if (Settings.apiEnv === 'stage')
       return 'https://api.na1.adobesignstage.us/api/rest/v6';
-    else
+    else if (Settings.apiEnv === 'prod')
       return 'https://api.na1.adobesign.us/api/rest/v6'
+    else
+      throw new Error('apiEnv must be "stage" or "prod".');
   }
   else
     return '/fedramp-api';
 }
 
 export async function getApiBaseUriCommercial(bearerAuth: string, // using this arg is kind of hacky
-                      inDevelopment = Settings.inDevelopment, useProxy = Settings.useProxy): Promise<any> {
+                      apiEnv = Settings.apiEnv, useProxy = Settings.useProxy): Promise<any> {
   if (!useProxy) {
     const requestConfig = {
       'method': 'get',
@@ -31,18 +36,20 @@ export async function getApiBaseUriCommercial(bearerAuth: string, // using this 
     return '/commercial-api';
 }
 
-export function getOAuthBaseUri(inDevelopment = Settings.inDevelopment, useProxy = Settings.useProxy): string {
+export function getOAuthBaseUri(apiEnv = Settings.apiEnv, useProxy = Settings.useProxy): string {
   if (!useProxy) {
-    if (inDevelopment)
+    if (Settings.apiEnv === 'stage')
       return 'https://secure.na1.adobesignstage.us/api/gateway/adobesignauthservice';
-    else
+    else if (Settings.apiEnv === 'prod')
       return 'https://secure.na1.adobesign.us/api/gateway/adobesignauthservice';
+    else
+      throw new Error('apiEnv must be "stage" or "prod".');
   }
   else
     return '/oauth-api';
 }
 
-export function getPdfLibraryBaseUri(inDevelopment = Settings.inDevelopment, useProxy = Settings.useProxy) : string {
+export function getPdfLibraryBaseUri(apiEnv = Settings.apiEnv, useProxy = Settings.useProxy) : string {
   if (!useProxy)
     return 'https://secure.na4.adobesign.com/document/cp';
   else
