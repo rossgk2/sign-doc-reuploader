@@ -19,6 +19,9 @@ import {first} from 'rxjs/operators';
 /* Settings */
 import {Settings} from '../../settings/settings';
 
+/* For debug purposes */
+import {saveAs} from 'file-saver';
+
 @Component({
   selector: 'app-migration-console',
   templateUrl: './migration-console.component.html',
@@ -71,7 +74,7 @@ export class MigrationConsoleComponent {
     let obs: Observable<any>; let response;
     let cursorQueryString = '';
     let done = false;
-    for (let i = 1; !done; i ++) {
+    for (let i = 1; i <= 1 && !done; i ++) { // after done testing, remove "i <= 1"
       const requestConfig = {
         'method': 'get',
         'url': `${baseUrl}/libraryDocuments?pageSize=${pageSize}` + cursorQueryString,
@@ -214,33 +217,49 @@ export class MigrationConsoleComponent {
     const prefixEndIndex = 'https://secure.na4.adobesign.com/document/cp/'.length - 1; // hardcoded
     const endIndex = combinedDocumentUrl.length - 1;
     const combinedDocumentUrlSuffix = combinedDocumentUrl.substring(prefixEndIndex + 1, endIndex + 1);
-    console.log('combinedDocumentUrlSuffix: ', combinedDocumentUrlSuffix);
     const proxiedCombinedDocumentUrl = `${getPdfLibraryBaseUri()}/${combinedDocumentUrlSuffix}`; // See proxy.conf.ts.
-    
-    // Make the GET request
-    requestConfig.url = proxiedCombinedDocumentUrl;
-    requestConfig.responseType = 'blob'; // 'blob' is browser only, but Electron runs on top of a browser
-    const pdfBlob = (await httpRequest(requestConfig));
-    this.logToConsoleTabbed(`Downloaded the PDF of this document.`);
+    console.log('combinedDocumentUrlSuffix: ', combinedDocumentUrlSuffix);
+    console.log('proxiedCombinedDocumentUrl: ', proxiedCombinedDocumentUrl);
 
-    return {'docName': docName, 'formFields': formFields, 'pdfBlob' : pdfBlob};
+    // Make the GET request
+    const requestConfig2 = {
+      'method': 'get',
+      'url': proxiedCombinedDocumentUrl,
+      'responseType': 'arraybuffer'
+    };
+
+    // requestConfig.url = proxiedCombinedDocumentUrl;
+    // requestConfig.responseType = 'arraybuffer';
+    const pdfArrayBuffer: ArrayBuffer = (await httpRequest(requestConfig2));
+    this.logToConsoleTabbed(`arrayBuffer size: ${pdfArrayBuffer.byteLength}`);
+
+    const pdfBlob = new Blob([pdfArrayBuffer], {type: 'application/pdf'});
+    this.logToConsoleTabbed(`pdfBlob size: ${pdfBlob.size}`);
+
+    this.logToConsoleTabbed(`Preparing to download the PDF of this document from ${proxiedCombinedDocumentUrl}.`);
+    const blobUrl = URL.createObjectURL(pdfBlob);
+    this.logToConsoleTabbed(`blobUrl: ${blobUrl}`);
+    (<any> window).open(blobUrl);
+
+    return {'docName': docName, 'formFields': formFields, 'pdfBlob': pdfBlob};
   }
 
   async upload(docName: string, formFields: {[key: string]: string}, pdfBlob: Blob, documentId: string) {
-    console.log('began upload');
     const baseUri = getApiBaseUriFedRamp();
     const defaultHeaders = {'Authorization': `Bearer ${this.bearerAuth}`};
+
+    this.logToConsoleTabbed('About to upload the downloaded PDF to the FedRamp account.')
 
     /* POST the same document (but without any custom form fields) as a transient document and get its ID.
     (Informed by https://stackoverflow.com/questions/53038900/nodejs-axios-post-file-from-local-server-to-another-server). */
     const formData = new FormData();
     formData.append('File-Name', docName);
-    //formData.append('File', pdfBlob);
+    formData.append('File', pdfBlob);
     
     let requestConfig: any = {
       'method': 'post',
-      'url': `/fedramp-api/transientDocuments`,
-      'headers': {...defaultHeaders, 'boundary': getRandomId()},
+      'url': `${baseUri}/transientDocuments`,
+      'headers': defaultHeaders,
       'data': formData
     };
     const response = (await httpRequest(requestConfig));
@@ -325,7 +344,7 @@ export class MigrationConsoleComponent {
     return (s > epsilon) && ((s % t) < epsilon);
   }
 
-  delay(seconds: number): Promise<any> {
+  async delay(seconds: number): Promise<any> {
     return new Promise(resolve => setTimeout(resolve, seconds * 1000));
   }
 }
