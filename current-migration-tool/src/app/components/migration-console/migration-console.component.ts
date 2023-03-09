@@ -68,7 +68,7 @@ export class MigrationConsoleComponent {
 
   async getDocumentList(): Promise<any> {
     const baseUrl = await getApiBaseUriCommercial(this.commercialIntegrationKey);
-    
+
     /* Get all library documents. */
     const pageSize = 100;
     let libraryDocuments: any[] = [];
@@ -181,10 +181,6 @@ export class MigrationConsoleComponent {
     this.logToConsole('About to inspect this document in the commercial account and then download it from the commercial account.');
     this.logToConsoleTabbed(`The ID of this document in the commercial account is ${documentId}.`);
     const result = await this.download(documentId, this.commercialIntegrationKey);
-    
-    /* For debug purposes, save the blob to a PDF to check that we downloaded the PDF correctly. 
-    The PDF will be saved to the Downloads folder. */
-    // saveAs(result.pdfBlob, 'debug.pdf');
 
     this.logToConsole('About to upload this document to the FedRamp account.');
     await this.upload(result.docName, result.formFields, result.pdfBlob, documentId);
