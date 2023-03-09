@@ -1,14 +1,15 @@
 # See http://help.github.com/ignore-files/ for more about ignoring files.
 
 # compiled output
-/dist
-/tmp
-/out-tsc
+**/dist
+**/tmp
+**/out-tsc
+**/out
 # Only exists if Bazel was run
 /bazel-out
 
 # dependencies
-/node_modules
+**/node_modules
 
 # profiling files
 chrome-profiler-events.json
@@ -22,14 +23,15 @@ speed-measure-plugin.json
 *.launch
 .settings/
 *.sublime-workspace
+**.editorconfig
 
 # IDE - VSCode
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-.history/*
+**/.vscode/*
+**/!.vscode/settings.json
+**/!.vscode/tasks.json
+**/!.vscode/launch.json
+**/!.vscode/extensions.json
+**/.history/*
 
 # misc
 /.sass-cache
@@ -40,10 +42,14 @@ npm-debug.log
 yarn-error.log
 testem.log
 /typings
+**/.angular/cache
 
 # System Files
 .DS_Store
 Thumbs.db
 
 # Sensitive credentials
-src/app/settings/credentials.ts
+**/credentials.ts
+
+# Angular
+electron-angular-demo/.angular

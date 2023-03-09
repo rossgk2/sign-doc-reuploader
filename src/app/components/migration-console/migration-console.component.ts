@@ -1,0 +1,339 @@
+import {Component} from '@angular/core';
+import {AbstractControl, FormArray, FormBuilder, FormGroup, FormControl, Validators} from '@angular/forms';
+import {HttpClient, HttpHeaders} from '@angular/common/http';
+
+/* Services */
+import {OAuthService, I_OAuthGrantRequest} from '../../services/oauth.service';
+import {SharerService} from '../../services/sharer.service';
+
+/* Utilities */
+import {getApiBaseUriFedRamp, getApiBaseUriCommercial, getOAuthBaseUri, getPdfLibraryBaseUri} from '../../util/url-getter';
+import {tab} from '../../util/spacing';
+import {getRandomId} from '../../util/random';
+import {httpRequest} from '../../util/electron-functions';
+
+/* RxJS Observables and support for vanilla JS Promises */
+import {Observable} from 'rxjs';
+import {first} from 'rxjs/operators';
+
+/* Settings */
+import {Settings} from '../../settings/settings';
+
+/* Should be unnecessary but for now is necessary. See definition of httpRequestTemp() 
+at the end of this file for an explanation. */
+import axios from 'axios';
+
+@Component({
+  selector: 'app-migration-console',
+  templateUrl: './migration-console.component.html',
+  styleUrls: ['./migration-console.component.scss']
+})
+export class MigrationConsoleComponent {
+  /* Reactive forms. */
+
+  migrationToolForm = this.formBuilder.group(
+  {
+    documents: this.formBuilder.array([]),
+    consoleMessages: this.formBuilder.array([])
+  });
+
+  get documents(): FormArray<FormGroup> {
+    return this.migrationToolForm.controls['documents'] as FormArray;
+  }
+
+  readyForDownload: boolean = false;
+
+  populateDocForm(libraryDocuments: any[]) {
+    this.readyForDownload = true;
+    libraryDocuments.forEach(template => {
+      const documentForm = this.formBuilder.group({
+        name: [template.name],
+        isSelected: [true]
+      });
+      this.documents.push(documentForm);
+    });
+  }
+
+  get consoleMessages() {
+    return this.migrationToolForm.controls['consoleMessages'] as FormArray;
+  }
+
+  logToConsole(message: string) {
+    this.consoleMessages.push(this.formBuilder.control(message));
+  }
+
+  logToConsoleTabbed(message: string) {
+    this.logToConsole(tab() + message);
+  }
+
+  async getDocumentList(): Promise<any> {
+    const baseUrl = await getApiBaseUriCommercial(this.commercialIntegrationKey);
+
+    /* Get all library documents. */
+    const pageSize = 100;
+    let libraryDocuments: any[] = [];
+    let response;
+    let cursorQueryString = '';
+    let done = false;
+    for (let i = 1; !done; i ++) {
+      const requestConfig = {
+        'method': 'get',
+        'url': `${baseUrl}/libraryDocuments?pageSize=${pageSize}` + cursorQueryString,
+        'headers': {'Authorization': `Bearer ${this.commercialIntegrationKey}`}
+      };
+      response = (await httpRequest(requestConfig));
+
+      libraryDocuments = libraryDocuments.concat(response.libraryDocumentList);
+      const cursor = response.page.nextCursor;
+      if (cursor !== undefined) {
+        cursorQueryString = `&cursor=${cursor}`;
+        done = Settings.devPageLimit >= 0 && i >= Settings.devPageLimit;
+      }
+      else
+        done = true;
+
+      this.logToConsole(`Loaded more than ${(i - 1) * pageSize} and at most ${i * pageSize} documents from the commercial account.`);
+    }
+    this.logToConsole(`Done loading. Loaded ${libraryDocuments.length} documents from the commercial account.`)
+
+    /* Initalize documentIds. */
+    const oldThis = this;
+    libraryDocuments.forEach(function(doc: any) {
+      oldThis.documentIds.push(doc.id);
+    });
+    
+    /* Set up the FormArray that will be used to display the list of documents to the user. */
+    this.populateDocForm(libraryDocuments); 
+  }
+
+  /* Fields input by user. */
+  private selectedDocs: boolean[] = [];
+
+  /* Internal variables. */
+  private bearerAuth = '';
+  private refreshToken = '';
+  private documentIds: string[] = [];
+
+  /* Fields input by user. */
+  commercialIntegrationKey: string = '';
+  oAuthClientId: string = '';
+  oAuthClientSecret: string = '';
+  loginEmail: string = '';
+
+  constructor(private oAuthService: OAuthService,
+              private sharerService: SharerService,
+              private formBuilder: FormBuilder,
+              private http: HttpClient) { }
+
+  /* ========================================== */
+  /* ========================================== */
+  /* ========================================== */
+  /* ========================================== */
+  /* ========================================== */
+
+  async reupload(): Promise<any> {
+    /* Get a list of all the indices cooresponding to documents that the user wants to upload. */
+    const oldThis = this;
+    this.documents.controls.forEach(function(group) {
+      oldThis.selectedDocs.push(group.value.isSelected); // in this context, '' functions as true and false as false
+    });
+
+    const numSelectedDocs = this.selectedDocs.filter(function(b) { return b; }).length;
+
+    /* For each document: if that document was selected, upload it. */
+    const startTime = Date.now();
+    const minutesPerMillisecond = 1.667E-5;
+    const timeoutPeriodInMinutes = 5; // hardcoded for now; later we can grab this value from initial response from /token
+    const epsilonInMinutes = (1/50) * timeoutPeriodInMinutes; 
+    for (let i = 0; i < this.selectedDocs.length; ) {
+      /* Determine how much time has elapsed since the start of this function and declare a helper function. */
+      const totalTimeElapsedInMinutes = (Date.now() - startTime) * minutesPerMillisecond;
+      console.log('totalTimeElapsedInMinutes:', totalTimeElapsedInMinutes);
+      console.log('If in the following comparison if we have LHS < RHS, then the current time is considered close to the time at which the token expires.');
+      console.log(`${totalTimeElapsedInMinutes % (timeoutPeriodInMinutes - 1)} < ${epsilonInMinutes}`);
+    
+      /* If the token is about to expire, use a refresh token to get a new token and a new refresh token. */
+      const tokenAboutToExpire: boolean = this.closeToNonzeroMultipleOf(totalTimeElapsedInMinutes, timeoutPeriodInMinutes - 1, epsilonInMinutes);
+      if (tokenAboutToExpire) {
+        const tokenResponse = await this.oAuthService.refreshToken(this.oAuthClientId, this.oAuthClientSecret, this.refreshToken);
+        this.bearerAuth = tokenResponse.accessToken; this.refreshToken = tokenResponse.refreshToken;
+      }
+
+      this.logToConsole(`Beginning migration of document ${i + 1} of the ${numSelectedDocs} documents.`);
+      /* Try to reupload the ith document. Only proceed to the next iteration if we succeed. */
+      let error = false;
+      try {
+        if (this.selectedDocs[i])
+          await this.reuploadHelper(this.documentIds[i]);
+      } catch (err) {
+        error = true;
+        this.logToConsole(`Migration of document ${i + 1} of the ${numSelectedDocs} failed. Retrying migration of document ${i + 1}.`);
+      }
+      if (!error) {
+        this.logToConsole(`Document ${i + 1} of the ${numSelectedDocs} documents has been sucessfully migrated.`);
+        this.logToConsole('========================================================================');
+        i ++;
+      }
+    }
+  }
+
+  async reuploadHelper(documentId: string): Promise<any> {
+    this.logToConsole('About to inspect this document in the commercial account and then download it from the commercial account.');
+    this.logToConsoleTabbed(`The ID of this document in the commercial account is ${documentId}.`);
+    const result = await this.download(documentId, this.commercialIntegrationKey);
+
+    this.logToConsole('About to upload this document to the FedRamp account.');
+    await this.upload(result.docName, result.formFields, result.pdfBlob, documentId);
+  }
+
+  async download(documentId: string, bearerAuth: string): Promise<any> {
+    const baseUri = await getApiBaseUriCommercial(bearerAuth);    
+    const defaultHeaders = {'Authorization': `Bearer ${bearerAuth}`};
+
+    /* GET the name of the document. */
+    let requestConfig: any = {
+      'method': 'get',
+      'url': `${baseUri}/libraryDocuments/${documentId}`,
+      'headers': defaultHeaders
+    };
+    const docName: string = (await httpRequest(requestConfig)).name;
+    this.logToConsoleTabbed(`The name of this document in the commercial account is "${docName}"`);
+
+    /* GET the values the user has entered into the document's fields. */
+    requestConfig.url = `${baseUri}/libraryDocuments/${documentId}/formFields`;
+    const formFields: {[key: string]: string}[] = (await httpRequest(requestConfig));
+    this.logToConsoleTabbed(`Obtained the values the user entered into this document's fields.`);
+
+    /* GET the URL of the PDF on which the custom form fields that the user field out were placed. */
+    requestConfig.url = `${baseUri}/libraryDocuments/${documentId}/combinedDocument/url`;
+    const combinedDocumentUrl = (await httpRequest(requestConfig)).url;
+    this.logToConsoleTabbed(`The PDF representation of this document is located at ${combinedDocumentUrl}.`);
+
+    /* Get the PDF itself. */
+    
+    // Form the request URL in a way that allows us to enable or disable proxying as we choose.
+    // (The output of getPdfLibraryBaseUri() depends on Settings.useProxy.)
+    const prefixEndIndex = 'https://secure.na4.adobesign.com/document/cp/'.length - 1; // hardcoded
+    const endIndex = combinedDocumentUrl.length - 1;
+    const combinedDocumentUrlSuffix = combinedDocumentUrl.substring(prefixEndIndex + 1, endIndex + 1);
+    const proxiedCombinedDocumentUrl = `${getPdfLibraryBaseUri()}/${combinedDocumentUrlSuffix}`; // See proxy.conf.ts.
+
+    // GET the PDF.
+    requestConfig.url = proxiedCombinedDocumentUrl;
+    requestConfig.responseType = 'arraybuffer';
+    const pdfArrayBuffer: ArrayBuffer = (await httpRequest(requestConfig));
+    const pdfBlob = new Blob([pdfArrayBuffer], {type: 'application/pdf'});
+
+    if (Settings.debugViewDownloadedPdf) {
+      const blobUrl = URL.createObjectURL(pdfBlob);
+      (<any> window).open(blobUrl);
+    }
+
+    return {'docName': docName, 'formFields': formFields, 'pdfBlob': pdfBlob};
+  }
+
+  async upload(docName: string, formFields: {[key: string]: string}, pdfBlob: Blob, documentId: string) {
+    const baseUri = getApiBaseUriFedRamp();
+    const defaultHeaders = {'Authorization': `Bearer ${this.bearerAuth}`};
+
+    this.logToConsoleTabbed(`About to upload the downloaded PDF to the FedRamp 
+      account by POSTing to ${baseUri}/transientDocuments`);
+
+    /* POST the same document (but without any custom form fields) as a transient document and get its ID.
+    (Informed by https://stackoverflow.com/questions/53038900/nodejs-axios-post-file-from-local-server-to-another-server). */
+    const formData = new FormData();
+    formData.append('File-Name', docName);
+    formData.append('File', pdfBlob);
+    
+    let requestConfig: any = {
+      'method': 'post',
+      'url': `${baseUri}/transientDocuments`,
+      'headers': defaultHeaders,
+      'data': formData
+    };
+    const response: any = (await this.httpRequestTemp(requestConfig)); // this API endpoint is tricky; have to access data field of response to get response
+    const transientDocumentId = response.transientDocumentId;
+    this.logToConsoleTabbed(`Uploaded the downloaded PDF to the FedRamp account as a transient document with a transientDocumentId of ${transientDocumentId}.`);
+
+    /* Create a library document from the just-created transient document. */
+    const libraryDocumentInfo = 
+    {
+      'fileInfos' : [{'transientDocumentId' : transientDocumentId}],
+      'name': Settings.docNamePrefixForDebug + docName,
+      'sharingMode': 'ACCOUNT', // can be 'USER' or 'GROUP' or 'ACCOUNT' or 'GLOBAL'
+      'state': 'AUTHORING', // can be 'AUTHORING' or 'ACTIVE'
+      'templateTypes': ['DOCUMENT'] // each array elt can be 'DOCUMENT' or 'FORM_FIELD_LAYER'
+    };
+    
+    requestConfig = {
+      'method': 'post',
+      'url': `${baseUri}/libraryDocuments`,
+      'headers': defaultHeaders,
+      'data': libraryDocumentInfo
+    };
+    const newLibraryDocumentId = (await httpRequest(requestConfig)).id;
+    this.logToConsoleTabbed(`Created a library document (a template) in the FedRamp account from the transient document with a libraryDocumentId of ${newLibraryDocumentId}.`);
+
+    /* Use a PUT request to add the custom form fields and the values entered earlier to the document. */
+    requestConfig = {
+      'method': 'put',
+      'url': `${baseUri}/libraryDocuments/${newLibraryDocumentId}/formFields`,
+      'headers': defaultHeaders,
+      'data': formFields
+    }
+
+    this.logToConsoleTabbed("Wrote the values the user entered into this document's fields to the library document in the FedRamp account.");
+  }
+
+  /* ========================================== */
+  /* ========================================== */
+  /* ========================================== */
+  /* ========================================== */
+  /* ========================================== */
+
+  async ngOnInit() {
+    /* See preload.ts for the definitions of the functions from api. */
+
+    /* Send a message to the Electron main process indicating that this ngOnInit() method
+    has begun executing. */
+    (<any> window).api.notifyIsConsoleInitStarted();
+    
+    /* When the Electron main process recieves the notification sent in the above,
+    it sends a message back that, when recieved, results in the invocation of the
+    below defined callback function. The message includes a url argument that is
+    passed to the callback. */
+    const oldThis = this;
+    (<any> window).api.onConsoleInitFinish(async function (event: any, url: string) {
+      /* Get credentials from earlier. */
+      const credentials: any = oldThis.sharerService.shared.credentials;
+      oldThis.commercialIntegrationKey = credentials.commercialIntegrationKey;
+      oldThis.oAuthClientId = credentials.oAuthClientId;
+      oldThis.oAuthClientSecret = credentials.oAuthClientSecret;
+      oldThis.loginEmail = credentials.loginEmail;
+
+      /* Use the credentials to get a "Bearer" token from OAuth. */
+      const initialOAuthState = oldThis.sharerService.shared.initialOAuthState;
+      const authGrant = oldThis.oAuthService.getAuthGrant(url, initialOAuthState);
+      const tokenResponse = await oldThis.oAuthService.getToken(oldThis.oAuthClientId, oldThis.oAuthClientSecret, authGrant, Settings.redirectUri);
+      oldThis.bearerAuth = tokenResponse.accessToken; oldThis.refreshToken = tokenResponse.refreshToken;
+    });
+  }
+
+  /* Helper functions. */
+
+  /* Returns true if and only if s is not epsilon-close to zero and s is epsilon-close to a multiple of t. */
+  private closeToNonzeroMultipleOf(s: number, t: number, epsilon: number): boolean {
+    return (s > epsilon) && ((s % t) < epsilon);
+  }
+
+  async delay(seconds: number): Promise<any> {
+    return new Promise(resolve => setTimeout(resolve, seconds * 1000));
+  }
+
+  /* We should be able to use httpRequest from util/electron-functions.ts instead of this,
+  but it seems that requestConfig.data isn't copied correctly (maybe not even copied at all)
+  when requestConfig is passed from httpRequest() to the axios() call in electron/main.ts. */
+  async httpRequestTemp(requestConfig: any): Promise<any> {
+    return (await axios(requestConfig)).data;
+  }
+}

@@ -4,14 +4,17 @@ import {Credentials} from '../settings/credentials';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {Observable} from 'rxjs';
 import {getRandomId} from '../util/random';
+import {httpRequest} from '../util/electron-functions';
 import {getOAuthBaseUri} from '../util/url-getter';
 import {Settings} from '../settings/settings';
 
+export interface I_OAuthGrantRequest {
+    url: string;
+    initialOAuthState: string;
+}
+
 @Injectable({providedIn: 'root'})
 export class OAuthService {
-
-  private oAuthBaseUri: string;
-
   constructor(private router: Router,
               private serializer: UrlSerializer,
               private http: HttpClient)
@@ -28,7 +31,8 @@ export class OAuthService {
       that is the authorizaton grant request
       - env must be such that env.toLowerCase() is either 'commercial' or 'fedramp'
   */
-  getOAuthGrantRequest(clientId: string, redirectUri: string, loginEmail: string, env: string): {[key: string]: string} {
+  
+  getOAuthGrantRequest(clientId: string, redirectUri: string, loginEmail: string, env: string): I_OAuthGrantRequest {
     const state = getRandomId();
     let scope: string;
 
@@ -43,56 +47,57 @@ export class OAuthService {
 
     /* Build the URL that is the authorizaton grant request. */
     const tree: UrlTree = this.router.createUrlTree([''],
+    {
+      'queryParams':
       {
-        'queryParams':
-        {
-              'client_id' : clientId,
-              'response_type' : 'code',
-              'redirect_uri' : redirectUri,
-              'scope' : scope,
-              'state' : state,
-              'login_hint' : loginEmail
-        }
-      });
+        'client_id' : clientId,
+        'response_type' : 'code',
+        'redirect_uri' : redirectUri,
+        'scope' : scope,
+        'state' : state,
+        'login_hint' : loginEmail
+      }
+    });
 
     /* Return the authorizaton grant request and the randomly generated state associated with it. */
     let queryParams: string = this.serializer.serialize(tree);
     queryParams = queryParams.substring(1, queryParams.length); // remove the / at the beginning
     return {
       'url': `${getOAuthBaseUri()}/api/v1/authorize` + queryParams,
-      'initialState': state
+      'initialOAuthState': state
     };  
   }
 
   /*
     Inputs:
       - authGrantResponse is a URL whose query params encode the response to the request for an authorization grant.
-      - initialState is the state that is sent as a part of the authorization grant request. This function needs to know
-      initialState so that it can compare it to authGrantResponse's initialState and thus verify that
+      - initialOAuthState is the state that is sent as a part of the authorization grant request. This function needs to know
+      initialOAuthState so that it can compare it to authGrantResponse's initialOAuthState and thus verify that
       the server sending authGrantResponse is not a malicous actor pretending to be the authorizaton server.  
 
     Returns a unique string that is the "authorization grant". This authorizaton grant is used to
     request more tokens (access tokens, ID tokens, or refresh tokens).
   */
-  getAuthGrant(authGrantResponse: string, initialState: string): string {
-    const tree: UrlTree = this.serializer.parse(authGrantResponse);
-    
-    /* Whether or not the request that generated authGrantResponse depends on which of 
-    "error" and "code" is a query param. */
+  getAuthGrant(authGrantResponse: string, initialOAuthState: string): string {
+    /* Consider the query param string instead of the entire URL so that we can avoid
+    parsing errors when the URL has the ? after a /, and is something like 
+    https://migrationtool.com/?a1=a2&b1=b2. */
+    const queryParamString = authGrantResponse.substring(authGrantResponse.indexOf("?"));
+    const tree: UrlTree = this.serializer.parse(queryParamString);
 
     /* Handle errors. If no errors, check that the server sending the authorizaton grant is
     legitimate, and then return the authorizaton grant. */
+
     if (tree.queryParams.hasOwnProperty('error')) {
       const errorMessage = 'An erroneous request was made to the OAuth /authorize endpoint.\n' +
-      `Error: ${tree.queryParams.error}\nError description: ${tree.queryParams.error_description}`;
+      `Error: ${tree.queryParams['error']}\nError description: ${tree.queryParams['error_description']}`;
       throw new Error(errorMessage);
     }
     else if (tree.queryParams.hasOwnProperty('code')) {
-      const code: string = tree.queryParams.code;
-      const state: string = tree.queryParams.state;
+      const code: string = tree.queryParams['code'];
+      const state: string = tree.queryParams['state'];
 
-      // After getting the ngrx store to work, delete "false &&" in order to enable this check.
-      if (false && state !== initialState) {
+      if (state !== initialOAuthState) {
         throw new Error('The state recieved from the server claiming to be authorization server does not match initial state passed to the authorization server.');
       }
 
@@ -103,57 +108,44 @@ export class OAuthService {
   }
 
   async getToken(clientId: string, clientSecret: string, authGrant: string, redirectUri: string): Promise<any> {
-    const headers = new HttpHeaders().set('Content-Type', 'application/x-www-form-urlencoded');
-    
-    console.log('Just set headers for the associated HTTP request. Now calling getToken().')
-    console.log('authGrant:', authGrant)
-
-    /* We use a proxied URL to avoid CORS errors. See proxy.conf.ts. */
-    const body = null;
-    const obs: Observable<any> = this.http.post(`${getOAuthBaseUri()}/api/v1/token`, body,
-      {'observe': 'response', 'headers': headers,
+    const requestConfig = {
+      'method': 'post',
+      'url': `${getOAuthBaseUri()}/api/v1/token`,
+      'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
       'params':
-        {
+       {
           'client_id' : clientId,
           'client_secret' : clientSecret,
           'grant_type' : 'authorization_code',
           'code' : authGrant,
           'redirect_uri' : redirectUri
-        }
-      }
-    );
+       }
+    };
 
-    const response = (await obs.toPromise()).body;
-    console.log('/token response:', response);
-    
+    const response = (await httpRequest(requestConfig));
     return this.handleTokenEndpointErrorsAndReturn(response);
   }
 
   async refreshToken(clientId: string, clientSecret: string, refreshToken: string): Promise<any> {
-    const headers = new HttpHeaders().set('Content-Type', 'application/x-www-form-urlencoded');
-
-    /* We use a proxied URL to avoid CORS errors. See proxy.conf.ts. */
-    const body = null;
-    const obs: Observable<any> = this.http.post(`/oauth-api/api/v1/token`, body,
-      {'observe': 'response', 'headers': headers,
+    const requestConfig = {
+      'method': 'post',
+      'url': `${getOAuthBaseUri()}/api/v1/token`,
+      'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
       'params':
-        {
-          'client_id' : clientId,
-          'client_secret' : clientSecret,
-          'grant_type' : 'refresh_token',
-          'refresh_token': refreshToken
-        }
+      {
+        'client_id' : clientId,
+        'client_secret' : clientSecret,
+        'grant_type' : 'refresh_token',
+        'refresh_token': refreshToken
       }
-    );
+    };
 
-    const response = (await obs.toPromise()).body;
-    console.log('refreshToken() response:', response);
-
+    const response = (await httpRequest(requestConfig));
     return this.handleTokenEndpointErrorsAndReturn(response);
   }
 
   /* Helper function. */
-  handleTokenEndpointErrorsAndReturn(tokenResponse) {
+  handleTokenEndpointErrorsAndReturn(tokenResponse: any) {
     if (tokenResponse.hasOwnProperty('error')) {
       const errorMessage = 'An erroneous request was made to the OAuth /token endpoint.\n' +
       `Error: ${tokenResponse.error}\nError description: ${tokenResponse.error_description}`;
