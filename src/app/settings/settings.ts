@@ -52,4 +52,4 @@ export const prodSettings: I_Settings = {
 export const almostProdSettings = prodSettings;
 almostProdSettings.apiEnv = 'stage';
 
-export const Settings = devSettings;
+export const Settings = prodSettings;

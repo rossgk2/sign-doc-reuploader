@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "electron-angular-demo": {
+    "migration-tool": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -17,7 +17,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "outputPath": "dist/electron-angular-demo",
+            "outputPath": "dist/migration-tool",
             "index": "src/index.html",
             "main": "src/main.ts",
             "polyfills": [
@@ -63,12 +63,19 @@
         },
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "browserTarget": "sign-doc-reuploader:build",
+            "ssl": true, // use HTTPS
+            "port": 443, // default port for HTTPS; default port for HTTP is 80
+            "proxyConfig": "proxy.conf.ts",
+            "disableHostCheck": false
+          },
           "configurations": {
             "production": {
-              "browserTarget": "electron-angular-demo:build:production"
+              "browserTarget": "migration-tool:build:production"
             },
             "development": {
-              "browserTarget": "electron-angular-demo:build:development"
+              "browserTarget": "migration-tool:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -76,7 +83,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "electron-angular-demo:build"
+            "browserTarget": "migration-tool:build"
           }
         },
         "test": {
