@@ -2,6 +2,8 @@
 
 This is a "migration tool" that copies selected documents from a specified commercial Adobe Sign account to a specified FedRAMP Adobe Sign account. The most common use case is the copying of *all* documents over from a commercial account to a FedRAMP account.
 
+This tool is currently in beta. Please open an issue for any bugs you find.
+
 ## Instructions for use
 
 #### Setup: commercial account
