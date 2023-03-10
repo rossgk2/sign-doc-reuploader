@@ -1,8 +1,8 @@
 <h1>Log in</h1>
 <div id="input-container" *ngIf="true">
   <input placeholder="Commercial integration key" (input) = "_commercialIntegrationKey=getValue($event)">
-  <input placeholder="FedRamp OAuth client ID" (input) = "_oAuthClientId=getValue($event)">
-  <input placeholder="FedRamp OAuth client secret" type = "password" (input) = "_oAuthClientSecret=getValue($event)">
+  <input placeholder="FedRAMP client ID" (input) = "_oAuthClientId=getValue($event)">
+  <input placeholder="FedRAMP client secret" type = "password" (input) = "_oAuthClientSecret=getValue($event)">
   <input placeholder="FedRamp Sign account email" (input) = "_loginEmail=getValue($event)">
   <button type="button" (click) = "login()" id="login-button">Log in</button>
 </div>
