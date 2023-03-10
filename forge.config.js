@@ -19,7 +19,11 @@ module.exports = {
     },
     {
       name: '@electron-forge/maker-dmg',
-      config: {}
+      config: {
+        name: 'Sign Template Migrator',
+        authors: 'Ross Grogan-Kaylor',
+        description: 'A template migration tool for Adobe Sign'
+      }
     },
     {
       name: '@electron-forge/maker-zip',
