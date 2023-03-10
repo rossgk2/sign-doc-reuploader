@@ -14,7 +14,7 @@ This is a "migration tool" that copies selected documents from a specified comme
 
 #### Setup: FedRAMP account
 
-Receive the client ID and client secret for said API Application from Professional Services.
+Receive the "FedRAMP client ID" and "Fed RAMP client secret" for said API Application from Professional Services.
 
 #### Building and running the app
 
@@ -23,7 +23,7 @@ Receive the client ID and client secret for said API Application from Profession
 3. Start a command prompt and `cd` into fldr.
 4. Execute `npm run make`.
 5. In your file explorer, navigate into the "out" directory, and then into the folder that corresponds to whatever operating system you're using (e.g. "migration-tool-win32-x64"). The app executable will be inside this folder. On Windows, it will be an .exe file, on Mac, it will be a .dmg file; on Linux, it will be a .deb file.
-6. Double click the executable to run the app.
+6. Double click the executable to run the app. Have the commercial integration key, FedRAMP client ID, and FedRAMP client secret on hand when you do so.
 
 # Disclaimer
 
