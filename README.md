@@ -27,4 +27,4 @@ Receive the "FedRAMP client ID" and "Fed RAMP client secret" for said API Applic
 
 # Disclaimer
 
-Any organization who uses this app implicitly acknowledges that it moves templates from FedRAMP LI-SAAS (colloquially referred to in the above as "commercial") to FedRAMP moderate. FedRAMP LI-SAAS is less strict than FedRAMP moderate.
+Any organization who uses this app implicitly acknowledges that it moves templates from FedRAMP LI-SAAS to FedRAMP moderate. FedRAMP LI-SAAS is less strict than FedRAMP moderate.
