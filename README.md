@@ -4,16 +4,26 @@ This is a "migration tool" that copies selected documents from a specified comme
 
 ## Instructions for use
 
-1. Request via ticket that https://migrationtool.com be added to the list of forwarding URLs that your FedRAMP account recognizes as legitimate:
+#### Setup: commercial account
 
-   > Please add https://migrationtool.com to the Redirect URI field of the Configure OAuth menu for the API Application owned by &lt;*your FedRAMP account email here*&gt;.
+1. Log-in to Sign and click on the "Account" tab.
+2. Search for "Access Tokens" in the left search bar and click on "Access Tokens".
+3. Click the plus sign to create an access token, and give it a name such as "migration-tool-access-token".
+4. Check the boxes next to `library_read`, `library_write`, and `agreement_write` when creating the token.
+5. After you've created the token, click on it, then click "Integration Key", and copy the long randomly generated string. You will need this "commercial integration key" later when running the migration tool.
 
-2. Download this repository by clicking "Code", then "Download ZIP". Unzip the downloaded .zip file and navigate into the "executables" directory, and then into the "Windows" directory. Double click on the .exe file to start the app.
-3. If you are on Mac or Linux, you will have to build the executable yourself before you run it by following these steps:
-   - Start a command prompt.
-   - `cd` into the unzipped folder. There should be a "package.json" file inside the unzipped folder. Let's call this unzipped folder `fldr`.
-   - Execute `npm run make`.
-   - The compiled executable should be located in one of the subfolders of `fldr/out` . If you are on Mac, the executable will be a .dmg file; if you are on Linux, it will be a .deb file.
+#### Setup: FedRAMP account
+
+Receive the client ID and client secret for said API Application from Professional Services.
+
+#### Building and running the app
+
+1. Download this repository by clicking "Code", then "Download ZIP".
+2. Unzip the downloaded .zip file. Let's refer to the folder that contains files such as package.json as "fldr".
+3. Start a command prompt and `cd` into fldr.
+4. Execute `npm run make`.
+5. In your file explorer, navigate into the "out" directory, and then into the folder that corresponds to whatever operating system you're using (e.g. "migration-tool-win32-x64"). The app executable will be inside this folder. On Windows, it will be an .exe file, on Mac, it will be a .dmg file; on Linux, it will be a .deb file.
+6. Double click the executable to run the app.
 
 # Disclaimer
 
