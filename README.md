@@ -30,3 +30,16 @@ Receive the "FedRAMP client ID" and "Fed RAMP client secret" for said API Applic
 # Disclaimer
 
 Any organization who uses this app implicitly acknowledges that it moves templates from FedRAMP LI-SAAS to FedRAMP moderate. FedRAMP LI-SAAS is less strict than FedRAMP moderate.
+
+# Known bugs
+
+About once every hundred times the app is run, you may see the following pop-up error message:
+
+```
+Uncaught Exception:
+TypeError: Cannot read properties of null (reading 'webContents')
+	at configLoadRenderAfterDOMContentLoaded (...\electron\main.ts45:7)
+	at Function.<anonymous> (...\electron\main.ts95:7)
+```
+
+If you get this error, just close the application and restart it.
