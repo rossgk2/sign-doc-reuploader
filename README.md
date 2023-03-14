@@ -18,7 +18,13 @@ This tool is currently in beta. Please open an issue for any bugs you find.
 
 Receive the "FedRAMP client ID" and "Fed RAMP client secret" for said API Application from Professional Services.
 
-#### Building and running the app
+#### Using the app
+
+To use the app, download the either Sign.Template.Migrator.Windows.zip or Sign.Template.Migrator.Mac.zip from the releases section of this repository, extract the folder inside the .zip file from the .zip, and double click the .exe (Windows) or .dmg (Mac) executable. The executable (the .exe or .dmg) must be kept inside the folder it resides in; if it is moved outside of this folder it will not work. 
+
+#### Optional: building the app manually
+
+If you would like to build the app yourself instead of downloading precompiled executables.
 
 1. Download this repository by clicking "Code", then "Download ZIP".
 2. Unzip the downloaded .zip file. Let's refer to the folder that contains files such as package.json as "fldr".
