@@ -6,7 +6,7 @@ This tool is currently in beta. Please open an issue for any bugs you find.
 
 ## Instructions for use
 
-#### Setup: commercial account
+### Setup: commercial account
 
 1. Log-in to Sign and click on the "Account" tab.
 2. Search for "Access Tokens" in the left search bar and click on "Access Tokens".
@@ -14,15 +14,15 @@ This tool is currently in beta. Please open an issue for any bugs you find.
 4. Check the boxes next to `library_read`, `library_write`, and `agreement_write` when creating the token.
 5. After you've created the token, click on it, then click "Integration Key", and copy the long randomly generated string. You will need this "commercial integration key" later when running the migration tool.
 
-#### Setup: FedRAMP account
+### Setup: FedRAMP account
 
 Receive the "FedRAMP client ID" and "Fed RAMP client secret" for said API Application from Professional Services.
 
-#### Using the app
+### Using the app
 
 To use the app, download the either Sign.Template.Migrator.Windows.zip or Sign.Template.Migrator.Mac.zip from the releases section of this repository, extract the folder inside the .zip file from the .zip, and double click the .exe (Windows) or .dmg (Mac) executable. The executable (the .exe or .dmg) must be kept inside the folder it resides in; if it is moved outside of this folder it will not work. 
 
-#### Optional: building the app manually
+### Optional: building the app manually
 
 If you would like to build the app yourself instead of downloading precompiled executables.
 
