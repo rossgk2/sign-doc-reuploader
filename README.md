@@ -24,7 +24,7 @@ To use the app, download either Sign.Template.Migrator.Windows.zip or Sign.Templ
 
 ### Optional: building the app manually
 
-If you would like to build the app yourself instead of downloading precompiled executables.
+If you would like to build the app yourself instead of downloading precompiled executables, follow these steps.
 
 1. Download this repository by clicking "Code", then "Download ZIP".
 2. Unzip the downloaded .zip file. Let's refer to the folder that contains files such as package.json as "fldr".
