@@ -92,8 +92,8 @@ app.whenReady().then(function() {
   session.defaultSession.webRequest.onBeforeRequest(filter, (details, callback) => {
     redirectUrl = details.url; // this the URL that OAuth redirects us to
     redirected = true;
-    callback({ cancel: true });
     const currentWindow = BrowserWindow.getFocusedWindow();
+    callback({ cancel: true });
     configLoadRendererAfterDOMContentLoaded(currentWindow);
     loadIndexHtml(currentWindow);
   });
