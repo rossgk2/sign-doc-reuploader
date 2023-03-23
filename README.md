@@ -11,7 +11,7 @@ This tool is currently in beta. Please open an issue for any bugs you find.
 1. Log-in to Sign and click on the "Account" tab.
 2. Search for "Access Tokens" in the left search bar and click on "Access Tokens".
 3. Click the plus sign to create an access token, and give it a name such as "migration-tool-access-token".
-4. Check the boxes next to `library_read`, `library_write`, and `agreement_write` when creating the token.
+4. Check the box next to `library_read` when creating the token.
 5. After you've created the token, click on it, then click "Integration Key", and copy the long randomly generated string. You will need this "commercial integration key" later when running the migration tool.
 
 ### Setup: FedRAMP account
