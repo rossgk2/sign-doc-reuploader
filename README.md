@@ -16,7 +16,7 @@ This tool is currently in beta. Please open an issue for any bugs you find.
 
 ### Setup: FedRAMP account
 
-Receive the "FedRAMP client ID" and "Fed RAMP client secret" for said API Application from Professional Services.
+Receive the "FedRAMP client ID" and "Fed RAMP client secret" for said API Application from Professional Services. The API token will have the scopes `agreement_write`, `agreement_sign`, `widget_write`, and `library_write` enabled.
 
 ### Using the app
 
