@@ -1,4 +1,3 @@
-import { HttpClient } from '@angular/common/http';
 import { Component } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup } from '@angular/forms';
 import axios from 'axios';
@@ -7,7 +6,8 @@ import { SharerService } from '../../services/sharer.service';
 import { Settings } from '../../settings/settings';
 import { httpRequest } from '../../util/electron-functions';
 import { tab } from '../../util/spacing';
-import { getApiBaseUriCommercial, getApiBaseUriFedRamp, getPdfLibraryBaseUri } from '../../util/url-getter';
+import { getApiBaseUriCommercial } from '../../util/url-getter';
+import { reuploadHelper } from './migration';
 
 @Component({
   selector: 'app-migration-console',
@@ -108,19 +108,12 @@ export class MigrationConsoleComponent {
 
   constructor(private oAuthService: OAuthService,
               private sharerService: SharerService,
-              private formBuilder: FormBuilder,
-              private http: HttpClient) { }
-
-  /* ========================================== */
-  /* ========================================== */
-  /* ========================================== */
-  /* ========================================== */
-  /* ========================================== */
+              private formBuilder: FormBuilder) { }
 
   async reupload(): Promise<any> {
     /* Get a list of all the indices cooresponding to documents that the user wants to upload. */
     const oldThis = this;
-    this.documents.controls.forEach(function(group) {
+    this.documents.controls.forEach(function(group: any) {
       oldThis.selectedDocs.push(group.value.isSelected); // in this context, '' functions as true and false as false
     });
 
@@ -150,7 +143,7 @@ export class MigrationConsoleComponent {
       let error = false;
       try {
         if (this.selectedDocs[i])
-          await this.reuploadHelper(this.documentIds[i]);
+          await reuploadHelper(this, this.documentIds[i]);
       } catch (err) {
         error = true;
         this.logToConsole(`Migration of document ${i + 1} of the ${numSelectedDocs} failed. Retrying migration of document ${i + 1}.`);
@@ -162,120 +155,6 @@ export class MigrationConsoleComponent {
       }
     }
   }
-
-  async reuploadHelper(documentId: string): Promise<any> {
-    this.logToConsole('About to inspect this document in the commercial account and then download it from the commercial account.');
-    this.logToConsoleTabbed(`The ID of this document in the commercial account is ${documentId}.`);
-    const result = await this.download(documentId, this.commercialIntegrationKey);
-
-    this.logToConsole('About to upload this document to the FedRamp account.');
-    await this.upload(result.docName, result.formFields, result.pdfBlob, documentId);
-  }
-
-  async download(documentId: string, bearerAuth: string): Promise<any> {
-    const baseUri = await getApiBaseUriCommercial(bearerAuth);    
-    const defaultHeaders = {'Authorization': `Bearer ${bearerAuth}`};
-
-    /* GET the name of the document. */
-    let requestConfig: any = {
-      'method': 'get',
-      'url': `${baseUri}/libraryDocuments/${documentId}`,
-      'headers': defaultHeaders
-    };
-    const docName: string = (await httpRequest(requestConfig)).name;
-    this.logToConsoleTabbed(`The name of this document in the commercial account is "${docName}"`);
-
-    /* GET the values the user has entered into the document's fields. */
-    requestConfig.url = `${baseUri}/libraryDocuments/${documentId}/formFields`;
-    const formFields: {[key: string]: string}[] = (await httpRequest(requestConfig));
-    this.logToConsoleTabbed(`Obtained the values the user entered into this document's fields.`);
-
-    /* GET the URL of the PDF on which the custom form fields that the user field out were placed. */
-    requestConfig.url = `${baseUri}/libraryDocuments/${documentId}/combinedDocument/url`;
-    const combinedDocumentUrl = (await httpRequest(requestConfig)).url;
-    this.logToConsoleTabbed(`The PDF representation of this document is located at ${combinedDocumentUrl}.`);
-
-    /* Get the PDF itself. */
-    
-    // Form the request URL in a way that allows us to enable or disable proxying as we choose.
-    // (The output of getPdfLibraryBaseUri() depends on Settings.useProxy.)
-    const prefixEndIndex = 'https://secure.na4.adobesign.com/document/cp/'.length - 1; // hardcoded
-    const endIndex = combinedDocumentUrl.length - 1;
-    const combinedDocumentUrlSuffix = combinedDocumentUrl.substring(prefixEndIndex + 1, endIndex + 1);
-    const proxiedCombinedDocumentUrl = `${getPdfLibraryBaseUri()}/${combinedDocumentUrlSuffix}`; // See proxy.conf.ts.
-
-    // GET the PDF.
-    requestConfig.url = proxiedCombinedDocumentUrl;
-    requestConfig.responseType = 'arraybuffer';
-    const pdfArrayBuffer: ArrayBuffer = (await httpRequest(requestConfig));
-    const pdfBlob = new Blob([pdfArrayBuffer], {type: 'application/pdf'});
-
-    if (Settings.debugViewDownloadedPdf) {
-      const blobUrl = URL.createObjectURL(pdfBlob);
-      (<any> window).open(blobUrl);
-    }
-
-    return {'docName': docName, 'formFields': formFields, 'pdfBlob': pdfBlob};
-  }
-
-  async upload(docName: string, formFields: {[key: string]: string}, pdfBlob: Blob, documentId: string) {
-    const baseUri = getApiBaseUriFedRamp();
-    const defaultHeaders = {'Authorization': `Bearer ${this.bearerAuth}`};
-
-    this.logToConsoleTabbed(`About to upload the downloaded PDF to the FedRamp 
-      account by POSTing to ${baseUri}/transientDocuments`);
-
-    /* POST the same document (but without any custom form fields) as a transient document and get its ID.
-    (Informed by https://stackoverflow.com/questions/53038900/nodejs-axios-post-file-from-local-server-to-another-server). */
-    const formData = new FormData();
-    formData.append('File-Name', docName);
-    formData.append('File', pdfBlob);
-    
-    let requestConfig: any = {
-      'method': 'post',
-      'url': `${baseUri}/transientDocuments`,
-      'headers': defaultHeaders,
-      'data': formData
-    };
-    const response: any = (await this.httpRequestTemp(requestConfig)); // this API endpoint is tricky; have to access data field of response to get response
-    const transientDocumentId = response.transientDocumentId;
-    this.logToConsoleTabbed(`Uploaded the downloaded PDF to the FedRamp account as a transient document with a transientDocumentId of ${transientDocumentId}.`);
-
-    /* Create a library document from the just-created transient document. */
-    const libraryDocumentInfo = 
-    {
-      'fileInfos' : [{'transientDocumentId' : transientDocumentId}],
-      'name': Settings.docNamePrefixForDebug + docName,
-      'sharingMode': 'ACCOUNT', // can be 'USER' or 'GROUP' or 'ACCOUNT' or 'GLOBAL'
-      'state': 'AUTHORING', // can be 'AUTHORING' or 'ACTIVE'
-      'templateTypes': ['DOCUMENT'] // each array elt can be 'DOCUMENT' or 'FORM_FIELD_LAYER'
-    };
-    
-    requestConfig = {
-      'method': 'post',
-      'url': `${baseUri}/libraryDocuments`,
-      'headers': defaultHeaders,
-      'data': libraryDocumentInfo
-    };
-    const newLibraryDocumentId = (await httpRequest(requestConfig)).id;
-    this.logToConsoleTabbed(`Created a library document (a template) in the FedRamp account from the transient document with a libraryDocumentId of ${newLibraryDocumentId}.`);
-
-    /* Use a PUT request to add the custom form fields and the values entered earlier to the document. */
-    requestConfig = {
-      'method': 'put',
-      'url': `${baseUri}/libraryDocuments/${newLibraryDocumentId}/formFields`,
-      'headers': defaultHeaders,
-      'data': formFields
-    }
-
-    this.logToConsoleTabbed("Wrote the values the user entered into this document's fields to the library document in the FedRamp account.");
-  }
-
-  /* ========================================== */
-  /* ========================================== */
-  /* ========================================== */
-  /* ========================================== */
-  /* ========================================== */
 
   async ngOnInit() {
     /* See preload.ts for the definitions of the functions from api. */
