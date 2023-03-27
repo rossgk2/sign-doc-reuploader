@@ -1,6 +1,4 @@
 const { contextBridge, ipcRenderer } = require("electron")
-const fs = require("fs"); // for testing only; delete later
-
 
 contextBridge.exposeInMainWorld("api", { 
   httpRequest2: (requestConfig) => ipcRenderer.invoke("httpRequest1", requestConfig),

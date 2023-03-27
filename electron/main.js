@@ -3,7 +3,7 @@ const url = require("url");
 const path = require("path");
 const axios = require("axios").default;
 
-/* Functions to be exposed to renderer via preload.ts. */
+/* Functions to be exposed to renderer via preload.js. */
 
 async function httpRequest(event, requestConfig) {
   /* We don't just "return (await axios(requestConfig))" because the result is not clonable
@@ -54,7 +54,7 @@ function createWindow () {
     width: 800,
     height: 600,
     webPreferences: {
-      preload: path.join(__dirname, "preload.ts"),
+      preload: path.join(__dirname, "preload.js"),
       nodeIntegration: true //necessary?
     }
   });

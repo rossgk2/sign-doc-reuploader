@@ -1,27 +1,13 @@
-import {Component} from '@angular/core';
-import {AbstractControl, FormArray, FormBuilder, FormGroup, FormControl, Validators} from '@angular/forms';
-import {HttpClient, HttpHeaders} from '@angular/common/http';
-
-/* Services */
-import {OAuthService, I_OAuthGrantRequest} from '../../services/oauth.service';
-import {SharerService} from '../../services/sharer.service';
-
-/* Utilities */
-import {getApiBaseUriFedRamp, getApiBaseUriCommercial, getOAuthBaseUri, getPdfLibraryBaseUri} from '../../util/url-getter';
-import {tab} from '../../util/spacing';
-import {getRandomId} from '../../util/random';
-import {httpRequest} from '../../util/electron-functions';
-
-/* RxJS Observables and support for vanilla JS Promises */
-import {Observable} from 'rxjs';
-import {first} from 'rxjs/operators';
-
-/* Settings */
-import {Settings} from '../../settings/settings';
-
-/* Should be unnecessary but for now is necessary. See definition of httpRequestTemp() 
-at the end of this file for an explanation. */
+import { HttpClient } from '@angular/common/http';
+import { Component } from '@angular/core';
+import { FormArray, FormBuilder, FormGroup } from '@angular/forms';
 import axios from 'axios';
+import { OAuthService } from '../../services/oauth.service';
+import { SharerService } from '../../services/sharer.service';
+import { Settings } from '../../settings/settings';
+import { httpRequest } from '../../util/electron-functions';
+import { tab } from '../../util/spacing';
+import { getApiBaseUriCommercial, getApiBaseUriFedRamp, getPdfLibraryBaseUri } from '../../util/url-getter';
 
 @Component({
   selector: 'app-migration-console',
