@@ -34,9 +34,9 @@ export const devSettings: I_Settings = {
 	useProxy: false,
 	forceUseTestCredentials: true,
 	redirectUri: "https://migrationtool.com",
-	docNamePrefixForDebug: '(--- FROM ELECTRON APP ---)',
+	docNamePrefixForDebug: '(-!- FROM ELECTRON APP -!-)',
 	debugViewDownloadedPdf: false,
-	devPageLimit: 1
+	devPageLimit: -1
 };
 
 export const prodSettings: I_Settings = {

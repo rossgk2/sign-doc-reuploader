@@ -2,12 +2,12 @@ import { Settings } from "src/app/settings/settings";
 import { httpRequest } from "src/app/util/electron-functions";
 import { getApiBaseUriCommercial, getApiBaseUriFedRamp, getPdfLibraryBaseUri } from "src/app/util/url-getter";
 
-export async function reuploadHelper(oldThis: any, documentId: string): Promise<any> {
+export async function reuploadHelper(oldThis: any, documentId: string): Promise<any> {  
   oldThis.logToConsole('About to inspect this document in the commercial account and then download it from the commercial account.');
   oldThis.logToConsoleTabbed(`The ID of this document in the commercial account is ${documentId}.`);
   const result = await download(oldThis, documentId, oldThis.commercialIntegrationKey);
 
-  oldThis.logToConsole('About to upload this document to the FedRamp account.');
+  oldThis.logToConsole('About to upload this document to the FedRAMP account.');
   await upload(oldThis, result.docName, result.formFields, result.pdfBlob, documentId);
 }
 
@@ -38,7 +38,7 @@ async function download(oldThis: any, documentId: string, bearerAuth: string): P
   
   // Form the request URL in a way that allows us to enable or disable proxying as we choose.
   // (The output of getPdfLibraryBaseUri() depends on Settings.useProxy.)
-  const prefixEndIndex = 'https://secure.na4.adobesign.com/document/cp/'.length - 1; // hardcoded
+  const prefixEndIndex = getPdfLibraryBaseUri(Settings.apiEnv, false).length - 1; // useProxy = false
   const endIndex = combinedDocumentUrl.length - 1;
   const combinedDocumentUrlSuffix = combinedDocumentUrl.substring(prefixEndIndex + 1, endIndex + 1);
   const proxiedCombinedDocumentUrl = `${getPdfLibraryBaseUri()}/${combinedDocumentUrlSuffix}`; // See proxy.conf.ts.
@@ -61,7 +61,7 @@ async function upload(oldThis: any, docName: string, formFields: {[key: string]:
   const baseUri = getApiBaseUriFedRamp();
   const defaultHeaders = {'Authorization': `Bearer ${oldThis.bearerAuth}`};
 
-  oldThis.logToConsoleTabbed(`About to upload the downloaded PDF to the FedRamp 
+  oldThis.logToConsoleTabbed(`About to upload the downloaded PDF to the FedRAMP 
     account by POSTing to ${baseUri}/transientDocuments`);
 
   /* POST the same document (but without any custom form fields) as a transient document and get its ID.
@@ -78,15 +78,15 @@ async function upload(oldThis: any, docName: string, formFields: {[key: string]:
   };
   const response: any = (await oldThis.httpRequestTemp(requestConfig)); // this API endpoint is tricky; have to access data field of response to get response
   const transientDocumentId = response.transientDocumentId;
-  oldThis.logToConsoleTabbed(`Uploaded the downloaded PDF to the FedRamp account as a transient document with a transientDocumentId of ${transientDocumentId}.`);
+  oldThis.logToConsoleTabbed(`Uploaded the downloaded PDF to the FedRAMP account as a transient document with a transientDocumentId of ${transientDocumentId}.`);
 
   /* Create a library document from the just-created transient document. */
-  const libraryDocumentInfo = 
+  let libraryDocumentInfo = 
   {
     'fileInfos' : [{'transientDocumentId' : transientDocumentId}],
     'name': Settings.docNamePrefixForDebug + docName,
     'sharingMode': 'ACCOUNT', // can be 'USER' or 'GROUP' or 'ACCOUNT' or 'GLOBAL'
-    'state': 'AUTHORING', // can be 'AUTHORING' or 'ACTIVE'
+    'state': 'ACTIVE', // can be 'AUTHORING' or 'ACTIVE'
     'templateTypes': ['DOCUMENT'] // each array elt can be 'DOCUMENT' or 'FORM_FIELD_LAYER'
   };
   
@@ -97,7 +97,7 @@ async function upload(oldThis: any, docName: string, formFields: {[key: string]:
     'data': libraryDocumentInfo
   };
   const newLibraryDocumentId = (await httpRequest(requestConfig)).id;
-  oldThis.logToConsoleTabbed(`Created a library document (a template) in the FedRamp account from the transient document with a libraryDocumentId of ${newLibraryDocumentId}.`);
+  oldThis.logToConsoleTabbed(`Created a library document (a template) in the FedRAMP account from the transient document with a libraryDocumentId of ${newLibraryDocumentId}.`);
 
   /* Use a PUT request to add the custom form fields and the values entered earlier to the document. */
   requestConfig = {
@@ -105,7 +105,7 @@ async function upload(oldThis: any, docName: string, formFields: {[key: string]:
     'url': `${baseUri}/libraryDocuments/${newLibraryDocumentId}/formFields`,
     'headers': defaultHeaders,
     'data': formFields
-  }
-
-  oldThis.logToConsoleTabbed("Wrote the values the user entered into this document's fields to the library document in the FedRamp account.");
+  };
+  await httpRequest(requestConfig);
+  oldThis.logToConsoleTabbed("Wrote the values the user entered into this document's fields to the library document in the FedRAMP account.");
 }

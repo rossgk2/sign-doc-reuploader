@@ -1,22 +1,10 @@
-/* Regular Angular stuff */
-import {Component, OnInit, HostListener} from '@angular/core';
-import {UrlTree, UrlSerializer} from '@angular/router';
-
-/* Services */
-import {OAuthService, I_OAuthGrantRequest} from '../../services/oauth.service';
-import {SharerService} from '../../services/sharer.service';
-
-/* Utilities */
-import {httpRequest, loadUrl} from '../../util/electron-functions';
-
-/* User-defined configuration */
-import {Credentials} from '../../settings/credentials';
-
-/* Settings */
-import {Settings} from '../../settings/settings';
-
-/* For debug purposes. */
-import {saveAs} from 'file-saver';
+import { Component, OnInit } from '@angular/core';
+import { UrlSerializer } from '@angular/router';
+import { OAuthService } from '../../services/oauth.service';
+import { SharerService } from '../../services/sharer.service';
+import { Credentials } from '../../settings/credentials';
+import { Settings } from '../../settings/settings';
+import { loadUrl } from '../../util/electron-functions';
 
 /*
   ===================================================================

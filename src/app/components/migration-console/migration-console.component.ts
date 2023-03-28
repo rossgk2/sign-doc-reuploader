@@ -30,7 +30,7 @@ export class MigrationConsoleComponent {
   readyForDownload: boolean = false;
 
   populateDocForm(libraryDocuments: any[]) {
-    this.readyForDownload = true;
+    this.readyForDownload = true; // causes the "Begin upload" button to appear
     libraryDocuments.forEach(template => {
       const documentForm = this.formBuilder.group({
         name: [template.name],
@@ -93,7 +93,7 @@ export class MigrationConsoleComponent {
   }
 
   /* Fields input by user. */
-  private selectedDocs: boolean[] = [];
+  private selectedDocs: string[] = [];
 
   /* Internal variables. */
   private bearerAuth = '';
@@ -113,11 +113,13 @@ export class MigrationConsoleComponent {
   async reupload(): Promise<any> {
     /* Get a list of all the indices cooresponding to documents that the user wants to upload. */
     const oldThis = this;
+    let i = 0;
     this.documents.controls.forEach(function(group: any) {
-      oldThis.selectedDocs.push(group.value.isSelected); // in this context, '' functions as true and false as false
+      if (group.value.isSelected) {
+        oldThis.selectedDocs.push(oldThis.documentIds[i]);
+      }
+      i ++;
     });
-
-    const numSelectedDocs = this.selectedDocs.filter(function(b) { return b; }).length;
 
     /* For each document: if that document was selected, upload it. */
     const startTime = Date.now();
@@ -138,18 +140,17 @@ export class MigrationConsoleComponent {
         this.bearerAuth = tokenResponse.accessToken; this.refreshToken = tokenResponse.refreshToken;
       }
 
-      this.logToConsole(`Beginning migration of document ${i + 1} of the ${numSelectedDocs} documents.`);
+      this.logToConsole(`Beginning migration of document ${i + 1} of the ${this.selectedDocs.length} documents.`);
       /* Try to reupload the ith document. Only proceed to the next iteration if we succeed. */
       let error = false;
       try {
-        if (this.selectedDocs[i])
-          await reuploadHelper(this, this.documentIds[i]);
+        await reuploadHelper(this, this.selectedDocs[i]);
       } catch (err) {
         error = true;
-        this.logToConsole(`Migration of document ${i + 1} of the ${numSelectedDocs} failed. Retrying migration of document ${i + 1}.`);
+        this.logToConsole(`Migration of document ${i + 1} of the ${this.selectedDocs.length} failed. Retrying migration of document ${i + 1}.`);
       }
       if (!error) {
-        this.logToConsole(`Document ${i + 1} of the ${numSelectedDocs} documents has been sucessfully migrated.`);
+        this.logToConsole(`Document ${i + 1} of the ${this.selectedDocs.length} documents has been sucessfully migrated.`);
         this.logToConsole('========================================================================');
         i ++;
       }
