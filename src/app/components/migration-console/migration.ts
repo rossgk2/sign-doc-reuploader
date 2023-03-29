@@ -2,7 +2,44 @@ import { Settings } from "src/app/settings/settings";
 import { httpRequest } from "src/app/util/electron-functions";
 import { getApiBaseUriCommercial, getApiBaseUriFedRamp, getPdfLibraryBaseUri } from "src/app/util/url-getter";
 
-export async function reuploadHelper(oldThis: any, documentId: string): Promise<any> {  
+export async function migrate(oldThis: any, selectedDocs: string[]): Promise<any> {
+  /* For each document: if that document was selected, upload it. */
+  const startTime = Date.now();
+  const minutesPerMillisecond = 1.667E-5;
+  const timeoutPeriodInMinutes = 5; // hardcoded for now; later we can grab this value from initial response from /token
+  const epsilonInMinutes = (1/50) * timeoutPeriodInMinutes; 
+  for (let i = 0; i < selectedDocs.length; ) {
+    /* Determine how much time has elapsed since the start of this function and declare a helper function. */
+    const totalTimeElapsedInMinutes = (Date.now() - startTime) * minutesPerMillisecond;
+    console.log('totalTimeElapsedInMinutes:', totalTimeElapsedInMinutes);
+    console.log('If in the following comparison if we have LHS < RHS, then the current time is considered close to the time at which the token expires.');
+    console.log(`${totalTimeElapsedInMinutes % (timeoutPeriodInMinutes - 1)} < ${epsilonInMinutes}`);
+  
+    /* If the token is about to expire, use a refresh token to get a new token and a new refresh token. */
+    const tokenAboutToExpire: boolean = closeToNonzeroMultipleOf(totalTimeElapsedInMinutes, timeoutPeriodInMinutes - 1, epsilonInMinutes);
+    if (tokenAboutToExpire) {
+      const tokenResponse = await oldThis.oAuthService.refreshToken(oldThis.oAuthClientId, oldThis.oAuthClientSecret, oldThis.refreshToken);
+      oldThis.bearerAuth = tokenResponse.accessToken; oldThis.refreshToken = tokenResponse.refreshToken;
+    }
+
+    oldThis.logToConsole(`Beginning migration of document ${i + 1} of the ${selectedDocs.length} documents.`);
+    /* Try to reupload the ith document. Only proceed to the next iteration if we succeed. */
+    let error = false;
+    try {
+      await reuploadHelper(oldThis, selectedDocs[i]);
+    } catch (err) {
+      error = true;
+      oldThis.logToConsole(`Migration of document ${i + 1} of the ${selectedDocs.length} failed. Retrying migration of document ${i + 1}.`);
+    }
+    if (!error) {
+      oldThis.logToConsole(`Document ${i + 1} of the ${selectedDocs.length} documents has been sucessfully migrated.`);
+      oldThis.logToConsole('========================================================================');
+      i ++;
+    }
+  }
+}
+
+async function reuploadHelper(oldThis: any, documentId: string): Promise<any> {  
   oldThis.logToConsole('About to inspect this document in the commercial account and then download it from the commercial account.');
   oldThis.logToConsoleTabbed(`The ID of this document in the commercial account is ${documentId}.`);
   const result = await download(oldThis, documentId, oldThis.commercialIntegrationKey);
@@ -108,4 +145,9 @@ async function upload(oldThis: any, docName: string, formFields: {[key: string]:
   };
   await httpRequest(requestConfig);
   oldThis.logToConsoleTabbed("Wrote the values the user entered into this document's fields to the library document in the FedRAMP account.");
+}
+
+/* Returns true if and only if s is not epsilon-close to zero and s is epsilon-close to a multiple of t. */
+function closeToNonzeroMultipleOf(s: number, t: number, epsilon: number): boolean {
+  return (s > epsilon) && ((s % t) < epsilon);
 }

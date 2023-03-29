@@ -32,10 +32,6 @@ import { loadUrl } from '../../util/electron-functions';
   styleUrls: ['./login.component.scss']
 })
 export class LoginComponent implements OnInit {
-  
-  /* Internal variables. */
-  private static previousUrl: string = window.location.href; // the URL that hosts this webapp before user is redirected
-
   /* Fields input by user. */
   _commercialIntegrationKey: string = '';
   _oAuthClientId: string = '';
