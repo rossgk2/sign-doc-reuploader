@@ -7,7 +7,7 @@ import { Settings } from '../../settings/settings';
 import { httpRequest } from '../../util/electron-functions';
 import { tab } from '../../util/spacing';
 import { getApiBaseUriCommercial } from '../../util/url-getter';
-import { reuploadHelper } from './migration';
+import { migrate } from './migration';
 
 @Component({
   selector: 'app-migration-console',
@@ -34,7 +34,7 @@ export class MigrationConsoleComponent {
     libraryDocuments.forEach(template => {
       const documentForm = this.formBuilder.group({
         name: [template.name],
-        isSelected: [true]
+        isSelected: [false]
       });
       this.documents.push(documentForm);
     });
@@ -92,9 +92,6 @@ export class MigrationConsoleComponent {
     this.populateDocForm(libraryDocuments); 
   }
 
-  /* Fields input by user. */
-  private selectedDocs: string[] = [];
-
   /* Internal variables. */
   private bearerAuth = '';
   private refreshToken = '';
@@ -112,49 +109,17 @@ export class MigrationConsoleComponent {
 
   async reupload(): Promise<any> {
     /* Get a list of all the indices cooresponding to documents that the user wants to upload. */
+    let selectedDocs: string[] = [];
     const oldThis = this;
     let i = 0;
     this.documents.controls.forEach(function(group: any) {
       if (group.value.isSelected) {
-        oldThis.selectedDocs.push(oldThis.documentIds[i]);
+        selectedDocs.push(oldThis.documentIds[i]);
       }
       i ++;
     });
 
-    /* For each document: if that document was selected, upload it. */
-    const startTime = Date.now();
-    const minutesPerMillisecond = 1.667E-5;
-    const timeoutPeriodInMinutes = 5; // hardcoded for now; later we can grab this value from initial response from /token
-    const epsilonInMinutes = (1/50) * timeoutPeriodInMinutes; 
-    for (let i = 0; i < this.selectedDocs.length; ) {
-      /* Determine how much time has elapsed since the start of this function and declare a helper function. */
-      const totalTimeElapsedInMinutes = (Date.now() - startTime) * minutesPerMillisecond;
-      console.log('totalTimeElapsedInMinutes:', totalTimeElapsedInMinutes);
-      console.log('If in the following comparison if we have LHS < RHS, then the current time is considered close to the time at which the token expires.');
-      console.log(`${totalTimeElapsedInMinutes % (timeoutPeriodInMinutes - 1)} < ${epsilonInMinutes}`);
-    
-      /* If the token is about to expire, use a refresh token to get a new token and a new refresh token. */
-      const tokenAboutToExpire: boolean = this.closeToNonzeroMultipleOf(totalTimeElapsedInMinutes, timeoutPeriodInMinutes - 1, epsilonInMinutes);
-      if (tokenAboutToExpire) {
-        const tokenResponse = await this.oAuthService.refreshToken(this.oAuthClientId, this.oAuthClientSecret, this.refreshToken);
-        this.bearerAuth = tokenResponse.accessToken; this.refreshToken = tokenResponse.refreshToken;
-      }
-
-      this.logToConsole(`Beginning migration of document ${i + 1} of the ${this.selectedDocs.length} documents.`);
-      /* Try to reupload the ith document. Only proceed to the next iteration if we succeed. */
-      let error = false;
-      try {
-        await reuploadHelper(this, this.selectedDocs[i]);
-      } catch (err) {
-        error = true;
-        this.logToConsole(`Migration of document ${i + 1} of the ${this.selectedDocs.length} failed. Retrying migration of document ${i + 1}.`);
-      }
-      if (!error) {
-        this.logToConsole(`Document ${i + 1} of the ${this.selectedDocs.length} documents has been sucessfully migrated.`);
-        this.logToConsole('========================================================================');
-        i ++;
-      }
-    }
+    migrate(this, selectedDocs);
   }
 
   async ngOnInit() {
@@ -186,11 +151,6 @@ export class MigrationConsoleComponent {
   }
 
   /* Helper functions. */
-
-  /* Returns true if and only if s is not epsilon-close to zero and s is epsilon-close to a multiple of t. */
-  private closeToNonzeroMultipleOf(s: number, t: number, epsilon: number): boolean {
-    return (s > epsilon) && ((s % t) < epsilon);
-  }
 
   async delay(seconds: number): Promise<any> {
     return new Promise(resolve => setTimeout(resolve, seconds * 1000));
