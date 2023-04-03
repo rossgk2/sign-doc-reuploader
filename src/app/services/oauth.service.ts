@@ -1,12 +1,8 @@
 import {Injectable} from '@angular/core';
 import {UrlTree, Router, UrlSerializer} from '@angular/router';
-import {Credentials} from '../settings/credentials';
-import {HttpClient, HttpHeaders} from '@angular/common/http';
-import {Observable} from 'rxjs';
 import {getRandomId} from '../util/random';
 import {httpRequest} from '../util/electron-functions';
-import {getOAuthBaseUri} from '../util/url-getter';
-import {Settings} from '../settings/settings';
+import {getOAuthAuthorizationGrantRequestEndpoint, getOAuthBaseUri, getOAuthTokenRequestEndpoint} from '../util/url-getter';
 
 export interface I_OAuthGrantRequest {
     url: string;
@@ -16,8 +12,7 @@ export interface I_OAuthGrantRequest {
 @Injectable({providedIn: 'root'})
 export class OAuthService {
   constructor(private router: Router,
-              private serializer: UrlSerializer,
-              private http: HttpClient)
+              private serializer: UrlSerializer)
   { }
 
   /* 
@@ -32,20 +27,20 @@ export class OAuthService {
       - env must be such that env.toLowerCase() is either 'commercial' or 'fedramp'
   */
   
-  getOAuthGrantRequest(clientId: string, redirectUri: string, loginEmail: string, env: string): I_OAuthGrantRequest {
+  getOAuthGrantRequest(complianceLevel: string, clientId: string, redirectUri: string, loginEmail: string): I_OAuthGrantRequest {
     const state = getRandomId();
     let scope: string;
 
-    /* The syntax for the 'scope' query param depends on whether the environment is commercial or FedRamp. */
-    if (env.toLowerCase() == 'commercial')
+    /* The syntax for the 'scope' query param depends on whether the complianceLevel.toLowerCase() is 'commercial' or 'fedramp'. */
+    if (complianceLevel.toLowerCase() == 'commercial')
       scope = 'library_read:account library_write:account agreement_write:account';
-    else if (env.toLowerCase() == 'fedramp')
+    else if (complianceLevel.toLowerCase() == 'fedramp')
       /* 'offline_access' is crucial. Instructs the POST to /token in getToken() to return a refresh token. */
       scope = 'library_read library_write agreement_write offline_access';
     else
       throw new Error("env.toLowerCase() must be either 'commercial' or 'fedramp'.");
 
-    /* Build the URL that is the authorizaton grant request. */
+    /* Build the string of query params that make up part of the authorizaton grant request. */
     const tree: UrlTree = this.router.createUrlTree([''],
     {
       'queryParams':
@@ -58,12 +53,12 @@ export class OAuthService {
         'login_hint' : loginEmail
       }
     });
+    let queryParams: string = this.serializer.serialize(tree);
+    queryParams = queryParams.substring(1, queryParams.length); // remove the / at the beginning    
 
     /* Return the authorizaton grant request and the randomly generated state associated with it. */
-    let queryParams: string = this.serializer.serialize(tree);
-    queryParams = queryParams.substring(1, queryParams.length); // remove the / at the beginning
     return {
-      'url': `${getOAuthBaseUri()}/api/v1/authorize` + queryParams,
+      'url': getOAuthBaseUri(complianceLevel) + getOAuthAuthorizationGrantRequestEndpoint(complianceLevel) + queryParams,
       'initialOAuthState': state
     };  
   }
@@ -81,7 +76,7 @@ export class OAuthService {
   getAuthGrant(authGrantResponse: string, initialOAuthState: string): string {
     /* Consider the query param string instead of the entire URL so that we can avoid
     parsing errors when the URL has the ? after a /, and is something like 
-    https://migrationtool.com/?a1=a2&b1=b2. */
+    https://migrationtool.com/?a1=a2&b1=b2 (as opposed to the more usual https://migrationtool.com?a1=a2&b1=b2). */
     const queryParamString = authGrantResponse.substring(authGrantResponse.indexOf("?"));
     const tree: UrlTree = this.serializer.parse(queryParamString);
 
@@ -107,10 +102,10 @@ export class OAuthService {
       throw new Error('The authorization grant URL does not contain a "code" or an "error" query param.');
   }
 
-  async getToken(clientId: string, clientSecret: string, authGrant: string, redirectUri: string): Promise<any> {
+  async getToken(complianceLevel: string, clientId: string, clientSecret: string, authGrant: string, redirectUri: string): Promise<any> {
     const requestConfig = {
       'method': 'post',
-      'url': `${getOAuthBaseUri()}/api/v1/token`,
+      'url': getOAuthBaseUri(complianceLevel) + getOAuthTokenRequestEndpoint(complianceLevel),
       'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
       'params':
        {
@@ -126,10 +121,10 @@ export class OAuthService {
     return this.handleTokenEndpointErrorsAndReturn(response);
   }
 
-  async refreshToken(clientId: string, clientSecret: string, refreshToken: string): Promise<any> {
+  async refreshToken(complianceLevel: string, clientId: string, clientSecret: string, refreshToken: string): Promise<any> {
     const requestConfig = {
       'method': 'post',
-      'url': `${getOAuthBaseUri()}/api/v1/token`,
+      'url': getOAuthBaseUri(complianceLevel) + getOAuthTokenRequestEndpoint(complianceLevel),
       'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
       'params':
       {

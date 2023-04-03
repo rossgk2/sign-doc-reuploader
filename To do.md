@@ -1,15 +1,13 @@
-- to implement oauth for source account...
+- implementing oauth for source and destination
 
-  - write function that encapsulates all oauth tasks that are done for second signer
-  - create three input fields that correspond to source account
-  - when "log in" clicked, pass values obtained from these fields to the newly written function
-  - at this point we've implemented commercial -> gov using oauth for both source and destination
-  - next step is to implement x -> y, where x, y in {commercial, gov}
-  - add two radio buttons to log in page that toggle between "commercial" and "gov"
-  - create sourceType and destinationType variables that are shared between login and console components
-  - update sourceType and destinationType with values obtained from radio buttons
-  - replace the functions getApiBaseUriFedRamp() and getApiBaseUriCommercial() that are used in download() and upload() with getApiBaseUri(). this new function will take sourceType and destinationType as parameters, and use conditional logic such as `if (sourceType  === 'commercial')`
-
+  - Current issue: when apiEnv is stage, the OAuth URL is `https://secure.na1.adobesignstage.us/api/gateway/adobesignauthservice`. This URL does not work for commercial OAuth. The commercial OAuth URL is likely different.
+    - commercial endpoints have different base urls; one is `/public/oauth`, one is just `/oauth`
+  - Is `'https://api.na1.adobesign.us/api/rest/v6` is the correct URL for gov prod API access? 
+  - only redirect to migration console UI after both logins have occurred
+    can use shared service to track this
+  - is oauth url always on na1? for commercial? for fedramp?
+  - are pdf documents always stored on na4?
+  
 - add a radio button for "prod" vs. "stage" apiEnv
 
 - implement commercial-to-commercial migration

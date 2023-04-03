@@ -2,11 +2,7 @@ export interface I_Settings {
 	/* Determines which Adobe Sign API URLs are used for the API calls that this
 	application relies on. Use "stage" to use URLs that contain "adobesignstage"
 	and "prod" to use URLs that contain "adobesign" but not "adobesignstage". */
-	apiEnv: string, // 'stage' or 'prod'
-	
-	/* A legacy setting from when this application was Angular only.
-	Was useful for avoiding CORS errors in developent. */
-	useProxy: boolean,
+	apiEnv: string, // 'stage' or 'prod',
 
 	/* Whether or not to use util/credentials.ts to log in. Useful
 	for development. */
@@ -31,7 +27,6 @@ export interface I_Settings {
 
 export const devSettings: I_Settings = {
 	apiEnv: 'stage',
-	useProxy: false,
 	forceUseTestCredentials: true,
 	redirectUri: "https://migrationtool.com",
 	docNamePrefixForDebug: '(-!- FROM ELECTRON APP -!-)',
@@ -41,7 +36,6 @@ export const devSettings: I_Settings = {
 
 export const prodSettings: I_Settings = {
 	apiEnv: 'prod',
-	useProxy: false,
 	forceUseTestCredentials: false,
 	redirectUri: "https://migrationtool.com",
 	docNamePrefixForDebug: '',

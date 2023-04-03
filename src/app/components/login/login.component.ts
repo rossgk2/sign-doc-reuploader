@@ -1,5 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { UrlSerializer } from '@angular/router';
 import { OAuthService } from '../../services/oauth.service';
 import { SharerService } from '../../services/sharer.service';
 import { Credentials } from '../../settings/credentials';
@@ -22,8 +21,6 @@ import { loadUrl } from '../../util/electron-functions';
   
   ===================================================================
 
-  We are currently implementing OAuth for FedRamp. After we do that it'd probably be a good idea to add the implementation
-  for commercial.
 */
 
 @Component({
@@ -33,65 +30,100 @@ import { loadUrl } from '../../util/electron-functions';
 })
 export class LoginComponent implements OnInit {
   /* Fields input by user. */
-  _commercialIntegrationKey: string = '';
-  _oAuthClientId: string = '';
-  _oAuthClientSecret: string = '';
-  _loginEmail: string = '';
+  _sourceComplianceLevel: string = 'commercial';
+  _sourceOAuthClientId: string = '';
+  _sourceOAuthClientSecret: string = '';
+  _sourceLoginEmail: string = '';
+  _destComplianceLevel: string = 'commercial';
+  _destOAuthClientId: string = '';
+  _destOAuthClientSecret: string = '';
+  _destLoginEmail: string = '';  
 
-  get commercialIntegrationKey() {
-    if (Settings.forceUseTestCredentials)
-      return Credentials.commercialIntegrationKey;
-    else
-      return this._commercialIntegrationKey;
+  get sourceComplianceLevel(): string {
+    return this._sourceComplianceLevel;
   }
 
-  get oAuthClientId() {
+  get sourceOAuthClientId(): string {
     if (Settings.forceUseTestCredentials)
-      return Credentials.oAuthClientId;
+      return Credentials.sourceOAuthClientId;
     else
-      return this._oAuthClientId;
+      return this._sourceOAuthClientId;
   }
 
-  get oAuthClientSecret() {
+  get sourceOAuthClientSecret(): string {
     if (Settings.forceUseTestCredentials)
-      return Credentials.oAuthClientSecret;
+      return Credentials.sourceOAuthClientSecret;
     else
-      return this._oAuthClientSecret;
+      return this._sourceOAuthClientSecret;
   }
   
-  get loginEmail() {
+  get sourceLoginEmail(): string {
     if (Settings.forceUseTestCredentials)
-      return Credentials.loginEmail;
+      return Credentials.sourceLoginEmail;
     else
-      return this._loginEmail;
+      return this._sourceLoginEmail;
+  }
+
+  get destComplianceLevel(): string {
+    return this._destComplianceLevel;
+  }
+
+  get destOAuthClientId(): string {
+    if (Settings.forceUseTestCredentials)
+      return Credentials.destOAuthClientId;
+    else
+      return this._destOAuthClientId;
+  }
+
+  get destOAuthClientSecret(): string {
+    if (Settings.forceUseTestCredentials)
+      return Credentials.destOAuthClientSecret;
+    else
+      return this._destOAuthClientSecret;
+  }
+  
+  get destLoginEmail(): string {
+    if (Settings.forceUseTestCredentials)
+      return Credentials.destLoginEmail;
+    else
+      return this._destLoginEmail;
   } 
 
   constructor(private oAuthService: OAuthService,
-              private sharerService: SharerService,
-              private serializer: UrlSerializer) { }
+              private sharerService: SharerService) { }
  
-  login(): void {
+  
+  async sourceLogin() {
+    this.loginHelper('source', this.sourceComplianceLevel, this.sourceOAuthClientId, this.sourceOAuthClientSecret, this.sourceLoginEmail);
+  }
+
+  async destLogin() {
+    this.loginHelper('dest', this.destComplianceLevel, this.destOAuthClientId, this.destOAuthClientSecret, this.destLoginEmail);
+  }
+
+  loginHelper(sourceOrDest: 'source' | 'dest', complianceLevel: string, oAuthClientId: string, oAuthClientSecret: string, loginEmail: string): void {
     /* Get the URL, the "authorization grant request", that the user must be redirected to in order to log in.*/
-    const authGrantRequest = this.oAuthService.getOAuthGrantRequest(this.oAuthClientId, Settings.redirectUri, this.loginEmail, 'FedRamp');
+    console.log('About to call getOAuthGrantRequest()');
+    const authGrantRequest = this.oAuthService.getOAuthGrantRequest(complianceLevel, oAuthClientId, Settings.redirectUri, loginEmail);
+    console.log('After calling getOAuthGrantRequest()');
 
     /* Store the OAuth state and the credentials. */
     const temp: any = {};
+    temp.complianceLevel = complianceLevel;
     temp.initialOAuthState = authGrantRequest.initialOAuthState;
     temp.credentials = {
-      commercialIntegrationKey: this.commercialIntegrationKey,
-      oAuthClientId: this.oAuthClientId,
-      oAuthClientSecret: this.oAuthClientSecret,
-      loginEmail: this.loginEmail
+      oAuthClientId: oAuthClientId,
+      oAuthClientSecret: oAuthClientSecret,
+      loginEmail: loginEmail
     };
-    this.sharerService.shared = temp;
+    this.sharerService.shared = {};
+    this.sharerService.shared[sourceOrDest] = temp;
 
     /* Redirect the user to the URL that is the authGrantRequest. */
     loadUrl(authGrantRequest.url);
   }
 
   async ngOnInit(): Promise<any> { }
-
-  /* Helper functions for use in .html file. */
 
   getValue(event: Event): string {
     return (event.target as HTMLInputElement).value;
