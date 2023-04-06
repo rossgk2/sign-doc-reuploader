@@ -103,17 +103,16 @@ export class MigrationConsoleComponent {
   destRefreshToken = '';
 
   /* Fields input by user. */
-  sourceComplianceLevel: string = '';
-  destComplianceLevel: string = '';
+  sourceComplianceLevel: 'commercial' | 'fedramp' = 'commercial';
   sourceOAuthClientId: string = '';
   sourceOAuthClientSecret: string = '';
   sourceLoginEmail: string = '';
+  destComplianceLevel: 'commercial' | 'fedramp' = 'commercial';
   destOAuthClientId: string = '';
   destOAuthClientSecret: string = '';
   destLoginEmail: string = '';
 
-  constructor(private sharerService: SharerService,
-              private formBuilder: FormBuilder) { }
+  constructor(private sharerService: SharerService, private formBuilder: FormBuilder) { }
 
   async migrate(): Promise<any> {
     /* Get a list of all the indices cooresponding to documents that the user wants to upload. */

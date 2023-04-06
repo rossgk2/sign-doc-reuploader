@@ -27,18 +27,17 @@ export class OAuthService {
       - env must be such that env.toLowerCase() is either 'commercial' or 'fedramp'
   */
   
-  getOAuthGrantRequest(complianceLevel: string, clientId: string, redirectUri: string, loginEmail: string): I_OAuthGrantRequest {
+  getOAuthGrantRequest(complianceLevel: 'commercial' | 'fedramp', clientId: string, redirectUri: string, loginEmail: string): I_OAuthGrantRequest {
     const state = getRandomId();
     let scope: string;
 
     /* The syntax for the 'scope' query param depends on whether the complianceLevel.toLowerCase() is 'commercial' or 'fedramp'. */
-    if (complianceLevel.toLowerCase() == 'commercial')
+    if (complianceLevel == 'commercial')
       scope = 'library_read:account library_write:account agreement_write:account';
-    else if (complianceLevel.toLowerCase() == 'fedramp')
+    else { // complianceLevel == 'fedramp'
       /* 'offline_access' is crucial. Instructs the POST to /token in getToken() to return a refresh token. */
       scope = 'library_read library_write agreement_write offline_access';
-    else
-      throw new Error("env.toLowerCase() must be either 'commercial' or 'fedramp'.");
+    }
 
     /* Build the string of query params that make up part of the authorizaton grant request. */
     const tree: UrlTree = this.router.createUrlTree([''],
@@ -102,7 +101,7 @@ export class OAuthService {
       throw new Error('The authorization grant URL does not contain a "code" or an "error" query param.');
   }
 
-  async getToken(complianceLevel: string, clientId: string, clientSecret: string, authGrant: string, redirectUri: string): Promise<any> {
+  async getToken(complianceLevel: 'commercial' | 'fedramp', clientId: string, clientSecret: string, authGrant: string, redirectUri: string): Promise<any> {
     const requestConfig = {
       'method': 'post',
       'url': getOAuthBaseUri(complianceLevel) + getOAuthTokenRequestEndpoint(complianceLevel),
@@ -121,7 +120,7 @@ export class OAuthService {
     return this.handleTokenEndpointErrorsAndReturn(response);
   }
 
-  async refreshToken(complianceLevel: string, clientId: string, clientSecret: string, refreshToken: string): Promise<any> {
+  async refreshToken(complianceLevel: 'commercial' | 'fedramp', clientId: string, clientSecret: string, refreshToken: string): Promise<any> {
     const requestConfig = {
       'method': 'post',
       'url': getOAuthBaseUri(complianceLevel) + getOAuthTokenRequestEndpoint(complianceLevel),

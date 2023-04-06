@@ -1,7 +1,6 @@
 - implementing oauth for source and destination
 
-  - Current issue: when apiEnv is stage, the OAuth URL is `https://secure.na1.adobesignstage.us/api/gateway/adobesignauthservice`. This URL does not work for commercial OAuth. The commercial OAuth URL is likely different.
-    - commercial endpoints have different base urls; one is `/public/oauth`, one is just `/oauth`
+  - initialize sourceComplianceLevel and destCompliance level to the default values that are used in the .html
   - only redirect to migration console UI after both logins have occurred
     can use shared service to track this
   - don't hardcode maybe not- change this

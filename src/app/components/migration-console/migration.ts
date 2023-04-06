@@ -1,6 +1,6 @@
 import { Settings } from "src/app/settings/settings";
 import { httpRequest } from "src/app/util/electron-functions";
-import { getApiBaseUri, getPdfLibraryBaseUri } from "src/app/util/url-getter";
+import { getApiBaseUri } from "src/app/util/url-getter";
 
 export async function migrateAll(oldThis: any, selectedDocs: string[]): Promise<any> {
   /* For each document: if that document was selected, upload it. */
@@ -98,7 +98,7 @@ async function download(oldThis: any, documentId: string): Promise<any> {
 }
 
 async function upload(oldThis: any, docName: string, formFields: {[key: string]: string}, pdfBlob: Blob, documentId: string) {
-  const baseUri = await getApiBaseUri();
+  const baseUri = await getApiBaseUri(oldThis.destBearerToken, oldThis.destComplianceLevel);
   const defaultHeaders = {'Authorization': `Bearer ${oldThis.destBearerToken}`};
 
   oldThis.logToConsoleTabbed(`About to upload the downloaded PDF to the FedRAMP 

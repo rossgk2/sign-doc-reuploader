@@ -30,17 +30,17 @@ import { loadUrl } from '../../util/electron-functions';
 })
 export class LoginComponent implements OnInit {
   /* Fields input by user. */
-  _sourceComplianceLevel: string = 'commercial';
+  _sourceComplianceLevel: string = 'commercial'; // hardcoded for now; later, use Reactive Forms to pull initial value from .html
   _sourceOAuthClientId: string = '';
   _sourceOAuthClientSecret: string = '';
   _sourceLoginEmail: string = '';
-  _destComplianceLevel: string = 'commercial';
+  _destComplianceLevel: string = 'commercial'; // hardcoded for now; later, use use Reactive Forms to pull initial value from .html
   _destOAuthClientId: string = '';
   _destOAuthClientSecret: string = '';
   _destLoginEmail: string = '';  
 
-  get sourceComplianceLevel(): string {
-    return this._sourceComplianceLevel;
+  get sourceComplianceLevel(): 'commercial' | 'fedramp' {
+    return this._sourceComplianceLevel as 'commercial' | 'fedramp';
   }
 
   get sourceOAuthClientId(): string {
@@ -64,8 +64,8 @@ export class LoginComponent implements OnInit {
       return this._sourceLoginEmail;
   }
 
-  get destComplianceLevel(): string {
-    return this._destComplianceLevel;
+  get destComplianceLevel(): 'commercial' | 'fedramp' {
+    return this._destComplianceLevel as 'commercial' | 'fedramp';
   }
 
   get destOAuthClientId(): string {
@@ -89,8 +89,7 @@ export class LoginComponent implements OnInit {
       return this._destLoginEmail;
   } 
 
-  constructor(private oAuthService: OAuthService,
-              private sharerService: SharerService) { }
+  constructor(private oAuthService: OAuthService, private sharerService: SharerService) { }
  
   
   async sourceLogin() {
@@ -101,7 +100,7 @@ export class LoginComponent implements OnInit {
     this.loginHelper('dest', this.destComplianceLevel, this.destOAuthClientId, this.destOAuthClientSecret, this.destLoginEmail);
   }
 
-  loginHelper(sourceOrDest: 'source' | 'dest', complianceLevel: string, oAuthClientId: string, oAuthClientSecret: string, loginEmail: string): void {
+  async loginHelper(sourceOrDest: 'source' | 'dest', complianceLevel: 'commercial' | 'fedramp', oAuthClientId: string, oAuthClientSecret: string, loginEmail: string) {
     /* Get the URL, the "authorization grant request", that the user must be redirected to in order to log in.*/
     console.log('About to call getOAuthGrantRequest()');
     const authGrantRequest = this.oAuthService.getOAuthGrantRequest(complianceLevel, oAuthClientId, Settings.redirectUri, loginEmail);
@@ -120,6 +119,9 @@ export class LoginComponent implements OnInit {
     this.sharerService.shared[sourceOrDest] = temp;
 
     /* Redirect the user to the URL that is the authGrantRequest. */
+    console.log(temp.credentials);
+    console.log(authGrantRequest.url);
+    await new Promise(resolve => setTimeout(resolve, 5 * 1000));
     loadUrl(authGrantRequest.url);
   }
 

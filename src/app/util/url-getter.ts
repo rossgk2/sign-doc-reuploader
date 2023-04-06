@@ -6,10 +6,10 @@ import {Settings} from '../settings/settings';
 
     Returns the base URI that is used to access the Adobe Sign API.
 */
-export async function getApiBaseUri(bearerToken: string = '', complianceLevel: string = '', apiEnv = Settings.apiEnv) {
+export async function getApiBaseUri(bearerToken: string = '', complianceLevel: 'commercial' | 'fedramp', apiEnv: 'stage' | 'prod' = Settings.apiEnv) {
   /* If the account is commercial, then the URI returned by this function depends on what shard (e.g. na1, na2, na3, na4)
   the account is on; we use an API call to determine the return value. */
-  if (complianceLevel.toLowerCase() === 'commercial') {
+  if (complianceLevel === 'commercial') {
     if (bearerToken === '')
       throw new Error('The empty string was passed as the bearerAuth argument in a call to getApiBaseUri().')      
     
@@ -24,16 +24,12 @@ export async function getApiBaseUri(bearerToken: string = '', complianceLevel: s
     return baseUri;
   }
   /* All FedRamp accounts are on the na1 shard, so we can hardcode the returned value for FedRamp accounts. */
-  else if (complianceLevel.toLowerCase() === 'fedramp') {
-    if (apiEnv.toLowerCase() === 'stage')
+  else { // complianceLevel === 'fedramp'
+    if (apiEnv === 'stage')
       return 'https://api.na1.adobesignstage.us/api/rest/v6';
-    else if (apiEnv.toLowerCase() === 'prod')
+    else // apiEnv === 'prod'
       return 'https://api.na1.adobesign.us/api/rest/v6'
-    else
-      throw new Error('apiEnv.toLowerCase() must be "stage" or "prod".');
   }
-  else
-    throw new Error('complianceLevel.toLowerCase() must be "commercial" or "fedramp".');
 }
 
 /* 
@@ -44,45 +40,27 @@ export async function getApiBaseUri(bearerToken: string = '', complianceLevel: s
   When using this function for a FedRamp account (complianceLevel === 'fedramp'), one will have to postpend a string of 
   the form `/api/v1/${str}` to access typical OAuth endpoints.  
 */
-export function getOAuthBaseUri(complianceLevel: string = '', apiEnv = Settings.apiEnv): string {
-  if (complianceLevel.toLowerCase() === 'commercial') {
-    if (apiEnv.toLowerCase() === 'stage')
-      return 'https://secure.na1.adobesignstage.com';
-    else if (apiEnv.toLowerCase() === 'prod')
-      return 'https://secure.na1.adobesign.com';
-    else
-      throw new Error('apiEnv.toLowerCase() must be "stage" or "prod".');
-  }
-  else if (complianceLevel.toLowerCase() === 'fedramp') {
-    if (apiEnv.toLowerCase() === 'stage')
+export function getOAuthBaseUri(complianceLevel: 'commercial' | 'fedramp', apiEnv: 'stage' | 'prod' = Settings.apiEnv): string {
+  if (complianceLevel.toLowerCase() === 'commercial') // For commercial, always use the prod endpoint
+    return 'https://secure.na1.adobesign.com';
+  else { // complianceLevel === 'fedramp'
+    if (apiEnv === 'stage')
       return 'https://secure.na1.adobesignstage.us/api/gateway/adobesignauthservice';
-    else if (apiEnv.toLowerCase() === 'prod')
+    else // apiEnv === 'prod'
       return 'https://secure.na1.adobesign.us/api/gateway/adobesignauthservice';
-    else
-      throw new Error('apiEnv.toLowerCase() must be "stage" or "prod".');
-    }
-    else
-      throw new Error('complianceLevel.toLowerCase() must be "commercial" or "fedramp".');
+  }
 }
 
-export function getOAuthAuthorizationGrantRequestEndpoint(complianceLevel: string) {
-  if (complianceLevel.toLowerCase() === 'commercial')
+export function getOAuthAuthorizationGrantRequestEndpoint(complianceLevel: 'commercial' | 'fedramp') {
+  if (complianceLevel === 'commercial')
     return '/public/oauth/v2';
-  else if (complianceLevel.toLowerCase() === 'fedramp')
+  else // complianceLevel === 'fedramp'
     return '/api/v1/authorize';
-  else
-    throw new Error('complianceLevel.toLowerCase() must be "commercial" or "fedramp".');
 }
 
-export function getOAuthTokenRequestEndpoint(complianceLevel: string) {
+export function getOAuthTokenRequestEndpoint(complianceLevel: 'commercial' | 'fedramp') {
   if (complianceLevel.toLowerCase() === 'commercial')
     return '/oauth/v2/token';
-  else if (complianceLevel.toLowerCase() === 'fedramp')
+  else // complianceLevel === 'fedramp'
     return '/api/v1/token';
-  else
-    throw new Error('complianceLevel.toLowerCase() must be "commercial" or "fedramp".');
-}
-
-export function getPdfLibraryBaseUri(apiEnv = Settings.apiEnv) : string {
-  return 'https://secure.na4.adobesign.com/document/cp';
 }
