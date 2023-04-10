@@ -28,9 +28,9 @@ If you would like to build the app yourself instead of downloading precompiled e
 
 1. Download this repository by clicking "Code", then "Download ZIP".
 2. Unzip the downloaded .zip file. Let's refer to the folder that contains files such as package.json as "fldr".
-3. Make sure the the last line of fldr/src/app/settings/settings.ts is `Settings = prodSettings`, and not `Settings = devSettings` or `Settings = almostProdSettings`. Edit this last line and then "Save" if necessary.
-4. Start a command prompt and `cd` into fldr.
-5. Execute `npm run make`.
+3. In a command prompt, `cd` into fldr and execute `npm install`.
+4. Make sure the the last line of fldr/src/app/settings/settings.ts is `Settings = prodSettings`, and not `Settings = devSettings` or `Settings = almostProdSettings`. Edit this last line and then "Save" if necessary.
+5. In a command prompt, `cd` into fldr and execute `npm run make`.
 6. In your file explorer, navigate into the "out" directory, and then into the folder that corresponds to whatever operating system you're using (e.g. "migration-tool-win32-x64"). The app executable will be inside this folder. On Windows, it will be an .exe file, on Mac, it will be a .dmg file; on Linux, it will be a .deb file.
 7. Double click the executable to run the app. Have the commercial integration key, FedRAMP client ID, and FedRAMP client secret on hand when you do so.
 
