@@ -31,18 +31,11 @@ import { loadUrl } from '../../util/electron-functions';
 export class LoginComponent implements OnInit {
   /* Fields input by user. */
   _sourceComplianceLevel: string = 'commercial'; // hardcoded for now; later, use Reactive Forms to pull initial value from .html
-  _sourceOAuthClientId: string = '';
-  _sourceOAuthClientSecret: string = '';
-  _sourceLoginEmail: string = '';
-  _destComplianceLevel: string = 'commercial'; // hardcoded for now; later, use use Reactive Forms to pull initial value from .html
-  _destOAuthClientId: string = '';
-  _destOAuthClientSecret: string = '';
-  _destLoginEmail: string = '';  
-
   get sourceComplianceLevel(): 'commercial' | 'fedramp' {
     return this._sourceComplianceLevel as 'commercial' | 'fedramp';
   }
 
+  _sourceOAuthClientId: string = '';
   get sourceOAuthClientId(): string {
     if (Settings.forceUseTestCredentials)
       return Credentials.sourceOAuthClientId;
@@ -50,6 +43,7 @@ export class LoginComponent implements OnInit {
       return this._sourceOAuthClientId;
   }
 
+  _sourceOAuthClientSecret: string = '';
   get sourceOAuthClientSecret(): string {
     if (Settings.forceUseTestCredentials)
       return Credentials.sourceOAuthClientSecret;
@@ -57,6 +51,7 @@ export class LoginComponent implements OnInit {
       return this._sourceOAuthClientSecret;
   }
   
+  _sourceLoginEmail: string = '';
   get sourceLoginEmail(): string {
     if (Settings.forceUseTestCredentials)
       return Credentials.sourceLoginEmail;
@@ -64,10 +59,12 @@ export class LoginComponent implements OnInit {
       return this._sourceLoginEmail;
   }
 
+  _destComplianceLevel: string = 'commercial'; // hardcoded for now; later, use use Reactive Forms to pull initial value from .html
   get destComplianceLevel(): 'commercial' | 'fedramp' {
     return this._destComplianceLevel as 'commercial' | 'fedramp';
   }
 
+  _destOAuthClientId: string = '';
   get destOAuthClientId(): string {
     if (Settings.forceUseTestCredentials)
       return Credentials.destOAuthClientId;
@@ -75,6 +72,7 @@ export class LoginComponent implements OnInit {
       return this._destOAuthClientId;
   }
 
+  _destOAuthClientSecret: string = '';
   get destOAuthClientSecret(): string {
     if (Settings.forceUseTestCredentials)
       return Credentials.destOAuthClientSecret;
@@ -82,12 +80,15 @@ export class LoginComponent implements OnInit {
       return this._destOAuthClientSecret;
   }
   
+  _destLoginEmail: string = '';  
   get destLoginEmail(): string {
     if (Settings.forceUseTestCredentials)
       return Credentials.destLoginEmail;
     else
       return this._destLoginEmail;
-  } 
+  }
+
+  shard: string = '';
 
   constructor(private oAuthService: OAuthService, private sharerService: SharerService) { }
  
@@ -103,7 +104,7 @@ export class LoginComponent implements OnInit {
   async loginHelper(sourceOrDest: 'source' | 'dest', complianceLevel: 'commercial' | 'fedramp', oAuthClientId: string, oAuthClientSecret: string, loginEmail: string) {
     /* Get the URL, the "authorization grant request", that the user must be redirected to in order to log in.*/
     console.log('About to call getOAuthGrantRequest()');
-    const authGrantRequest = this.oAuthService.getOAuthGrantRequest(complianceLevel, oAuthClientId, Settings.redirectUri, loginEmail);
+    const authGrantRequest = this.oAuthService.getOAuthGrantRequest(sourceOrDest, complianceLevel, oAuthClientId, Settings.redirectUri, loginEmail);
     console.log('After calling getOAuthGrantRequest()');
 
     /* Store the OAuth state and the credentials. */
