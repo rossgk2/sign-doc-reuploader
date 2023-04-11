@@ -2,7 +2,7 @@ import {httpRequest} from '../util/electron-functions';
 import {Settings} from '../settings/settings';
 
 /* 
-  - apiEnv needs to be specified if and only if complianceLevel.toLower() === 'fedramp'
+  - apiEnv needs to be specified if and only if complianceLevel === 'fedramp'
 
     Returns the base URI that is used to access the Adobe Sign API.
 */
@@ -11,7 +11,7 @@ export async function getApiBaseUri(bearerToken: string = '', complianceLevel: '
   the account is on; we use an API call to determine the return value. */
   if (complianceLevel === 'commercial') {
     if (bearerToken === '')
-      throw new Error('The empty string was passed as the bearerAuth argument in a call to getApiBaseUri().')      
+      throw new Error('The empty string was passed as the "bearerAuth" argument in a call to getApiBaseUri().');      
     
     const requestConfig = {
       'method': 'get',
@@ -40,9 +40,12 @@ export async function getApiBaseUri(bearerToken: string = '', complianceLevel: '
   When using this function for a FedRamp account (complianceLevel === 'fedramp'), one will have to postpend a string of 
   the form `/api/v1/${str}` to access typical OAuth endpoints.  
 */
-export function getOAuthBaseUri(complianceLevel: 'commercial' | 'fedramp', apiEnv: 'stage' | 'prod' = Settings.apiEnv): string {
-  if (complianceLevel.toLowerCase() === 'commercial') // For commercial, always use the prod endpoint
-    return 'https://secure.na1.adobesign.com';
+export function getOAuthBaseUri(shard = '', complianceLevel: 'commercial' | 'fedramp', apiEnv: 'stage' | 'prod' = Settings.apiEnv): string {
+  if (complianceLevel === 'commercial') { // For commercial, always use the prod endpoint
+    if (shard === '')
+      throw new Error('The empty string was passed as the "shard" argument in a call to getOAuthBaseUri().')  
+    return `https://secure.${shard}.adobesign.com`;
+  }
   else { // complianceLevel === 'fedramp'
     if (apiEnv === 'stage')
       return 'https://secure.na1.adobesignstage.us/api/gateway/adobesignauthservice';
@@ -59,7 +62,7 @@ export function getOAuthAuthorizationGrantRequestEndpoint(complianceLevel: 'comm
 }
 
 export function getOAuthTokenRequestEndpoint(complianceLevel: 'commercial' | 'fedramp') {
-  if (complianceLevel.toLowerCase() === 'commercial')
+  if (complianceLevel === 'commercial')
     return '/oauth/v2/token';
   else // complianceLevel === 'fedramp'
     return '/api/v1/token';

@@ -1,9 +1,10 @@
 - implementing oauth for source and destination
 
-  - initialize sourceComplianceLevel and destCompliance level to the default values that are used in the .html
+- **get shard from user input or some other way, use in commercial case of getOAuthBaseUri()**
+
+  - initialize `sourceComplianceLevel` and `destComplianceLevel` to the default values that are used in the .html instead of hardcoding their initial values to match those from the .html
   - only redirect to migration console UI after both logins have occurred
     can use shared service to track this
-  - don't hardcode maybe not- change this
   
 - type arguments with types such as `'option1' | 'option2'` in functions where applicable
 

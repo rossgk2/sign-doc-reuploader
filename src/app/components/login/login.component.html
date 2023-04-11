@@ -10,6 +10,13 @@
       <option value = "commercial">Commercial</option>
       <option value = "fedramp">FedRamp</option>
     </select>
+
+    <select name="shard" id="shard" (change) = "shard = getValue($event)" *ngIf="sourceComplianceLevel === 'commercial'">
+      <option value = "na1">na1</option>
+      <option value = "na2">na2</option>
+      <option value = "na3">na3</option>
+      <option value = "na4">na4</option>
+    </select>
   </div>
 
   <div>
@@ -21,6 +28,13 @@
     <select name="destComplianceLevel" id="dest-compliance-level" (change) = "_destComplianceLevel = getValue($event)">
       <option value = "commercial">Commercial</option>
       <option value = "fedramp">FedRamp</option>
+    </select>
+
+    <select name="shard" id="shard" (change) = "shard = getValue($event)" *ngIf="destComplianceLevel === 'commercial'">
+      <option value = "na1">na1</option>
+      <option value = "na2">na2</option>
+      <option value = "na3">na3</option>
+      <option value = "na4">na4</option>
     </select>
   </div>
 
