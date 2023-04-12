@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 
 /* The type of the object to be shared. */
 export class SharedInner {
+  loggedIn = false;
   complianceLevel: 'commercial' | 'fedramp' = 'commercial';
   initialOAuthState = '';
   credentials = {
@@ -14,8 +15,6 @@ export class SharedInner {
 export class Shared {
   source = new SharedInner();
   dest = new SharedInner();
-  sourceLoggedIn = false;
-  destLoggedIn = false;
 };
 
 /* Service with getter and setter methods for sharing an object of type "Shared". */

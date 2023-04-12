@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { OAuthService } from '../../services/oauth.service';
-import { SharerService } from '../../services/sharer.service';
+import { Shared, SharedInner, SharerService } from '../../services/sharer.service';
 import { Credentials } from '../../settings/credentials';
 import { Settings } from '../../settings/settings';
 import { loadUrl } from '../../util/electron-functions';
@@ -94,12 +94,10 @@ export class LoginComponent implements OnInit {
  
   async sourceLogin() {
     this.loginHelper('source', this.sourceComplianceLevel, this.sourceOAuthClientId, this.sourceOAuthClientSecret, this.sourceLoginEmail);
-    this.sharerService.shared.sourceLoggedIn = true;
   }
 
   async destLogin() {
     this.loginHelper('dest', this.destComplianceLevel, this.destOAuthClientId, this.destOAuthClientSecret, this.destLoginEmail);
-    this.sharerService.shared.destLoggedIn = true;
   }
 
   async loginHelper(sourceOrDest: 'source' | 'dest', complianceLevel: 'commercial' | 'fedramp', oAuthClientId: string, oAuthClientSecret: string, loginEmail: string) {
@@ -110,7 +108,8 @@ export class LoginComponent implements OnInit {
     console.log('After calling getOAuthGrantRequest()');
 
     /* Store the OAuth state and the credentials. */
-    const shared = {...this.sharerService.shared[sourceOrDest]}; // {...x } is a shallow copy of (i.e. a reference to) x
+    const shared: SharedInner = {...this.sharerService.shared[sourceOrDest]}; // {...x } is a shallow copy of (i.e. a reference to) x
+    shared.loggedIn = true;
     shared.complianceLevel = complianceLevel;
     shared.initialOAuthState = authGrantRequest.initialOAuthState;
     shared.credentials = {
@@ -123,7 +122,7 @@ export class LoginComponent implements OnInit {
     console.log(shared.credentials);
     console.log(authGrantRequest.url);
     await new Promise(resolve => setTimeout(resolve, 5 * 1000));
-    loadUrl(authGrantRequest.url);
+    await loadUrl(authGrantRequest.url);
   }
 
   async ngOnInit(): Promise<any> { }
