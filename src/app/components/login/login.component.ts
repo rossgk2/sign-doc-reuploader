@@ -92,35 +92,35 @@ export class LoginComponent implements OnInit {
 
   constructor(private oAuthService: OAuthService, private sharerService: SharerService) { }
  
-  
   async sourceLogin() {
     this.loginHelper('source', this.sourceComplianceLevel, this.sourceOAuthClientId, this.sourceOAuthClientSecret, this.sourceLoginEmail);
+    this.sharerService.shared.sourceLoggedIn = true;
   }
 
   async destLogin() {
     this.loginHelper('dest', this.destComplianceLevel, this.destOAuthClientId, this.destOAuthClientSecret, this.destLoginEmail);
+    this.sharerService.shared.destLoggedIn = true;
   }
 
   async loginHelper(sourceOrDest: 'source' | 'dest', complianceLevel: 'commercial' | 'fedramp', oAuthClientId: string, oAuthClientSecret: string, loginEmail: string) {
     /* Get the URL, the "authorization grant request", that the user must be redirected to in order to log in.*/
     console.log('About to call getOAuthGrantRequest()');
+    console.log(`complianceLevel: ${complianceLevel}, shard: ${this.shard}`);
     const authGrantRequest = this.oAuthService.getOAuthGrantRequest(sourceOrDest, complianceLevel, this.shard, oAuthClientId, Settings.redirectUri, loginEmail);
     console.log('After calling getOAuthGrantRequest()');
 
     /* Store the OAuth state and the credentials. */
-    const temp: any = {};
-    temp.complianceLevel = complianceLevel;
-    temp.initialOAuthState = authGrantRequest.initialOAuthState;
-    temp.credentials = {
+    const shared = {...this.sharerService.shared[sourceOrDest]}; // {...x } is a shallow copy of (i.e. a reference to) x
+    shared.complianceLevel = complianceLevel;
+    shared.initialOAuthState = authGrantRequest.initialOAuthState;
+    shared.credentials = {
       oAuthClientId: oAuthClientId,
       oAuthClientSecret: oAuthClientSecret,
       loginEmail: loginEmail
     };
-    this.sharerService.shared = {};
-    this.sharerService.shared[sourceOrDest] = temp;
 
     /* Redirect the user to the URL that is the authGrantRequest. */
-    console.log(temp.credentials);
+    console.log(shared.credentials);
     console.log(authGrantRequest.url);
     await new Promise(resolve => setTimeout(resolve, 5 * 1000));
     loadUrl(authGrantRequest.url);
@@ -128,6 +128,7 @@ export class LoginComponent implements OnInit {
 
   async ngOnInit(): Promise<any> { }
 
+  /* Helper function used in login.component.html. */
   getValue(event: Event): string {
     return (event.target as HTMLInputElement).value;
   }

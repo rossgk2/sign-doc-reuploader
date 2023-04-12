@@ -1,11 +1,15 @@
 - implementing oauth for source and destination
 
-- **get shard from user input or some other way, use in commercial case of getOAuthBaseUri()**
+- only redirect to migration console UI after both logins have occurred
+  can use shared service to track this
 
-  - initialize `sourceComplianceLevel` and `destComplianceLevel` to the default values that are used in the .html instead of hardcoding their initial values to match those from the .html
-  - only redirect to migration console UI after both logins have occurred
-    can use shared service to track this
-  
+  - add fields `sourceLoggedIn`, `destLoggedIn` to shared service; initialize both to false
+  - in `sourceLogin()` and `destLogin()` update the values of above variables to true
+  - get code to work
+  - convert `IShared` to a class
+
+- initialize `sourceComplianceLevel` and `destComplianceLevel` to the default values that are used in the .html instead of hardcoding their initial values to match those from the .html
+
 - type arguments with types such as `'option1' | 'option2'` in functions where applicable
 
   - e.g. `complianceLevel` should always be of type `'commercial' | 'fedramp'`
