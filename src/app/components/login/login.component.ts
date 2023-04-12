@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { OAuthService } from '../../services/oauth.service';
-import { Shared, SharedInner, SharerService } from '../../services/sharer.service';
+import { SharedInner, SharerService } from '../../services/sharer.service';
 import { Credentials } from '../../settings/credentials';
 import { Settings } from '../../settings/settings';
 import { loadUrl } from '../../util/electron-functions';
@@ -122,7 +122,7 @@ export class LoginComponent implements OnInit {
     console.log(shared.credentials);
     console.log(authGrantRequest.url);
     await new Promise(resolve => setTimeout(resolve, 5 * 1000));
-    await loadUrl(authGrantRequest.url);
+    loadUrl(authGrantRequest.url);
   }
 
   async ngOnInit(): Promise<any> { }
