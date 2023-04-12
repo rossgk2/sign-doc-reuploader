@@ -1,12 +1,12 @@
-- implementing oauth for source and destination
+- **just finished converting getter and setter methods with syntactic sugar in sharer.service.ts to regular getter and setter methods to eliminate misuse. next step: run tool, see error, debug.**
 
 - only redirect to migration console UI after both logins have occurred
   can use shared service to track this
 
   - add fields `sourceLoggedIn`, `destLoggedIn` to shared service; initialize both to false
   - in `sourceLogin()` and `destLogin()` update the values of above variables to true
-  - get code to work
-  - convert `IShared` to a class
+
+- looks like redirect works; now need to save the old state of the login ui (namely the content of the dropdowns) and reload it upon redirect 
 
 - initialize `sourceComplianceLevel` and `destComplianceLevel` to the default values that are used in the .html instead of hardcoding their initial values to match those from the .html
 

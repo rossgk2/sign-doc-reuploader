@@ -143,10 +143,10 @@ export class MigrationConsoleComponent {
     const oldThis = this;
     (<any> window).api.onConsoleInitFinish(async function (event: any, redirectUrl: string) {
       /* Get a Bearer token and Bearer refresh token for the source account. */
-      const sourceCredentials: any = oldThis.sharerService.shared.source.credentials;
-      const sharedSourceData: any = oldThis.sharerService.shared.source;
-      let tokenResponse: any = await oldThis.oAuthLogIn(oldThis, redirectUrl, sourceCredentials, sharedSourceData);
-      oldThis.sourceComplianceLevel = sharedSourceData.complianceLevel;
+      const shared = oldThis.sharerService.getShared();
+      const sourceCredentials: any = shared.source.credentials;
+      let tokenResponse: any = await oldThis.oAuthLogIn(oldThis, redirectUrl, sourceCredentials, shared.source);
+      oldThis.sourceComplianceLevel = shared.source.complianceLevel;
       oldThis.sourceBearerToken = tokenResponse.bearerAuth; oldThis.sourceRefreshToken = tokenResponse.refreshToken;
 
       console.log('sourceComplianceLevel', oldThis.sourceComplianceLevel);
@@ -154,10 +154,9 @@ export class MigrationConsoleComponent {
       console.log('sourceRefreshToken', oldThis.sourceRefreshToken);
 
       /* Get a Bearer token and Bearer refresh for the dest account. */
-      const destCredentials: any = oldThis.sharerService.shared.dest.credentials;
-      const sharedDestData: any = oldThis.sharerService.shared.dest;
-      tokenResponse = await oldThis.oAuthLogIn(oldThis, redirectUrl, destCredentials, sharedDestData);
-      oldThis.destComplianceLevel = sharedDestData.complianceLevel;
+      const destCredentials: any = shared.dest.credentials;
+      tokenResponse = await oldThis.oAuthLogIn(oldThis, redirectUrl, destCredentials, shared.dest);
+      oldThis.destComplianceLevel = shared.dest.complianceLevel;
       oldThis.destBearerToken = tokenResponse.bearerAuth; oldThis.destRefreshToken = tokenResponse.refreshToken;
 
       console.log('destComplianceLevel', oldThis.destComplianceLevel);

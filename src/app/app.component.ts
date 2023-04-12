@@ -24,8 +24,8 @@ export class AppComponent implements OnInit {
       /* If the user has logged into both their source and dest accounts, then navigate them to the
       "url" argument that's passed to the callback. Otherwise, return them back to the login UI so that
       they can log into the remaining account. Currently, the "url" argument of the callback is always "/migration-console". */
-      console.log(`sourceLoggedIn: ${this.sharerService.shared.source.loggedIn}, destLoggedIn: ${this.sharerService.shared.dest.loggedIn}`);
-      if (this.sharerService.shared.source.loggedIn && this.sharerService.shared.dest.loggedIn)
+      console.log(`sourceLoggedIn: ${this.sharerService.getShared().source.loggedIn}, destLoggedIn: ${this.sharerService.getShared().dest.loggedIn}`);
+      if (this.sharerService.getShared().source.loggedIn && this.sharerService.getShared().dest.loggedIn)
         this.router.navigateByUrl(url);
       else
         this.router.navigateByUrl('/login'); 
