@@ -108,18 +108,23 @@ export class LoginComponent implements OnInit {
     console.log('After calling getOAuthGrantRequest()');
 
     /* Store the OAuth state and the credentials. */
-    const shared: SharedInner = {...this.sharerService.shared[sourceOrDest]}; // {...x } is a shallow copy of (i.e. a reference to) x
-    shared.loggedIn = true;
-    shared.complianceLevel = complianceLevel;
-    shared.initialOAuthState = authGrantRequest.initialOAuthState;
-    shared.credentials = {
-      oAuthClientId: oAuthClientId,
-      oAuthClientSecret: oAuthClientSecret,
-      loginEmail: loginEmail
+    const temp: Shared = this.sharerService.getShared() == null ? new Shared() : this.sharerService.getShared();
+    temp[sourceOrDest] = {
+      loggedIn: true,
+      complianceLevel: complianceLevel,
+      initialOAuthState: authGrantRequest.initialOAuthState,
+      credentials: {
+        oAuthClientId: oAuthClientId,
+        oAuthClientSecret: oAuthClientSecret,
+        loginEmail: loginEmail
+      }
     };
+    this.sharerService.setShared(temp);
+  
+    console.log(`source.loggedIn: ${this.sharerService.getShared().source.loggedIn}, dest.loggedIn: ${this.sharerService.getShared().dest.loggedIn}`);
 
     /* Redirect the user to the URL that is the authGrantRequest. */
-    console.log(shared.credentials);
+    console.log(temp[sourceOrDest].credentials);
     console.log(authGrantRequest.url);
     await new Promise(resolve => setTimeout(resolve, 5 * 1000));
     await loadUrl(authGrantRequest.url);
