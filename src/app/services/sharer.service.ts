@@ -19,6 +19,12 @@ export class Shared {
   constructor() {
     console.log('Shared ctor called');
   }
+  source: SharedInner = new SharedInner();
+  dest: SharedInner = new SharedInner();
+
+  constructor() {
+    console.log('Shared ctor called');
+  }
 };
 
 /* Service with getter and setter methods for sharing an object of type "Shared". */
@@ -28,7 +34,12 @@ export class SharerService {
 
   /* If this constructor is being called for the first time, generate a default value for "shared". Otherwise,
   restore the value from the session storage by using the getShared() method. */
+  private shared: Shared | null = null;
+
+  /* If this constructor is being called for the first time, generate a default value for "shared". Otherwise,
+  restore the value from the session storage by using the getShared() method. */
   constructor() {
+    this.shared = this.shared == null ? new Shared() : this.getShared();
     this.shared = this.shared == null ? new Shared() : this.getShared();
   }
   
