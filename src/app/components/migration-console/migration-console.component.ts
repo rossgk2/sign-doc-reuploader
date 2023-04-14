@@ -177,6 +177,8 @@ export class MigrationConsoleComponent {
 
     /* Use the credentials to get a "Bearer" token from OAuth. */
     const initialOAuthState = sharedData.initialOAuthState;
+    console.log('initialOAuthState from console UI', initialOAuthState);
+    console.log('redirectUrl', redirectUrl);
     const authGrant = oldThis.oAuthService.getAuthGrant(redirectUrl, initialOAuthState); // problematic for some reason
     return await oldThis.oAuthService.getToken(oldThis.oAuthClientId, oldThis.shard, oldThis.oAuthClientSecret, authGrant, Settings.redirectUri);
   }

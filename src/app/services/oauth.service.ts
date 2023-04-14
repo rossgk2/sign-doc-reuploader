@@ -85,7 +85,8 @@ export class OAuthService {
       const state: string = tree.queryParams['state'];
 
       if (state !== initialOAuthState) {
-        throw new Error('The state recieved from the server claiming to be authorization server does not match initial state passed to the authorization server.');
+        throw new Error(`The state recieved from the server claiming to be authorization server does not 
+        match initial state passed to the authorization server.`);
       }
 
       return code;

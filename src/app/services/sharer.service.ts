@@ -38,12 +38,10 @@ export class SharerService {
   for the non-primitive field's fields to be valid. */
 
   setShared(shared: Shared) {
-    console.log('setShared() called');
     (<any> window).sessionStorage.setItem('shared', JSON.stringify(shared));
   }
 
   getShared(): Shared {
-    console.log('getShared() called');
     const result = (<any> window).sessionStorage.getItem('shared');
     return result == null ? null : JSON.parse(result); // (== null) <=> (=== null or === undefined)
   }
