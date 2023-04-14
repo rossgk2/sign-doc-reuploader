@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup } from '@angular/forms';
 import axios from 'axios';
-import { SharerService } from '../../services/sharer.service';
+import { Shared, SharerService } from '../../services/sharer.service';
 import { Settings } from '../../settings/settings';
 import { httpRequest } from '../../util/electron-functions';
 import { tab } from '../../util/spacing';
@@ -134,35 +134,39 @@ export class MigrationConsoleComponent {
   }
 
   async ngOnInit() {
-    /* See preload.ts for the definitions of the functions from api. */
+    /* See preload.ts for the definitions of the functions from "api". */
 
-    /* Send a message to the Electron main process indicating that this ngOnInit() method
-    has begun executing. */
+    /* Send a message to the Electron main process indicating that this ngOnInit() method has begun executing. */
     (<any> window).api.notifyIsConsoleInitStarted();
     
-    /* When the Electron main process recieves the notification sent in the above,
-    it sends a message back that, when recieved, results in the invocation of the
-    below defined callback function. The callback function is aware of the URL that 
-    the user has just been redirected to. */
+    /* When the Electron main process recieves the notification sent in the above, it sends a message back that,
+    when recieved, results in the invocation of the below defined callback function. The callback function is aware
+    of the URL that the user has just been redirected to. */
     const oldThis = this;
-    (<any> window).api.onConsoleInitFinish(async function (event: any, redirectUrl: string) {
-      /* Get a Bearer token and Bearer refresh token for the source account. */
-      const shared = oldThis.sharerService.getShared();
-      const sourceCredentials: any = shared.source.credentials;
-      let tokenResponse: any = await oldThis.oAuthLogIn(oldThis, redirectUrl, sourceCredentials, shared.source);
+    (<any> window).api.onConsoleInitFinish(async function (event: any, redirectUrls: string[]) {
+      const shared: Shared = oldThis.sharerService.getShared();
+
+      /* Use the client IDs provided by the user to determine which redirect URL is returned by the login for the
+      source account and which one is returned by the login for the destination account. */
+      const sourceIndex: 0 | 1 = redirectUrls.map(url => url === shared.source.credentials.oAuthClientId).indexOf(true) as 0 | 1;
+      const destIndex: 1 | 0 = [0, 1].filter(i => i != sourceIndex)[0] as 1 | 0; // 0th element of [0, 1] minus [sourceIndex]
+      const sourceRedirectUrl: string = redirectUrls[sourceIndex];
+      const destRedirectUrl: string = redirectUrls[destIndex];
+      
+      /* Take the information embedded in the sourceRedirectUrl and use it to update the source Bearer
+      and refresh tokens. */
+      let tokenResponse = await oldThis.oAuthLogIn(oldThis, sourceRedirectUrl, shared.dest.credentials, shared.dest);
       oldThis.sourceComplianceLevel = shared.source.complianceLevel;
       oldThis.sourceBearerToken = tokenResponse.bearerAuth; oldThis.sourceRefreshToken = tokenResponse.refreshToken;
-
       console.log('sourceComplianceLevel', oldThis.sourceComplianceLevel);
-      console.log('sourceBearerToken', oldThis.sourceBearerToken);
-      console.log('sourceRefreshToken', oldThis.sourceRefreshToken);
+      console.log('bearerToken', oldThis.sourceBearerToken);
+      console.log('refreshToken', oldThis.sourceRefreshToken);
 
-      /* Get a Bearer token and Bearer refresh for the dest account. */
-      const destCredentials: any = shared.dest.credentials;
-      tokenResponse = await oldThis.oAuthLogIn(oldThis, redirectUrl, destCredentials, shared.dest);
+      /* Take the information embedded in the sourceRedirectUrl and use it to update the destination Bearer
+      and refresh tokens. */
+      tokenResponse = await oldThis.oAuthLogIn(oldThis, destRedirectUrl, shared.dest.credentials, shared.dest);
       oldThis.destComplianceLevel = shared.dest.complianceLevel;
       oldThis.destBearerToken = tokenResponse.bearerAuth; oldThis.destRefreshToken = tokenResponse.refreshToken;
-
       console.log('destComplianceLevel', oldThis.destComplianceLevel);
       console.log('destBearerToken', oldThis.destBearerToken);
       console.log('destRefreshToken', oldThis.destRefreshToken);

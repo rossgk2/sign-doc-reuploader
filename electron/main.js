@@ -25,7 +25,7 @@ function getCurrentUrl(event) {
 
 let mainWindow; // BrowserWindow
 let redirected = false; // boolean
-let redirectUrl; // string
+let redirectUrls = []; // string[]
 
 /* Loads the index.html file into the window win. */
 function loadIndexHtml(win) {
@@ -83,14 +83,14 @@ app.whenReady().then(function() {
   /* Configure similar handling for when ngOnInit() method of migration-console.component has fired. */
   ipcMain.on("console-init-started", function(event) {
     const currentWindow = BrowserWindow.getFocusedWindow();
-    currentWindow.webContents.send("console-init-finish", redirectUrl);
+    currentWindow.webContents.send("console-init-finish", redirectUrls);
   });
 
   /* Configure handling of redirect from OAuth to https://migrationtool.com by canceling
   the redirect and manually loading index.html. */
   const filter = { urls: ['https://migrationtool.com/*'] };
   session.defaultSession.webRequest.onBeforeRequest(filter, (details, callback) => {
-    redirectUrl = details.url; // this the URL that OAuth redirects us to
+    redirectUrls.push(details.url); // the URL that OAuth redirects us to
     redirected = true;
     const currentWindow = BrowserWindow.getFocusedWindow();
     callback({ cancel: true });
