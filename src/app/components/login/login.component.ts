@@ -108,7 +108,7 @@ export class LoginComponent implements OnInit {
     console.log('After calling getOAuthGrantRequest()');
 
     /* Store the OAuth state and the credentials. */
-    const temp: Shared = this.sharerService.getShared();
+    const temp: Shared = this.sharerService.getShared() == null ? new Shared() : this.sharerService.getShared();
     temp[sourceOrDest] = {
       loggedIn: true,
       complianceLevel: complianceLevel,
