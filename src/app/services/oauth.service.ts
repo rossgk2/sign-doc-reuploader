@@ -2,7 +2,7 @@ import {Injectable} from '@angular/core';
 import {UrlTree, Router, UrlSerializer} from '@angular/router';
 import {getRandomId} from '../util/random';
 import {httpRequest} from '../util/electron-functions';
-import {getOAuthAuthorizationGrantRequestEndpoint, getOAuthBaseUri, getOAuthTokenRequestEndpoint} from '../util/url-getter';
+import { UrlService } from './url.service';
 
 export interface I_OAuthGrantRequest {
     url: string;
@@ -11,9 +11,7 @@ export interface I_OAuthGrantRequest {
 
 @Injectable({providedIn: 'root'})
 export class OAuthService {
-  constructor(private router: Router,
-              private serializer: UrlSerializer)
-  { }
+  constructor(private urlService: UrlService) { }
 
   /* 
     Returns a URL which is an "authorizaton grant request". When the user visits this URL,
@@ -28,15 +26,13 @@ export class OAuthService {
   */
   
   getOAuthGrantRequest(sourceOrDest: 'source' | 'dest', complianceLevel: 'commercial' | 'fedramp',
-   shard = '', clientId: string, redirectUri: string, loginEmail: string): I_OAuthGrantRequest {
+    shard = '', clientId: string, redirectUri: string, loginEmail: string): I_OAuthGrantRequest {
     const state = getRandomId();
     const scope = this.getOAuthScopeString(sourceOrDest, complianceLevel);
 
     /* Build the string of query params that make up part of the authorizaton grant request. */
-    const tree: UrlTree = this.router.createUrlTree([''],
-    {
-      'queryParams':
-      {
+    const queryParamString = this.urlService.getQueryString(
+      {  
         'client_id' : clientId,
         'response_type' : 'code',
         'redirect_uri' : redirectUri,
@@ -44,13 +40,11 @@ export class OAuthService {
         'state' : state,
         'login_hint' : loginEmail
       }
-    });
-    let queryParams: string = this.serializer.serialize(tree);
-    queryParams = queryParams.substring(1, queryParams.length); // remove the / at the beginning    
+    );  
 
     /* Return the authorizaton grant request and the randomly generated state associated with it. */
     return {
-      'url': getOAuthBaseUri(shard, complianceLevel) + getOAuthAuthorizationGrantRequestEndpoint(complianceLevel) + queryParams,
+      'url': this.urlService.getOAuthBaseUri(shard, complianceLevel) + this.urlService.getOAuthAuthorizationGrantRequestEndpoint(complianceLevel) + queryParamString,
       'initialOAuthState': state
     };  
   }
@@ -66,23 +60,19 @@ export class OAuthService {
     request more tokens (access tokens, ID tokens, or refresh tokens).
   */
   getAuthGrant(authGrantResponse: string, initialOAuthState: string): string {
-    /* Consider the query param string instead of the entire URL so that we can avoid
-    parsing errors when the URL has the ? after a /, and is something like 
-    https://migrationtool.com/?a1=a2&b1=b2 (as opposed to the more usual https://migrationtool.com?a1=a2&b1=b2). */
-    const queryParamString = authGrantResponse.substring(authGrantResponse.indexOf("?"));
-    const tree: UrlTree = this.serializer.parse(queryParamString);
-
-    /* Handle errors. If no errors, check that the server sending the authorizaton grant is
-    legitimate, and then return the authorizaton grant. */
-
-    if (tree.queryParams.hasOwnProperty('error')) {
+    const queryParams = this.urlService.getQueryParams(authGrantResponse);
+    
+    /* If the authGrantResponse indicates an error, throw an error. */
+    if (queryParams.hasOwnProperty('error')) {
       const errorMessage = 'An erroneous request was made to the OAuth /authorize endpoint.\n' +
-      `Error: ${tree.queryParams['error']}\nError description: ${tree.queryParams['error_description']}`;
+      `Error: ${queryParams['error']}\nError description: ${queryParams['error_description']}`;
       throw new Error(errorMessage);
     }
-    else if (tree.queryParams.hasOwnProperty('code')) {
-      const code: string = tree.queryParams['code'];
-      const state: string = tree.queryParams['state'];
+    /* If the authGrantResponse indicates no errors, check that the server sending the authorizaton grant is legitimate.
+    If it is, return the authorizaton grant. */
+    else if (queryParams.hasOwnProperty('code')) {
+      const code: string = queryParams['code'];
+      const state: string = queryParams['state'];
 
       if (state !== initialOAuthState) {
         throw new Error(`The state recieved from the server claiming to be authorization server does not 
@@ -99,7 +89,7 @@ export class OAuthService {
   clientId: string, clientSecret: string, authGrant: string, redirectUri: string): Promise<any> {
     const requestConfig = {
       'method': 'post',
-      'url': getOAuthBaseUri(shard, complianceLevel) + getOAuthTokenRequestEndpoint(complianceLevel),
+      'url': this.urlService.getOAuthBaseUri(shard, complianceLevel) + this.urlService.getOAuthTokenRequestEndpoint(complianceLevel),
       'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
       'params':
        {
@@ -119,7 +109,7 @@ export class OAuthService {
   clientId: string, clientSecret: string, refreshToken: string): Promise<any> {
     const requestConfig = {
       'method': 'post',
-      'url': getOAuthBaseUri(shard, complianceLevel) + getOAuthTokenRequestEndpoint(complianceLevel),
+      'url': this.urlService.getOAuthBaseUri(shard, complianceLevel) + this.urlService.getOAuthTokenRequestEndpoint(complianceLevel),
       'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
       'params':
       {

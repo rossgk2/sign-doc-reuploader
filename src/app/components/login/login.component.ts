@@ -4,6 +4,7 @@ import { Shared, SharedInner, SharerService } from '../../services/sharer.servic
 import { Credentials } from '../../settings/credentials';
 import { Settings } from '../../settings/settings';
 import { loadUrl } from '../../util/electron-functions';
+import { UrlService } from 'src/app/services/url.service';
 
 /*
   ===================================================================
@@ -90,7 +91,7 @@ export class LoginComponent implements OnInit {
 
   shard: string = '';
 
-  constructor(private oAuthService: OAuthService, private sharerService: SharerService) { }
+  constructor(private oAuthService: OAuthService, private sharerService: SharerService, private urlService: UrlService) { }
  
   async sourceLogin() {
     this.loginHelper('source', this.sourceComplianceLevel, this.sourceOAuthClientId, this.sourceOAuthClientSecret, this.sourceLoginEmail);
@@ -131,7 +132,9 @@ export class LoginComponent implements OnInit {
     await loadUrl(authGrantRequest.url);
   }
 
-  async ngOnInit(): Promise<any> { }
+  async ngOnInit(): Promise<any> {
+
+  }
 
   /* Helper function used in login.component.html. */
   getValue(event: Event): string {

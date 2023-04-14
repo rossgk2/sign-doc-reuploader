@@ -15,10 +15,6 @@ export class SharedInner {
 export class Shared {
   source: SharedInner = new SharedInner();
   dest: SharedInner = new SharedInner();
-
-  constructor() {
-    console.log('Shared ctor called');
-  }
 };
 
 /* Service with getter and setter methods for sharing an object of type "Shared". */

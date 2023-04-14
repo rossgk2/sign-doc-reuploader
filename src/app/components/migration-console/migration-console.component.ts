@@ -5,9 +5,9 @@ import { SharerService } from '../../services/sharer.service';
 import { Settings } from '../../settings/settings';
 import { httpRequest } from '../../util/electron-functions';
 import { tab } from '../../util/spacing';
-import { getApiBaseUri } from '../../util/url-getter';
 import { migrateAll as migrateAll } from './migration';
 import { OAuthService } from 'src/app/services/oauth.service';
+import { UrlService } from 'src/app/services/url.service';
 
 @Component({
   selector: 'app-migration-console',
@@ -53,7 +53,7 @@ export class MigrationConsoleComponent {
   }
 
   async getDocumentList(): Promise<any> {
-    const baseUrl = await getApiBaseUri(this.sourceBearerToken, this.sourceComplianceLevel);
+    const baseUrl = await this.urlService.getApiBaseUri(this.sourceBearerToken, this.sourceComplianceLevel);
 
     /* Get all library documents. */
     const pageSize = 100;
@@ -114,8 +114,9 @@ export class MigrationConsoleComponent {
   destLoginEmail: string = '';
 
   constructor(private formBuilder: FormBuilder,
-              private oAuthService: OAuthService,
-              private sharerService: SharerService) { }
+              private sharerService: SharerService,
+              private oAuthService: OAuthService, // migration.ts uses this instance's oAuthService
+              private urlService: UrlService) { }
 
   async migrate(): Promise<any> {
     /* Get a list of all the indices cooresponding to documents that the user wants to upload. */
