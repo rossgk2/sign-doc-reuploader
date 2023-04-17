@@ -146,24 +146,28 @@ export class MigrationConsoleComponent {
     (<any> window).api.onConsoleInitFinish(async function (event: any, redirectUrls: string[]) {
       const shared: Shared = oldThis.sharerService.getShared();
 
+      console.log('redirectUrls', redirectUrls);
+
       /* Use the client IDs provided by the user to determine which redirect URL is returned by the login for the
       source account and which one is returned by the login for the destination account. */
-      const sourceIndex: 0 | 1 = redirectUrls.map(url => url === shared.source.credentials.oAuthClientId).indexOf(true) as 0 | 1;
-      const destIndex: 1 | 0 = [0, 1].filter(i => i != sourceIndex)[0] as 1 | 0; // 0th element of [0, 1] minus [sourceIndex]
+      const sourceIndex: 0 | 1 = shared.loggedIn.indexOf('source') as 0 | 1;
+      const destIndex: 1 | 0 = shared.loggedIn.indexOf('dest') as 1 | 0;
       const sourceRedirectUrl: string = redirectUrls[sourceIndex];
       const destRedirectUrl: string = redirectUrls[destIndex];
+
+      console.log('sourceRedirectUrl', sourceRedirectUrl);
+      console.log('destRedirectUrl', destRedirectUrl);
       
       /* Take the information embedded in the sourceRedirectUrl and use it to update the source Bearer
       and refresh tokens. */
-      let tokenResponse = await oldThis.oAuthLogIn(oldThis, sourceRedirectUrl, shared.dest.credentials, shared.dest);
+      let tokenResponse = await oldThis.oAuthLogIn(oldThis, sourceRedirectUrl, shared.source.credentials, shared.source);
       oldThis.sourceComplianceLevel = shared.source.complianceLevel;
       oldThis.sourceBearerToken = tokenResponse.bearerAuth; oldThis.sourceRefreshToken = tokenResponse.refreshToken;
       console.log('sourceComplianceLevel', oldThis.sourceComplianceLevel);
       console.log('bearerToken', oldThis.sourceBearerToken);
       console.log('refreshToken', oldThis.sourceRefreshToken);
 
-      /* Take the information embedded in the sourceRedirectUrl and use it to update the destination Bearer
-      and refresh tokens. */
+      /* Do the same with the destRedirectUrl. */
       tokenResponse = await oldThis.oAuthLogIn(oldThis, destRedirectUrl, shared.dest.credentials, shared.dest);
       oldThis.destComplianceLevel = shared.dest.complianceLevel;
       oldThis.destBearerToken = tokenResponse.bearerAuth; oldThis.destRefreshToken = tokenResponse.refreshToken;
@@ -183,8 +187,8 @@ export class MigrationConsoleComponent {
     /* Use the credentials to get a "Bearer" token from OAuth. */
     const initialOAuthState = sharedData.initialOAuthState;
     console.log('initialOAuthState from console UI', initialOAuthState);
-    console.log('redirectUrl', redirectUrl);
-    const authGrant = oldThis.oAuthService.getAuthGrant(redirectUrl, initialOAuthState); // problematic for some reason
+    console.log('redirectUrl', redirectUrl); // PROBLEM: redirectUrl is undefined for some reason
+    const authGrant = oldThis.oAuthService.getAuthGrant(redirectUrl, initialOAuthState);
     return await oldThis.oAuthService.getToken(oldThis.oAuthClientId, oldThis.shard, oldThis.oAuthClientSecret, authGrant, Settings.redirectUri);
   }
 

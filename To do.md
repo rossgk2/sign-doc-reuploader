@@ -1,9 +1,4 @@
-- **the same redirect url is used to call oldThis.oAuthLogIn() in the callback function to onConsoleInitFinish() in migration-console.component.ts**
-
-  - will likely have to:
-    - after logging into source, add redirectUrl to shared.source
-
-    - after logging into dest, add redirectUrl to shared.dest 
+- **call to getApiBaseUri() in getDocumentList() seems to pass empty string for the bearerToken for some reason** 
 
 - save the old state of the login ui (namely the content of the dropdowns) and reload it upon redirect 
 

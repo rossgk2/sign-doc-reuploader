@@ -109,10 +109,16 @@ export class LoginComponent implements OnInit {
     console.log('After calling getOAuthGrantRequest()');
     console.log('initialOAuthState from login UI', authGrantRequest.initialOAuthState);
 
-    /* Store the OAuth state and the credentials. */
+    /* Store information that the console UI needs to know in the Shared object. */
     const temp: Shared = this.sharerService.getShared() == null ? new Shared() : this.sharerService.getShared();
+    
+    /* Add either 'source' or 'dest' to the 'loggedIn' array so as to record which of the source and dest accounts
+    have been logged into, and to record the order in which the logins occured. */
+    temp.loggedIn.push(sourceOrDest);
+    
+    /* Store other information that the console UI component needs to know, such as the login credentials for 
+    the source or dest account. */
     temp[sourceOrDest] = {
-      loggedIn: true,
       complianceLevel: complianceLevel,
       initialOAuthState: authGrantRequest.initialOAuthState,
       credentials: {
@@ -123,7 +129,7 @@ export class LoginComponent implements OnInit {
     };
     this.sharerService.setShared(temp);
   
-    console.log(`source.loggedIn: ${this.sharerService.getShared().source.loggedIn}, dest.loggedIn: ${this.sharerService.getShared().dest.loggedIn}`);
+    console.log(`source.loggedIn: ${this.sharerService.getShared().loggedIn.includes('source')}, dest.loggedIn: ${this.sharerService.getShared().loggedIn.includes('dest')}`);
 
     /* Redirect the user to the URL that is the authGrantRequest. */
     console.log(temp[sourceOrDest].credentials);

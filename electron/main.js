@@ -90,7 +90,9 @@ app.whenReady().then(function() {
   the redirect and manually loading index.html. */
   const filter = { urls: ['https://migrationtool.com/*'] };
   session.defaultSession.webRequest.onBeforeRequest(filter, (details, callback) => {
+    console.log('redirected!');
     redirectUrls.push(details.url); // the URL that OAuth redirects us to
+    console.log('redirectUrls', redirectUrls);
     redirected = true;
     const currentWindow = BrowserWindow.getFocusedWindow();
     callback({ cancel: true });

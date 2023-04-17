@@ -75,9 +75,9 @@ export class UrlService {
   }
 
   getQueryParams(url: string): {[key: string]: any} {
-      const queryParamString = url.substring(url.indexOf("?"));
-      const tree: UrlTree = this.serializer.parse(queryParamString);
-      return tree.queryParams;
+    const queryParamString = url.substring(url.indexOf("?"));
+    const tree: UrlTree = this.serializer.parse(queryParamString);
+    return tree.queryParams;
   }
 
   getQueryString(queryParams: {[key: string]: any}) {
