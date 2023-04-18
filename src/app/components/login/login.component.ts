@@ -62,9 +62,9 @@ export class LoginComponent implements OnInit {
 
   _sourceShard: string = '';
   get sourceShard(): string {
-    if (this.sourceComplianceLevel == 'commercial')
+    if (this.sourceComplianceLevel === 'commercial')
       return this._sourceShard;
-    else // this.sourceComplianceLevel == 'fedramp'
+    else // this.sourceComplianceLevel === 'fedramp'
       return 'na1'; // there is currently only one shard for all FedRamp accounts
   }
 
@@ -99,9 +99,9 @@ export class LoginComponent implements OnInit {
 
   _destShard: string = '';
   get destShard(): string {
-    if (this.destComplianceLevel == 'commercial')
+    if (this.destComplianceLevel === 'commercial')
       return this._destShard;
-    else // this.destComplianceLevel == 'fedramp'
+    else // this.destComplianceLevel === 'fedramp'
       return 'na1'; // there is currently only one shard for all FedRamp accounts
   }
 

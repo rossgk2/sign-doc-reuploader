@@ -89,19 +89,26 @@ export class OAuthService {
   async getToken(complianceLevel: 'commercial' | 'fedramp', shard = '', clientId: string,
                  clientSecret: string, authGrant: string, redirectUri: string): Promise<any> {
     
-    const requestConfig = {
+    let requestConfig: any = {
       'method': 'post',
       'url': this.urlService.getOAuthBaseUri(shard, complianceLevel) + this.urlService.getOAuthTokenRequestEndpoint(complianceLevel),
-      'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
-      'params':
-       {
-          'client_id' : clientId,
-          'client_secret' : clientSecret,
-          'grant_type' : 'authorization_code',
-          'code' : authGrant,
-          'redirect_uri' : redirectUri
-       }
+      'headers': {'Content-Type': 'application/x-www-form-urlencoded'}
     };
+
+    /* Whether we need to pass arguments as part of the request body or as query params depends
+    on whether the account is commercial or FedRamp. */
+    const args = {
+      'client_id' : clientId,
+      'client_secret' : clientSecret,
+      'grant_type' : 'authorization_code',
+      'code' : authGrant,
+      'redirect_uri' : redirectUri
+   };
+
+  if (complianceLevel === 'commercial')
+    requestConfig.data = args; // request body
+  else // complianceLevel === 'fedramp'
+    requestConfig.params = args; // query params
 
     console.log('getToken() requestConfig', requestConfig);
 
@@ -111,18 +118,25 @@ export class OAuthService {
 
   async refreshToken(complianceLevel: 'commercial' | 'fedramp', shard = '', 
   clientId: string, clientSecret: string, refreshToken: string): Promise<any> {
-    const requestConfig = {
+    let requestConfig: any = {
       'method': 'post',
       'url': this.urlService.getOAuthBaseUri(shard, complianceLevel) + this.urlService.getOAuthTokenRequestEndpoint(complianceLevel),
-      'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
-      'params':
-      {
-        'client_id' : clientId,
-        'client_secret' : clientSecret,
-        'grant_type' : 'refresh_token',
-        'refresh_token': refreshToken
-      }
+      'headers': {'Content-Type': 'application/x-www-form-urlencoded'}
     };
+
+    /* Whether we need to pass arguments as part of the request body or as query params depends
+    on whether the account is commercial or FedRamp. */
+    const args = {
+      'client_id' : clientId,
+      'client_secret' : clientSecret,
+      'grant_type' : 'refresh_token',
+      'refresh_token': refreshToken
+    };
+
+    if (complianceLevel === 'commercial')
+      requestConfig.data = args; // request body
+    else // complianceLevel === 'fedramp'
+      requestConfig.params = args; // query params
 
     const response = (await httpRequest(requestConfig));
     return this.handleTokenEndpointErrorsAndReturn(response);
@@ -141,7 +155,7 @@ export class OAuthService {
     else { // sourceOrDest === 'dest'
       if (complianceLevel === 'commercial')
         return 'library_read:account library_write:account agreement_write:account';
-      else // complianceLevel == 'fedramp'
+      else // complianceLevel === 'fedramp'
         return 'library_read library_write agreement_write offline_access';
     }
   }

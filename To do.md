@@ -1,4 +1,4 @@
-- **fixing this: the gov spoke currently used is na4 when it should always be na1**
+- **when complianceLevel === commercial, pass params as body rather than as queryParams **
 
 - save the old state of the login ui (namely the content of the dropdowns) and reload it upon redirect 
 
