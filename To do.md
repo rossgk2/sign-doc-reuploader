@@ -1,7 +1,3 @@
-- **debug why `sourceBearerToken` and `destBearerToken` are `undefined` **
-
-- save the old state of the login ui (namely the content of the dropdowns) and reload it upon redirect 
-
 - initialize `sourceComplianceLevel` and `destComplianceLevel` to the default values that are used in the .html instead of hardcoding their initial values to match those from the .html
 
 - type arguments with types such as `'option1' | 'option2'` in functions where applicable

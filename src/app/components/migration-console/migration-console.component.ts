@@ -170,7 +170,7 @@ export class MigrationConsoleComponent {
       console.log('before oAuthLogIn() for source');
       let tokenResponse = await oldThis.oAuthLogIn(oldThis, shared.source, sourceRedirectUrl);
       oldThis.sourceComplianceLevel = shared.source.complianceLevel; oldThis.sourceShard = shared.source.shard;
-      oldThis.sourceBearerToken = tokenResponse.bearerAuth; oldThis.sourceRefreshToken = tokenResponse.refreshToken;
+      oldThis.sourceBearerToken = tokenResponse.accessToken; oldThis.sourceRefreshToken = tokenResponse.refreshToken;
       console.log('sourceComplianceLevel', oldThis.sourceComplianceLevel);
       console.log('sourceBearerToken', oldThis.sourceBearerToken);
       console.log('sourceRefreshToken', oldThis.sourceRefreshToken);
@@ -179,7 +179,7 @@ export class MigrationConsoleComponent {
       console.log('before oAuthLogIn() for dest');
       tokenResponse = await oldThis.oAuthLogIn(oldThis, shared.dest, destRedirectUrl);
       oldThis.destComplianceLevel = shared.dest.complianceLevel; oldThis.destShard = shared.dest.shard;
-      oldThis.destBearerToken = tokenResponse.bearerAuth; oldThis.destRefreshToken = tokenResponse.refreshToken;
+      oldThis.destBearerToken = tokenResponse.accessToken; oldThis.destRefreshToken = tokenResponse.refreshToken;
       console.log('destComplianceLevel', oldThis.destComplianceLevel);
       console.log('destBearerToken', oldThis.destBearerToken);
       console.log('destRefreshToken', oldThis.destRefreshToken);
