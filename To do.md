@@ -1,4 +1,4 @@
-- **when complianceLevel === commercial, pass params as body rather than as queryParams **
+- **debug why `sourceBearerToken` and `destBearerToken` are `undefined` **
 
 - save the old state of the login ui (namely the content of the dropdowns) and reload it upon redirect 
 

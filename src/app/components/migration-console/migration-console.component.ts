@@ -172,8 +172,8 @@ export class MigrationConsoleComponent {
       oldThis.sourceComplianceLevel = shared.source.complianceLevel; oldThis.sourceShard = shared.source.shard;
       oldThis.sourceBearerToken = tokenResponse.bearerAuth; oldThis.sourceRefreshToken = tokenResponse.refreshToken;
       console.log('sourceComplianceLevel', oldThis.sourceComplianceLevel);
-      console.log('bearerToken', oldThis.sourceBearerToken);
-      console.log('refreshToken', oldThis.sourceRefreshToken);
+      console.log('sourceBearerToken', oldThis.sourceBearerToken);
+      console.log('sourceRefreshToken', oldThis.sourceRefreshToken);
 
       /* Do the same with the destRedirectUrl. */
       console.log('before oAuthLogIn() for dest');
