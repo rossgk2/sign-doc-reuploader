@@ -147,6 +147,7 @@ export class MigrationConsoleComponent {
       const shared: Shared = oldThis.sharerService.getShared();
 
       console.log('redirectUrls', redirectUrls);
+      console.log(shared.loggedIn);
 
       /* Use the client IDs provided by the user to determine which redirect URL is returned by the login for the
       source account and which one is returned by the login for the destination account. */

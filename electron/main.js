@@ -95,8 +95,8 @@ app.whenReady().then(function() {
     console.log('redirectUrls', redirectUrls);
     redirected = true;
     const currentWindow = BrowserWindow.getFocusedWindow();
-    callback({ cancel: true });
     configLoadRendererAfterDOMContentLoaded(currentWindow);
+    callback({ cancel: true });
     loadIndexHtml(currentWindow);
   });
 
