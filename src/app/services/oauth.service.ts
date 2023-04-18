@@ -86,8 +86,9 @@ export class OAuthService {
       throw new Error('The authorization grant URL does not contain a "code" or an "error" query param.');
   }
 
-  async getToken(complianceLevel: 'commercial' | 'fedramp', shard = '', 
-  clientId: string, clientSecret: string, authGrant: string, redirectUri: string): Promise<any> {
+  async getToken(complianceLevel: 'commercial' | 'fedramp', shard = '', clientId: string,
+                 clientSecret: string, authGrant: string, redirectUri: string): Promise<any> {
+    
     const requestConfig = {
       'method': 'post',
       'url': this.urlService.getOAuthBaseUri(shard, complianceLevel) + this.urlService.getOAuthTokenRequestEndpoint(complianceLevel),

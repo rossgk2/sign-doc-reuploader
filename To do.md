@@ -1,4 +1,4 @@
-- **fixing this:** **The empty string was passed as the "shard" argument in a call to getOAuthBaseUri()**.**adding sourceShard and destShard**
+- **fixing this: the gov spoke currently used is na4 when it should always be na1**
 
 - save the old state of the login ui (namely the content of the dropdowns) and reload it upon redirect 
 

@@ -60,7 +60,13 @@ export class LoginComponent implements OnInit {
       return this._sourceLoginEmail;
   }
 
-  sourceShard: string = '';
+  _sourceShard: string = '';
+  get sourceShard(): string {
+    if (this.sourceComplianceLevel == 'commercial')
+      return this._sourceShard;
+    else // this.sourceComplianceLevel == 'fedramp'
+      return 'na1'; // there is currently only one shard for all FedRamp accounts
+  }
 
   _destComplianceLevel: string = 'commercial'; // hardcoded for now; later, use use Reactive Forms to pull initial value from .html
   get destComplianceLevel(): 'commercial' | 'fedramp' {
@@ -91,7 +97,13 @@ export class LoginComponent implements OnInit {
       return this._destLoginEmail;
   }
 
-  destShard: string = '';
+  _destShard: string = '';
+  get destShard(): string {
+    if (this.destComplianceLevel == 'commercial')
+      return this._destShard;
+    else // this.destComplianceLevel == 'fedramp'
+      return 'na1'; // there is currently only one shard for all FedRamp accounts
+  }
 
   constructor(private oAuthService: OAuthService, private sharerService: SharerService, private urlService: UrlService) { }
  

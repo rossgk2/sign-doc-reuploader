@@ -165,9 +165,9 @@ export class MigrationConsoleComponent {
       console.log('sourceShard', shared.source.shard);
       console.log('destShard', shared.dest.shard);
 
-
       /* Take the information embedded in the sourceRedirectUrl and use it alongside the source login credentials to update
       the source Bearer and refresh tokens. */
+      console.log('before oAuthLogIn() for source');
       let tokenResponse = await oldThis.oAuthLogIn(oldThis, shared.source, sourceRedirectUrl);
       oldThis.sourceComplianceLevel = shared.source.complianceLevel; oldThis.sourceShard = shared.source.shard;
       oldThis.sourceBearerToken = tokenResponse.bearerAuth; oldThis.sourceRefreshToken = tokenResponse.refreshToken;
@@ -176,6 +176,7 @@ export class MigrationConsoleComponent {
       console.log('refreshToken', oldThis.sourceRefreshToken);
 
       /* Do the same with the destRedirectUrl. */
+      console.log('before oAuthLogIn() for dest');
       tokenResponse = await oldThis.oAuthLogIn(oldThis, shared.dest, destRedirectUrl);
       oldThis.destComplianceLevel = shared.dest.complianceLevel; oldThis.destShard = shared.dest.shard;
       oldThis.destBearerToken = tokenResponse.bearerAuth; oldThis.destRefreshToken = tokenResponse.refreshToken;
