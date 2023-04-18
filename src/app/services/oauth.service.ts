@@ -61,7 +61,8 @@ export class OAuthService {
   */
   getAuthGrant(authGrantResponse: string, initialOAuthState: string): string {
     const queryParams = this.urlService.getQueryParams(authGrantResponse);
-    
+    console.log('getAuthGrant() queryParams', queryParams);
+
     /* If the authGrantResponse indicates an error, throw an error. */
     if (queryParams.hasOwnProperty('error')) {
       const errorMessage = 'An erroneous request was made to the OAuth /authorize endpoint.\n' +
@@ -100,6 +101,8 @@ export class OAuthService {
           'redirect_uri' : redirectUri
        }
     };
+
+    console.log('getToken() requestConfig', requestConfig);
 
     const response = (await httpRequest(requestConfig));
     return this.handleTokenEndpointErrorsAndReturn(response);
@@ -143,6 +146,7 @@ export class OAuthService {
   }
 
   handleTokenEndpointErrorsAndReturn(tokenResponse: any) {
+    console.log('tokenResponse', tokenResponse);
     if (tokenResponse.hasOwnProperty('error')) {
       const errorMessage = 'An erroneous request was made to the OAuth /token endpoint.\n' +
       `Error: ${tokenResponse.error}\nError description: ${tokenResponse.error_description}`;

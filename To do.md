@@ -1,6 +1,4 @@
-- **since in the current state of the app each login button often has to be clicked multiple times before the intended action occurs without error, shared.loggedIn often has more than two elements**
-
-- **call to getApiBaseUri() in getDocumentList() seems to pass empty string for the bearerToken for some reason** 
+- **fixing this:** **The empty string was passed as the "shard" argument in a call to getOAuthBaseUri()**.**adding sourceShard and destShard**
 
 - save the old state of the login ui (namely the content of the dropdowns) and reload it upon redirect 
 

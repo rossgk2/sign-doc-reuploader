@@ -60,6 +60,8 @@ export class LoginComponent implements OnInit {
       return this._sourceLoginEmail;
   }
 
+  sourceShard: string = '';
+
   _destComplianceLevel: string = 'commercial'; // hardcoded for now; later, use use Reactive Forms to pull initial value from .html
   get destComplianceLevel(): 'commercial' | 'fedramp' {
     return this._destComplianceLevel as 'commercial' | 'fedramp';
@@ -89,23 +91,23 @@ export class LoginComponent implements OnInit {
       return this._destLoginEmail;
   }
 
-  shard: string = '';
+  destShard: string = '';
 
   constructor(private oAuthService: OAuthService, private sharerService: SharerService, private urlService: UrlService) { }
  
   async sourceLogin() {
-    this.loginHelper('source', this.sourceComplianceLevel, this.sourceOAuthClientId, this.sourceOAuthClientSecret, this.sourceLoginEmail);
+    this.loginHelper('source', this.sourceComplianceLevel, this.sourceOAuthClientId, this.sourceOAuthClientSecret, this.sourceLoginEmail, this.sourceShard);
   }
 
   async destLogin() {
-    this.loginHelper('dest', this.destComplianceLevel, this.destOAuthClientId, this.destOAuthClientSecret, this.destLoginEmail);
+    this.loginHelper('dest', this.destComplianceLevel, this.destOAuthClientId, this.destOAuthClientSecret, this.destLoginEmail, this.destShard);
   }
 
-  async loginHelper(sourceOrDest: 'source' | 'dest', complianceLevel: 'commercial' | 'fedramp', oAuthClientId: string, oAuthClientSecret: string, loginEmail: string) {
+  async loginHelper(sourceOrDest: 'source' | 'dest', complianceLevel: 'commercial' | 'fedramp', oAuthClientId: string, oAuthClientSecret: string, loginEmail: string, shard: string) {
     /* Get the URL, the "authorization grant request", that the user must be redirected to in order to log in.*/
     console.log('About to call getOAuthGrantRequest()');
-    console.log(`complianceLevel: ${complianceLevel}, shard: ${this.shard}`);
-    const authGrantRequest = this.oAuthService.getOAuthGrantRequest(sourceOrDest, complianceLevel, this.shard, oAuthClientId, Settings.redirectUri, loginEmail);
+    console.log(`complianceLevel: ${complianceLevel}`);
+    const authGrantRequest = this.oAuthService.getOAuthGrantRequest(sourceOrDest, complianceLevel, shard, oAuthClientId, Settings.redirectUri, loginEmail);
     console.log('After calling getOAuthGrantRequest()');
     console.log('initialOAuthState from login UI', authGrantRequest.initialOAuthState);
 
@@ -125,7 +127,8 @@ export class LoginComponent implements OnInit {
         oAuthClientId: oAuthClientId,
         oAuthClientSecret: oAuthClientSecret,
         loginEmail: loginEmail
-      }
+      },
+      shard: shard
     };
     this.sharerService.setShared(temp);
   
@@ -134,7 +137,6 @@ export class LoginComponent implements OnInit {
     /* Redirect the user to the URL that is the authGrantRequest. */
     console.log(temp[sourceOrDest].credentials);
     console.log(authGrantRequest.url);
-    await new Promise(resolve => setTimeout(resolve, 5 * 1000));
     await loadUrl(authGrantRequest.url);
   }
 

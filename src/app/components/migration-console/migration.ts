@@ -24,13 +24,13 @@ export async function migrateAll(oldThis: any, selectedDocs: string[]): Promise<
     const destTokenAboutToExpire: boolean = closeToNonzeroMultipleOf(totalTimeElapsedInMinutesDest, timeoutPeriodInMinutes - 1, epsilonInMinutes);
 
     if (sourceTokenAboutToExpire) {
-      const tokenResponse = await oldThis.oAuthService.refreshToken(oldThis.sourceComplianceLevel, oldThis.shard, 
+      const tokenResponse = await oldThis.oAuthService.refreshToken(oldThis.sourceComplianceLevel, oldThis.sourceShard, 
         oldThis.oAuthClientId, oldThis.oAuthClientSecret, oldThis.destRefreshToken);
       oldThis.sourceBearerToken = tokenResponse.accessToken; oldThis.sourceRefreshToken = tokenResponse.refreshToken;
     }
 
     if (destTokenAboutToExpire) {
-      const tokenResponse = await oldThis.oAuthService.refreshToken(oldThis.destComplianceLevel, oldThis.shard, 
+      const tokenResponse = await oldThis.oAuthService.refreshToken(oldThis.destComplianceLevel, oldThis.destShard, 
         oldThis.oAuthClientId, oldThis.oAuthClientSecret, oldThis.destRefreshToken);
       oldThis.destBearerToken = tokenResponse.accessToken; oldThis.destRefreshToken = tokenResponse.refreshToken;
     }

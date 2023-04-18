@@ -8,7 +8,8 @@ export class SharedInner {
     oAuthClientId: '',
     oAuthClientSecret: '',
     loginEmail: ''
-  }
+  };
+  shard = '';
 };
 
 export class Shared {
