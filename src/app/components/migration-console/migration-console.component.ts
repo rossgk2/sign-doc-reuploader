@@ -83,7 +83,7 @@ export class MigrationConsoleComponent {
     this.logToConsole(`Done loading. Loaded ${libraryDocuments.length} documents from the commercial account.`)
 
     /* Initalize documentIds. */
-    const oldThis = this;
+    const oldThis: MigrationConsoleComponent = this;
     libraryDocuments.forEach(function(doc: any) {
       oldThis.documentIds.push(doc.id);
     });
@@ -124,7 +124,7 @@ export class MigrationConsoleComponent {
   async migrate(): Promise<any> {
     /* Get a list of all the indices cooresponding to documents that the user wants to upload. */
     let selectedDocs: string[] = [];
-    const oldThis = this;
+    const oldThis: MigrationConsoleComponent = this;
     let i = 0;
     this.documents.controls.forEach(function(group: any) {
       if (group.value.isSelected) {
@@ -145,7 +145,7 @@ export class MigrationConsoleComponent {
     /* When the Electron main process recieves the notification sent in the above, it sends a message back that,
     when recieved, results in the invocation of the below defined callback function. The callback function is aware
     of the URL that the user has just been redirected to. */
-    const oldThis = this;
+    const oldThis: MigrationConsoleComponent = this;
     (<any> window).api.onConsoleInitFinish(async function (event: any, redirectUrls: string[]) {
       const shared: Shared = oldThis.sharerService.getShared();
 
@@ -162,10 +162,13 @@ export class MigrationConsoleComponent {
       console.log('sourceRedirectUrl', sourceRedirectUrl);
       console.log('destRedirectUrl', destRedirectUrl);
       
+      console.log('sourceShard', shared.source.shard);
+      console.log('destShard', shared.dest.shard);
+
+
       /* Take the information embedded in the sourceRedirectUrl and use it alongside the source login credentials to update
       the source Bearer and refresh tokens. */
-      let tokenResponse = await oldThis.oAuthLogIn(oldThis, shared.source.complianceLevel, shared.source.credentials,
-                                                   shared.source, sourceRedirectUrl);
+      let tokenResponse = await oldThis.oAuthLogIn(oldThis, shared.source, sourceRedirectUrl);
       oldThis.sourceComplianceLevel = shared.source.complianceLevel; oldThis.sourceShard = shared.source.shard;
       oldThis.sourceBearerToken = tokenResponse.bearerAuth; oldThis.sourceRefreshToken = tokenResponse.refreshToken;
       console.log('sourceComplianceLevel', oldThis.sourceComplianceLevel);
@@ -173,8 +176,7 @@ export class MigrationConsoleComponent {
       console.log('refreshToken', oldThis.sourceRefreshToken);
 
       /* Do the same with the destRedirectUrl. */
-      tokenResponse = await oldThis.oAuthLogIn(oldThis, shared.dest.complianceLevel, shared.dest.credentials,
-                                               shared.dest, destRedirectUrl);
+      tokenResponse = await oldThis.oAuthLogIn(oldThis, shared.dest, destRedirectUrl);
       oldThis.destComplianceLevel = shared.dest.complianceLevel; oldThis.destShard = shared.dest.shard;
       oldThis.destBearerToken = tokenResponse.bearerAuth; oldThis.destRefreshToken = tokenResponse.refreshToken;
       console.log('destComplianceLevel', oldThis.destComplianceLevel);
@@ -183,20 +185,15 @@ export class MigrationConsoleComponent {
     });
   }
 
-  async oAuthLogIn(oldThis: any, complianceLevel: 'commercial' | 'fedramp', credentials: any, shared: SharedInner, redirectUrl: string) {
+  async oAuthLogIn(oldThis: any, sourceOrDest: SharedInner, redirectUrl: string) {
     /* Get credentials from earlier. */
-    oldThis.commercialIntegrationKey = credentials.commercialIntegrationKey;
-    oldThis.oAuthClientId = credentials.oAuthClientId;
-    oldThis.oAuthClientSecret = credentials.oAuthClientSecret;
-    oldThis.loginEmail = credentials.loginEmail;
+    oldThis.oAuthClientId = sourceOrDest.credentials.oAuthClientId;
+    oldThis.oAuthClientSecret = sourceOrDest.credentials.oAuthClientSecret;
+    oldThis.loginEmail = sourceOrDest.credentials.loginEmail;
 
     /* Use the credentials to get a "Bearer" token from OAuth. */
-    const initialOAuthState = shared.initialOAuthState;
-    console.log('initialOAuthState from console UI', initialOAuthState);
-    console.log('redirectUrl', redirectUrl);
-    const authGrant = oldThis.oAuthService.getAuthGrant(redirectUrl, initialOAuthState);
-    console.log('in oAuthLogin(), after getAuthGrant()');
-    return await oldThis.oAuthService.getToken(complianceLevel, shared.shard, oldThis.oAuthClientId, oldThis.oAuthClientSecret, authGrant, Settings.redirectUri);
+    const authGrant = oldThis.oAuthService.getAuthGrant(redirectUrl, sourceOrDest.initialOAuthState);
+    return await oldThis.oAuthService.getToken(sourceOrDest.complianceLevel, sourceOrDest.shard, oldThis.oAuthClientId, oldThis.oAuthClientSecret, authGrant, Settings.redirectUri);
   }
 
   /* Helper functions. */
