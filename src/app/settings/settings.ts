@@ -2,10 +2,9 @@ export interface I_Settings {
 	/* Determines which Adobe Sign API URLs are used for the API calls that this
 	application relies on. Use "stage" to use URLs that contain "adobesignstage"
 	and "prod" to use URLs that contain "adobesign" but not "adobesignstage". */
-	apiEnv: string, // 'stage' or 'prod'
-	
-	/* A legacy setting from when this application was Angular only.
-	Was useful for avoiding CORS errors in developent. */
+	apiEnv: "stage" | "prod",
+
+	/* Legacy setting. */
 	useProxy: boolean,
 
 	/* Whether or not to use util/credentials.ts to log in. Useful
@@ -29,8 +28,8 @@ export interface I_Settings {
 	devPageLimit: number
 };
 
-export const devSettings: I_Settings = {
-	apiEnv: 'stage',
+const devStageSettings: I_Settings = {
+	apiEnv: "stage",
 	useProxy: false,
 	forceUseTestCredentials: true,
 	redirectUri: "https://migrationtool.com",
@@ -39,8 +38,11 @@ export const devSettings: I_Settings = {
 	devPageLimit: -1
 };
 
-export const prodSettings: I_Settings = {
-	apiEnv: 'prod',
+let devProdSettings = devStageSettings;
+devProdSettings.apiEnv = "prod";
+
+const prodSettings: I_Settings = {
+	apiEnv: "prod",
 	useProxy: false,
 	forceUseTestCredentials: false,
 	redirectUri: "https://migrationtool.com",
@@ -49,7 +51,7 @@ export const prodSettings: I_Settings = {
 	devPageLimit: -1
 };
 
-export const almostProdSettings = prodSettings;
-almostProdSettings.apiEnv = 'stage';
+const stageSettings = prodSettings;
+stageSettings.apiEnv = "stage";
 
-export const Settings = devSettings;
+export const Settings = devProdSettings;
