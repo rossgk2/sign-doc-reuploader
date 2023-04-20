@@ -1,18 +1,14 @@
-- to implement oauth for source account...
+- is offline_access scope required for fedramp dest account?
 
-  - write function that encapsulates all oauth tasks that are done for second signer
-  - create three input fields that correspond to source account
-  - when "log in" clicked, pass values obtained from these fields to the newly written function
-  - at this point we've implemented commercial -> gov using oauth for both source and destination
-  - next step is to implement x -> y, where x, y in {commercial, gov}
-  - add two radio buttons to log in page that toggle between "commercial" and "gov"
-  - create sourceType and destinationType variables that are shared between login and console components
-  - update sourceType and destinationType with values obtained from radio buttons
-  - replace the functions getApiBaseUriFedRamp() and getApiBaseUriCommercial() that are used in download() and upload() with getApiBaseUri(). this new function will take sourceType and destinationType as parameters, and use conditional logic such as `if (sourceType  === 'commercial')`
+- **change console logging to talk about source account and dest account rather than commercial account and FedRAMP account**
 
-- add a radio button for "prod" vs. "stage" apiEnv
+- **upon redirect, set values of dropdowns to be what they were before the redirect**
 
-- implement commercial-to-commercial migration
+- initialize `sourceComplianceLevel` and `destComplianceLevel` to the default values that are used in the .html instead of hardcoding their initial values to match those from the .html
+
+- type arguments with types such as `'option1' | 'option2'` in functions where applicable
+
+  - e.g. `complianceLevel` should always be of type `'commercial' | 'fedramp'`
 
 - remove need for direct call to axios (sending `data` with `JSON.stringify()` and then deserializing with `JSON.parse()` should probably work)
 

@@ -4,9 +4,6 @@ export interface I_Settings {
 	and "prod" to use URLs that contain "adobesign" but not "adobesignstage". */
 	apiEnv: "stage" | "prod",
 
-	/* Legacy setting. */
-	useProxy: boolean,
-
 	/* Whether or not to use util/credentials.ts to log in. Useful
 	for development. */
 	forceUseTestCredentials: boolean,
@@ -30,7 +27,6 @@ export interface I_Settings {
 
 const devStageSettings: I_Settings = {
 	apiEnv: "stage",
-	useProxy: false,
 	forceUseTestCredentials: true,
 	redirectUri: "https://migrationtool.com",
 	docNamePrefixForDebug: '(-!- FROM ELECTRON APP -!-)',
@@ -43,7 +39,6 @@ devProdSettings.apiEnv = "prod";
 
 const prodSettings: I_Settings = {
 	apiEnv: "prod",
-	useProxy: false,
 	forceUseTestCredentials: false,
 	redirectUri: "https://migrationtool.com",
 	docNamePrefixForDebug: '',

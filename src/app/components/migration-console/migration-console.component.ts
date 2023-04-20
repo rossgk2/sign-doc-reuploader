@@ -1,13 +1,13 @@
 import { Component } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup } from '@angular/forms';
 import axios from 'axios';
-import { OAuthService } from '../../services/oauth.service';
-import { SharerService } from '../../services/sharer.service';
+import { Shared, SharedInner, SharerService } from '../../services/sharer.service';
 import { Settings } from '../../settings/settings';
 import { httpRequest } from '../../util/electron-functions';
 import { tab } from '../../util/spacing';
-import { getApiBaseUriCommercial } from '../../util/url-getter';
-import { migrate } from './migration';
+import { migrateAll as migrateAll } from './migration';
+import { OAuthService } from 'src/app/services/oauth.service';
+import { UrlService } from 'src/app/services/url.service';
 
 @Component({
   selector: 'app-migration-console',
@@ -53,7 +53,7 @@ export class MigrationConsoleComponent {
   }
 
   async getDocumentList(): Promise<any> {
-    const baseUrl = await getApiBaseUriCommercial(this.commercialIntegrationKey);
+    const baseUrl = await this.urlService.getApiBaseUri(this.sourceBearerToken, this.sourceComplianceLevel);
 
     /* Get all library documents. */
     const pageSize = 100;
@@ -65,7 +65,7 @@ export class MigrationConsoleComponent {
       const requestConfig = {
         'method': 'get',
         'url': `${baseUrl}/libraryDocuments?pageSize=${pageSize}` + cursorQueryString,
-        'headers': {'Authorization': `Bearer ${this.commercialIntegrationKey}`}
+        'headers': {'Authorization': `Bearer ${this.sourceBearerToken}`}
       };
       response = (await httpRequest(requestConfig));
 
@@ -83,7 +83,7 @@ export class MigrationConsoleComponent {
     this.logToConsole(`Done loading. Loaded ${libraryDocuments.length} documents from the commercial account.`)
 
     /* Initalize documentIds. */
-    const oldThis = this;
+    const oldThis: MigrationConsoleComponent = this;
     libraryDocuments.forEach(function(doc: any) {
       oldThis.documentIds.push(doc.id);
     });
@@ -92,25 +92,39 @@ export class MigrationConsoleComponent {
     this.populateDocForm(libraryDocuments); 
   }
 
-  /* Internal variables. */
-  private bearerAuth = '';
-  private refreshToken = '';
   private documentIds: string[] = [];
 
+  /* These two variables are not referenced in this file, but instead in migration.ts.
+  In the future it would be better to have migrate() return values that should be used
+  to update these two variables, rather than having migrate() actually perform said update
+  by accessing a reference to this. */
+  sourceBearerToken = '';
+  sourceRefreshToken = '';
+  destBearerToken = '';
+  destRefreshToken = '';
+
   /* Fields input by user. */
-  commercialIntegrationKey: string = '';
-  oAuthClientId: string = '';
-  oAuthClientSecret: string = '';
-  loginEmail: string = '';
+  sourceComplianceLevel: 'commercial' | 'fedramp' = 'commercial';
+  sourceOAuthClientId: string = '';
+  sourceOAuthClientSecret: string = '';
+  sourceLoginEmail: string = '';
+  sourceShard: string = '';
 
-  constructor(private oAuthService: OAuthService,
+  destComplianceLevel: 'commercial' | 'fedramp' = 'commercial';
+  destOAuthClientId: string = '';
+  destOAuthClientSecret: string = '';
+  destLoginEmail: string = '';
+  destShard: string = '';
+
+  constructor(private formBuilder: FormBuilder,
               private sharerService: SharerService,
-              private formBuilder: FormBuilder) { }
+              private oAuthService: OAuthService, // migration.ts uses this instance's oAuthService
+              private urlService: UrlService) { }
 
-  async reupload(): Promise<any> {
+  async migrate(): Promise<any> {
     /* Get a list of all the indices cooresponding to documents that the user wants to upload. */
     let selectedDocs: string[] = [];
-    const oldThis = this;
+    const oldThis: MigrationConsoleComponent = this;
     let i = 0;
     this.documents.controls.forEach(function(group: any) {
       if (group.value.isSelected) {
@@ -119,35 +133,68 @@ export class MigrationConsoleComponent {
       i ++;
     });
 
-    migrate(this, selectedDocs);
+    migrateAll(this, selectedDocs);
   }
 
   async ngOnInit() {
-    /* See preload.ts for the definitions of the functions from api. */
+    /* See preload.ts for the definitions of the functions from "api". */
 
-    /* Send a message to the Electron main process indicating that this ngOnInit() method
-    has begun executing. */
+    /* Send a message to the Electron main process indicating that this ngOnInit() method has begun executing. */
     (<any> window).api.notifyIsConsoleInitStarted();
     
-    /* When the Electron main process recieves the notification sent in the above,
-    it sends a message back that, when recieved, results in the invocation of the
-    below defined callback function. The message includes a url argument that is
-    passed to the callback. */
-    const oldThis = this;
-    (<any> window).api.onConsoleInitFinish(async function (event: any, url: string) {
-      /* Get credentials from earlier. */
-      const credentials: any = oldThis.sharerService.shared.credentials;
-      oldThis.commercialIntegrationKey = credentials.commercialIntegrationKey;
-      oldThis.oAuthClientId = credentials.oAuthClientId;
-      oldThis.oAuthClientSecret = credentials.oAuthClientSecret;
-      oldThis.loginEmail = credentials.loginEmail;
+    /* When the Electron main process recieves the notification sent in the above, it sends a message back that,
+    when recieved, results in the invocation of the below defined callback function. The callback function is aware
+    of the URL that the user has just been redirected to. */
+    const oldThis: MigrationConsoleComponent = this;
+    (<any> window).api.onConsoleInitFinish(async function (event: any, redirectUrls: string[]) {
+      const shared: Shared = oldThis.sharerService.getShared();
 
-      /* Use the credentials to get a "Bearer" token from OAuth. */
-      const initialOAuthState = oldThis.sharerService.shared.initialOAuthState;
-      const authGrant = oldThis.oAuthService.getAuthGrant(url, initialOAuthState);
-      const tokenResponse = await oldThis.oAuthService.getToken(oldThis.oAuthClientId, oldThis.oAuthClientSecret, authGrant, Settings.redirectUri);
-      oldThis.bearerAuth = tokenResponse.accessToken; oldThis.refreshToken = tokenResponse.refreshToken;
+      console.log('redirectUrls', redirectUrls);
+      console.log(shared.loggedIn);
+
+      /* Use the client IDs provided by the user to determine which redirect URL is returned by the login for the
+      source account and which one is returned by the login for the destination account. */
+      const sourceIndex: 0 | 1 = shared.loggedIn.indexOf('source') as 0 | 1;
+      const destIndex: 1 | 0 = shared.loggedIn.indexOf('dest') as 1 | 0;
+      const sourceRedirectUrl: string = redirectUrls[sourceIndex];
+      const destRedirectUrl: string = redirectUrls[destIndex];
+
+      console.log('sourceRedirectUrl', sourceRedirectUrl);
+      console.log('destRedirectUrl', destRedirectUrl);
+      
+      console.log('sourceShard', shared.source.shard);
+      console.log('destShard', shared.dest.shard);
+
+      /* Take the information embedded in the sourceRedirectUrl and use it alongside the source login credentials to update
+      the source Bearer and refresh tokens. */
+      console.log('before oAuthLogIn() for source');
+      let tokenResponse = await oldThis.oAuthLogIn(oldThis, shared.source, sourceRedirectUrl);
+      oldThis.sourceComplianceLevel = shared.source.complianceLevel; oldThis.sourceShard = shared.source.shard;
+      oldThis.sourceBearerToken = tokenResponse.accessToken; oldThis.sourceRefreshToken = tokenResponse.refreshToken;
+      console.log('sourceComplianceLevel', oldThis.sourceComplianceLevel);
+      console.log('sourceBearerToken', oldThis.sourceBearerToken);
+      console.log('sourceRefreshToken', oldThis.sourceRefreshToken);
+
+      /* Do the same with the destRedirectUrl. */
+      console.log('before oAuthLogIn() for dest');
+      tokenResponse = await oldThis.oAuthLogIn(oldThis, shared.dest, destRedirectUrl);
+      oldThis.destComplianceLevel = shared.dest.complianceLevel; oldThis.destShard = shared.dest.shard;
+      oldThis.destBearerToken = tokenResponse.accessToken; oldThis.destRefreshToken = tokenResponse.refreshToken;
+      console.log('destComplianceLevel', oldThis.destComplianceLevel);
+      console.log('destBearerToken', oldThis.destBearerToken);
+      console.log('destRefreshToken', oldThis.destRefreshToken);
     });
+  }
+
+  async oAuthLogIn(oldThis: any, sourceOrDest: SharedInner, redirectUrl: string) {
+    /* Get credentials from earlier. */
+    oldThis.oAuthClientId = sourceOrDest.credentials.oAuthClientId;
+    oldThis.oAuthClientSecret = sourceOrDest.credentials.oAuthClientSecret;
+    oldThis.loginEmail = sourceOrDest.credentials.loginEmail;
+
+    /* Use the credentials to get a "Bearer" token from OAuth. */
+    const authGrant = oldThis.oAuthService.getAuthGrant(redirectUrl, sourceOrDest.initialOAuthState);
+    return await oldThis.oAuthService.getToken(sourceOrDest.complianceLevel, sourceOrDest.shard, oldThis.oAuthClientId, oldThis.oAuthClientSecret, authGrant, Settings.redirectUri);
   }
 
   /* Helper functions. */

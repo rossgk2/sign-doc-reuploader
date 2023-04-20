@@ -1,10 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { UrlSerializer } from '@angular/router';
 import { OAuthService } from '../../services/oauth.service';
-import { SharerService } from '../../services/sharer.service';
+import { Shared, SharedInner, SharerService } from '../../services/sharer.service';
 import { Credentials } from '../../settings/credentials';
 import { Settings } from '../../settings/settings';
 import { loadUrl } from '../../util/electron-functions';
+import { UrlService } from 'src/app/services/url.service';
 
 /*
   ===================================================================
@@ -22,8 +22,6 @@ import { loadUrl } from '../../util/electron-functions';
   
   ===================================================================
 
-  We are currently implementing OAuth for FedRamp. After we do that it'd probably be a good idea to add the implementation
-  for commercial.
 */
 
 @Component({
@@ -33,66 +31,130 @@ import { loadUrl } from '../../util/electron-functions';
 })
 export class LoginComponent implements OnInit {
   /* Fields input by user. */
-  _commercialIntegrationKey: string = '';
-  _oAuthClientId: string = '';
-  _oAuthClientSecret: string = '';
-  _loginEmail: string = '';
-
-  get commercialIntegrationKey() {
-    if (Settings.forceUseTestCredentials)
-      return Credentials.commercialIntegrationKey;
-    else
-      return this._commercialIntegrationKey;
+  _sourceComplianceLevel: string = 'commercial'; // hardcoded for now; later, use Reactive Forms to pull initial value from .html
+  get sourceComplianceLevel(): 'commercial' | 'fedramp' {
+    return this._sourceComplianceLevel as 'commercial' | 'fedramp';
   }
 
-  get oAuthClientId() {
+  _sourceOAuthClientId: string = '';
+  get sourceOAuthClientId(): string {
     if (Settings.forceUseTestCredentials)
-      return Credentials.oAuthClientId;
+      return Credentials.sourceOAuthClientId;
     else
-      return this._oAuthClientId;
+      return this._sourceOAuthClientId;
   }
 
-  get oAuthClientSecret() {
+  _sourceOAuthClientSecret: string = '';
+  get sourceOAuthClientSecret(): string {
     if (Settings.forceUseTestCredentials)
-      return Credentials.oAuthClientSecret;
+      return Credentials.sourceOAuthClientSecret;
     else
-      return this._oAuthClientSecret;
+      return this._sourceOAuthClientSecret;
   }
   
-  get loginEmail() {
+  _sourceLoginEmail: string = '';
+  get sourceLoginEmail(): string {
     if (Settings.forceUseTestCredentials)
-      return Credentials.loginEmail;
+      return Credentials.sourceLoginEmail;
     else
-      return this._loginEmail;
-  } 
-
-  constructor(private oAuthService: OAuthService,
-              private sharerService: SharerService,
-              private serializer: UrlSerializer) { }
- 
-  login(): void {
-    /* Get the URL, the "authorization grant request", that the user must be redirected to in order to log in.*/
-    const authGrantRequest = this.oAuthService.getOAuthGrantRequest(this.oAuthClientId, Settings.redirectUri, this.loginEmail, 'FedRamp');
-
-    /* Store the OAuth state and the credentials. */
-    const temp: any = {};
-    temp.initialOAuthState = authGrantRequest.initialOAuthState;
-    temp.credentials = {
-      commercialIntegrationKey: this.commercialIntegrationKey,
-      oAuthClientId: this.oAuthClientId,
-      oAuthClientSecret: this.oAuthClientSecret,
-      loginEmail: this.loginEmail
-    };
-    this.sharerService.shared = temp;
-
-    /* Redirect the user to the URL that is the authGrantRequest. */
-    loadUrl(authGrantRequest.url);
+      return this._sourceLoginEmail;
   }
 
-  async ngOnInit(): Promise<any> { }
+  _sourceShard: string = '';
+  get sourceShard(): string {
+    if (this.sourceComplianceLevel === 'commercial')
+      return this._sourceShard;
+    else // this.sourceComplianceLevel === 'fedramp'
+      return 'na1'; // there is currently only one shard for all FedRamp accounts
+  }
 
-  /* Helper functions for use in .html file. */
+  _destComplianceLevel: string = 'commercial'; // hardcoded for now; later, use use Reactive Forms to pull initial value from .html
+  get destComplianceLevel(): 'commercial' | 'fedramp' {
+    return this._destComplianceLevel as 'commercial' | 'fedramp';
+  }
 
+  _destOAuthClientId: string = '';
+  get destOAuthClientId(): string {
+    if (Settings.forceUseTestCredentials)
+      return Credentials.destOAuthClientId;
+    else
+      return this._destOAuthClientId;
+  }
+
+  _destOAuthClientSecret: string = '';
+  get destOAuthClientSecret(): string {
+    if (Settings.forceUseTestCredentials)
+      return Credentials.destOAuthClientSecret;
+    else
+      return this._destOAuthClientSecret;
+  }
+  
+  _destLoginEmail: string = '';  
+  get destLoginEmail(): string {
+    if (Settings.forceUseTestCredentials)
+      return Credentials.destLoginEmail;
+    else
+      return this._destLoginEmail;
+  }
+
+  _destShard: string = '';
+  get destShard(): string {
+    if (this.destComplianceLevel === 'commercial')
+      return this._destShard;
+    else // this.destComplianceLevel === 'fedramp'
+      return 'na1'; // there is currently only one shard for all FedRamp accounts
+  }
+
+  constructor(private oAuthService: OAuthService, private sharerService: SharerService, private urlService: UrlService) { }
+ 
+  async sourceLogin() {
+    this.loginHelper('source', this.sourceComplianceLevel, this.sourceOAuthClientId, this.sourceOAuthClientSecret, this.sourceLoginEmail, this.sourceShard);
+  }
+
+  async destLogin() {
+    this.loginHelper('dest', this.destComplianceLevel, this.destOAuthClientId, this.destOAuthClientSecret, this.destLoginEmail, this.destShard);
+  }
+
+  async loginHelper(sourceOrDest: 'source' | 'dest', complianceLevel: 'commercial' | 'fedramp', oAuthClientId: string, oAuthClientSecret: string, loginEmail: string, shard: string) {
+    /* Get the URL, the "authorization grant request", that the user must be redirected to in order to log in.*/
+    console.log('About to call getOAuthGrantRequest()');
+    console.log(`complianceLevel: ${complianceLevel}`);
+    const authGrantRequest = this.oAuthService.getOAuthGrantRequest(sourceOrDest, complianceLevel, shard, oAuthClientId, Settings.redirectUri, loginEmail);
+    console.log('After calling getOAuthGrantRequest()');
+    console.log('initialOAuthState from login UI', authGrantRequest.initialOAuthState);
+
+    /* Store information that the console UI needs to know in the Shared object. */
+    const temp: Shared = this.sharerService.getShared() == null ? new Shared() : this.sharerService.getShared();
+    
+    /* Add either 'source' or 'dest' to the 'loggedIn' array so as to record which of the source and dest accounts
+    have been logged into, and to record the order in which the logins occured. */
+    temp.loggedIn.push(sourceOrDest);
+    
+    /* Store other information that the console UI component needs to know, such as the login credentials for 
+    the source or dest account. */
+    temp[sourceOrDest] = {
+      complianceLevel: complianceLevel,
+      initialOAuthState: authGrantRequest.initialOAuthState,
+      credentials: {
+        oAuthClientId: oAuthClientId,
+        oAuthClientSecret: oAuthClientSecret,
+        loginEmail: loginEmail
+      },
+      shard: shard
+    };
+    this.sharerService.setShared(temp);
+  
+    console.log(`source.loggedIn: ${this.sharerService.getShared().loggedIn.includes('source')}, dest.loggedIn: ${this.sharerService.getShared().loggedIn.includes('dest')}`);
+
+    /* Redirect the user to the URL that is the authGrantRequest. */
+    await loadUrl(authGrantRequest.url);
+  }
+
+  async ngOnInit(): Promise<any> {
+
+  }
+
+  /* Helper function used in login.component.html. */
   getValue(event: Event): string {
     return (event.target as HTMLInputElement).value;
   }
