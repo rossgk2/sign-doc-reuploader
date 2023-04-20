@@ -38,10 +38,10 @@ export class OAuthService {
 
     /* The syntax for the 'scope' query param depends on whether the environment is commercial or FedRamp. */
     if (env.toLowerCase() == 'commercial')
-      scope = 'library_read:account library_write:account agreement_write:account';
+      scope = 'library_read:account library_write:account';
     else if (env.toLowerCase() == 'fedramp')
       /* 'offline_access' is crucial. Instructs the POST to /token in getToken() to return a refresh token. */
-      scope = 'library_read library_write agreement_write offline_access';
+      scope = 'library_read library_write offline_access';
     else
       throw new Error("env.toLowerCase() must be either 'commercial' or 'fedramp'.");
 
