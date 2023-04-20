@@ -117,11 +117,7 @@ export class LoginComponent implements OnInit {
 
   async loginHelper(sourceOrDest: 'source' | 'dest', complianceLevel: 'commercial' | 'fedramp', oAuthClientId: string, oAuthClientSecret: string, loginEmail: string, shard: string) {
     /* Get the URL, the "authorization grant request", that the user must be redirected to in order to log in.*/
-    console.log('About to call getOAuthGrantRequest()');
-    console.log(`complianceLevel: ${complianceLevel}`);
     const authGrantRequest = this.oAuthService.getOAuthGrantRequest(sourceOrDest, complianceLevel, shard, oAuthClientId, Settings.redirectUri, loginEmail);
-    console.log('After calling getOAuthGrantRequest()');
-    console.log('initialOAuthState from login UI', authGrantRequest.initialOAuthState);
 
     /* Store information that the console UI needs to know in the Shared object. */
     const temp: Shared = this.sharerService.getShared() == null ? new Shared() : this.sharerService.getShared();
@@ -144,8 +140,6 @@ export class LoginComponent implements OnInit {
     };
     this.sharerService.setShared(temp);
   
-    console.log(`source.loggedIn: ${this.sharerService.getShared().loggedIn.includes('source')}, dest.loggedIn: ${this.sharerService.getShared().loggedIn.includes('dest')}`);
-
     /* Redirect the user to the URL that is the authGrantRequest. */
     await loadUrl(authGrantRequest.url);
   }

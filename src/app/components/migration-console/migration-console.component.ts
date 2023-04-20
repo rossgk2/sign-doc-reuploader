@@ -149,9 +149,6 @@ export class MigrationConsoleComponent {
     (<any> window).api.onConsoleInitFinish(async function (event: any, redirectUrls: string[]) {
       const shared: Shared = oldThis.sharerService.getShared();
 
-      console.log('redirectUrls', redirectUrls);
-      console.log(shared.loggedIn);
-
       /* Use the client IDs provided by the user to determine which redirect URL is returned by the login for the
       source account and which one is returned by the login for the destination account. */
       const sourceIndex: 0 | 1 = shared.loggedIn.indexOf('source') as 0 | 1;
@@ -159,30 +156,16 @@ export class MigrationConsoleComponent {
       const sourceRedirectUrl: string = redirectUrls[sourceIndex];
       const destRedirectUrl: string = redirectUrls[destIndex];
 
-      console.log('sourceRedirectUrl', sourceRedirectUrl);
-      console.log('destRedirectUrl', destRedirectUrl);
-      
-      console.log('sourceShard', shared.source.shard);
-      console.log('destShard', shared.dest.shard);
-
       /* Take the information embedded in the sourceRedirectUrl and use it alongside the source login credentials to update
       the source Bearer and refresh tokens. */
-      console.log('before oAuthLogIn() for source');
       let tokenResponse = await oldThis.oAuthLogIn(oldThis, shared.source, sourceRedirectUrl);
       oldThis.sourceComplianceLevel = shared.source.complianceLevel; oldThis.sourceShard = shared.source.shard;
       oldThis.sourceBearerToken = tokenResponse.accessToken; oldThis.sourceRefreshToken = tokenResponse.refreshToken;
-      console.log('sourceComplianceLevel', oldThis.sourceComplianceLevel);
-      console.log('sourceBearerToken', oldThis.sourceBearerToken);
-      console.log('sourceRefreshToken', oldThis.sourceRefreshToken);
 
       /* Do the same with the destRedirectUrl. */
-      console.log('before oAuthLogIn() for dest');
       tokenResponse = await oldThis.oAuthLogIn(oldThis, shared.dest, destRedirectUrl);
       oldThis.destComplianceLevel = shared.dest.complianceLevel; oldThis.destShard = shared.dest.shard;
       oldThis.destBearerToken = tokenResponse.accessToken; oldThis.destRefreshToken = tokenResponse.refreshToken;
-      console.log('destComplianceLevel', oldThis.destComplianceLevel);
-      console.log('destBearerToken', oldThis.destBearerToken);
-      console.log('destRefreshToken', oldThis.destRefreshToken);
     });
   }
 
