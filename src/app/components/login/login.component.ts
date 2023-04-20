@@ -147,8 +147,6 @@ export class LoginComponent implements OnInit {
     console.log(`source.loggedIn: ${this.sharerService.getShared().loggedIn.includes('source')}, dest.loggedIn: ${this.sharerService.getShared().loggedIn.includes('dest')}`);
 
     /* Redirect the user to the URL that is the authGrantRequest. */
-    console.log(temp[sourceOrDest].credentials);
-    console.log(authGrantRequest.url);
     await loadUrl(authGrantRequest.url);
   }
 

@@ -151,9 +151,9 @@ export class OAuthService {
     }
     else { // sourceOrDest === 'dest'
       if (complianceLevel === 'commercial')
-        return 'library_read:account library_write:account agreement_write:account';
+        return 'library_read:account library_write:account';
       else // complianceLevel === 'fedramp'
-        return 'library_read library_write agreement_write offline_access';
+        return 'library_read library_write offline_access';
     }
   }
 
