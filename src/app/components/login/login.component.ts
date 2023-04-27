@@ -105,6 +105,13 @@ export class LoginComponent implements OnInit {
       return 'na1'; // there is currently only one shard for all FedRamp accounts
   }
 
+  /* Helper function for use in .html. A null check is not necessary all other times
+  this sort of query is made. */
+  loggedInSourceDestWithNullCheck(sourceOrDest: 'source' | 'dest'): boolean {
+    const shared: Shared = this.sharerService.getShared();
+    return (shared != null) && shared.loggedIn.includes(sourceOrDest);
+  }
+
   constructor(private oAuthService: OAuthService, private sharerService: SharerService, private urlService: UrlService) { }
  
   async sourceLogin() {

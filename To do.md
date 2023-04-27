@@ -1,7 +1,5 @@
 - **change console logging to talk about source account and dest account rather than commercial account and FedRAMP account**
 
-- **upon redirect, set values of dropdowns to be what they were before the redirect**
-
 - initialize `sourceComplianceLevel` and `destComplianceLevel` to the default values that are used in the .html instead of hardcoding their initial values to match those from the .html
 
 - type arguments with types such as `'option1' | 'option2'` in functions where applicable

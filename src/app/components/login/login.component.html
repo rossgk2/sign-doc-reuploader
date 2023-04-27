@@ -1,6 +1,6 @@
 <h1>Log in</h1>
 <div id="input-container" *ngIf="true">
-  <div>
+  <div *ngIf="!loggedInSourceDestWithNullCheck('source')">
     <input placeholder="Source client ID" (input) = "_sourceOAuthClientId = getValue($event)">
     <input placeholder="Source client secret" type = "password" (input) = "_sourceOAuthClientSecret = getValue($event)">
     <input placeholder="Source Sign account email" (input) = "_sourceLoginEmail = getValue($event)">
@@ -19,7 +19,7 @@
     </select>
   </div>
 
-  <div>
+  <div *ngIf="!loggedInSourceDestWithNullCheck('dest')">
     <input placeholder="Destination client ID" (input) = "_destOAuthClientId=getValue($event)">
     <input placeholder="Destination client secret" type = "password" (input) = "_destOAuthClientSecret=getValue($event)">
     <input placeholder="Destination Sign account email" (input) = "_destLoginEmail = getValue($event)">
