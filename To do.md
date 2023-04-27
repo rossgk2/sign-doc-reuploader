@@ -1,5 +1,3 @@
-- is offline_access scope required for fedramp dest account?
-
 - **change console logging to talk about source account and dest account rather than commercial account and FedRAMP account**
 
 - **upon redirect, set values of dropdowns to be what they were before the redirect**

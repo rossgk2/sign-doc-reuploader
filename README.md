@@ -16,6 +16,8 @@ This tool is currently in beta. Please open an issue for any bugs you find.
 
 ### Setup: FedRAMP account
 
+First, log in to your FedRAMP account to ensure that you can indeed log in. After the migration process executes, it's necessary to log into the FedRAMP account to check that documents were correctly migrated.
+
 Receive the "FedRAMP client ID" and "Fed RAMP client secret" for said API Application from Professional Services. The API token will have the `library_write` scope enabled.
 
 ### Using the app
