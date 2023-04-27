@@ -53,11 +53,11 @@ export async function migrateAll(oldThis: any, selectedDocs: string[]): Promise<
 }
 
 async function migrate(oldThis: any, documentId: string): Promise<any> {  
-  oldThis.logToConsole('About to inspect this document in the commercial account and then download it from the commercial account.');
-  oldThis.logToConsoleTabbed(`The ID of this document in the commercial account is ${documentId}.`);
+  oldThis.logToConsole('About to inspect this document in the source account and then download it from the source account.');
+  oldThis.logToConsoleTabbed(`The ID of this document in the source account is ${documentId}.`);
   const result = await download(oldThis, documentId);
 
-  oldThis.logToConsole('About to upload this document to the FedRAMP account.');
+  oldThis.logToConsole('About to upload this document to the destination account.');
   await upload(oldThis, result.docName, result.formFields, result.pdfBlob, documentId);
 }
 
@@ -72,7 +72,7 @@ async function download(oldThis: any, documentId: string): Promise<any> {
     'headers': defaultHeaders
   };
   const docName: string = (await httpRequest(requestConfig)).name;
-  oldThis.logToConsoleTabbed(`The name of this document in the commercial account is "${docName}"`);
+  oldThis.logToConsoleTabbed(`The name of this document in the source account is "${docName}"`);
 
   /* GET the values the user has entered into the document's fields. */
   requestConfig.url = `${baseUri}/libraryDocuments/${documentId}/formFields`;
@@ -102,7 +102,7 @@ async function upload(oldThis: any, docName: string, formFields: {[key: string]:
   const baseUri = await oldThis.urlService.getApiBaseUri(oldThis.destBearerToken, oldThis.destComplianceLevel);
   const defaultHeaders = {'Authorization': `Bearer ${oldThis.destBearerToken}`};
 
-  oldThis.logToConsoleTabbed(`About to upload the downloaded PDF to the FedRAMP 
+  oldThis.logToConsoleTabbed(`About to upload the downloaded PDF to the destination 
     account by POSTing to ${baseUri}/transientDocuments`);
 
   /* POST the same document (but without any custom form fields) as a transient document and get its ID.
@@ -119,7 +119,7 @@ async function upload(oldThis: any, docName: string, formFields: {[key: string]:
   };
   const response: any = (await oldThis.httpRequestTemp(requestConfig)); // this API endpoint is tricky; have to access data field of response to get response
   const transientDocumentId = response.transientDocumentId;
-  oldThis.logToConsoleTabbed(`Uploaded the downloaded PDF to the FedRAMP account as a transient document with a transientDocumentId of ${transientDocumentId}.`);
+  oldThis.logToConsoleTabbed(`Uploaded the downloaded PDF to the destination account as a transient document with a transientDocumentId of ${transientDocumentId}.`);
 
   /* Create a library document from the just-created transient document. */
   let libraryDocumentInfo = 
@@ -138,7 +138,7 @@ async function upload(oldThis: any, docName: string, formFields: {[key: string]:
     'data': libraryDocumentInfo
   };
   const newLibraryDocumentId = (await httpRequest(requestConfig)).id;
-  oldThis.logToConsoleTabbed(`Created a library document (a template) in the FedRAMP account from the transient document with a libraryDocumentId of ${newLibraryDocumentId}.`);
+  oldThis.logToConsoleTabbed(`Created a library document (a template) in the destination account from the transient document with a libraryDocumentId of ${newLibraryDocumentId}.`);
 
   /* Use a PUT request to add the custom form fields and the values entered earlier to the document. */
   requestConfig = {
@@ -148,7 +148,7 @@ async function upload(oldThis: any, docName: string, formFields: {[key: string]:
     'data': formFields
   };
   await httpRequest(requestConfig);
-  oldThis.logToConsoleTabbed("Wrote the values the user entered into this document's fields to the library document in the FedRAMP account.");
+  oldThis.logToConsoleTabbed("Wrote the values the user entered into this document's fields to the library document in the destination account.");
 }
 
 /* Returns true if and only if s is not epsilon-close to zero and s is epsilon-close to a multiple of t. */

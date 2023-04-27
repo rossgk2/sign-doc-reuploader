@@ -1,4 +1,4 @@
-- **change console logging to talk about source account and dest account rather than commercial account and FedRAMP account**
+- **apply font already in use to #h1 in the html of the login component**
 
 - initialize `sourceComplianceLevel` and `destComplianceLevel` to the default values that are used in the .html instead of hardcoding their initial values to match those from the .html
 
