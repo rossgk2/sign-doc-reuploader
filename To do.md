@@ -1,4 +1,4 @@
-- **apply font already in use to #h1 in the html of the login component**
+- place dropdowns below login buttons
 
 - initialize `sourceComplianceLevel` and `destComplianceLevel` to the default values that are used in the .html instead of hardcoding their initial values to match those from the .html
 

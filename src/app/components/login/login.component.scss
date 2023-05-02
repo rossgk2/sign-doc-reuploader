@@ -11,3 +11,8 @@ input {
 #login-button {
 	margin-top: 10px;
 }
+
+.login-button-group {
+	display: flex;
+	flex-direction: column;
+}
