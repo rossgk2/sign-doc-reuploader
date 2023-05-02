@@ -38,6 +38,6 @@
     </select>
   </div>
 
-  <button type="button" (click) = "sourceLogin()" id="source-login-button">Log in (source account)</button>
-  <button type="button" (click) = "destLogin()" id="dest-login-button">Log in (destination account)</button>
+  <button type="button" (click) = "sourceLogin()" id="source-login-button" *ngIf="!loggedInSourceDestWithNullCheck('source')">Log in (source account)</button>
+  <button type="button" (click) = "destLogin()" id="dest-login-button" *ngIf="!loggedInSourceDestWithNullCheck('dest')">Log in (destination account)</button>
 </div>
